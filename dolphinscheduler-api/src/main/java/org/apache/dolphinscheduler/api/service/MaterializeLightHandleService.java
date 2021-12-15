@@ -5,6 +5,7 @@
 
 package org.apache.dolphinscheduler.api.service;
 
+import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleExec;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleProcessDefinition;
 
 import java.util.Map;
@@ -20,4 +21,5 @@ public interface MaterializeLightHandleService {
 
     Map<String, Object> update(MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition) throws Exception;
 
+    Map<String, Object> exec(MaterializeLightHandleExec materializeLightHandleExec) throws Exception;
 }

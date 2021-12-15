@@ -6,23 +6,32 @@
 package org.apache.dolphinscheduler.api.service.impl;
 
 import static org.apache.dolphinscheduler.api.enums.Status.CREATE_TASK_DEFINITION_ERROR;
+import static org.apache.dolphinscheduler.common.Constants.CMD_PARAM_START_NODES;
+import static org.apache.dolphinscheduler.common.Constants.CMD_PARAM_START_PARAMS;
 
 import org.apache.dolphinscheduler.api.dto.materialize.Feature;
+import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleExec;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleProcessDefinition;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleTaskDefinition;
 import org.apache.dolphinscheduler.api.enums.Status;
 import org.apache.dolphinscheduler.api.exceptions.ServiceException;
 import org.apache.dolphinscheduler.api.service.MaterializeLightHandleService;
 import org.apache.dolphinscheduler.common.Constants;
+import org.apache.dolphinscheduler.common.enums.CommandType;
 import org.apache.dolphinscheduler.common.enums.ConditionType;
+import org.apache.dolphinscheduler.common.enums.FailureStrategy;
 import org.apache.dolphinscheduler.common.enums.Flag;
 import org.apache.dolphinscheduler.common.enums.Priority;
+import org.apache.dolphinscheduler.common.enums.TaskDependType;
 import org.apache.dolphinscheduler.common.enums.TaskTimeoutStrategy;
 import org.apache.dolphinscheduler.common.enums.TaskType;
 import org.apache.dolphinscheduler.common.enums.TimeoutFlag;
+import org.apache.dolphinscheduler.common.enums.WarningType;
 import org.apache.dolphinscheduler.common.task.self.AsyncPlatformParameters;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
+import org.apache.dolphinscheduler.common.utils.DateUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
+import org.apache.dolphinscheduler.dao.entity.Command;
 import org.apache.dolphinscheduler.dao.entity.ProcessDefinition;
 import org.apache.dolphinscheduler.dao.entity.ProcessTaskRelationLog;
 import org.apache.dolphinscheduler.dao.entity.TaskDefinition;
@@ -33,6 +42,8 @@ import org.apache.dolphinscheduler.dao.mapper.TaskDefinitionMapper;
 import org.apache.dolphinscheduler.service.process.ProcessService;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -205,6 +216,41 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             putMsg(result, Status.UPDATE_PROCESS_DEFINITION_ERROR);
             throw new ServiceException(Status.UPDATE_PROCESS_DEFINITION_ERROR);
         }
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> exec(MaterializeLightHandleExec materializeLightHandleExec) throws Exception {
+        int warningGroupId = 1;
+        int userId = 1;
+
+        ProcessDefinition processDefinition = processDefinitionMapper.queryByExternalCode(materializeLightHandleExec.getExternalCode());
+        Command command = new Command();
+
+        command.setCommandType(CommandType.START_PROCESS);
+        command.setProcessDefinitionCode(processDefinition.getCode());
+        command.setTaskDependType(TaskDependType.TASK_POST);
+        command.setFailureStrategy(FailureStrategy.END);
+        command.setWarningType(WarningType.FAILURE);
+
+        Map<String, String> cmdParam = new HashMap<>();
+        if (MapUtils.isNotEmpty(materializeLightHandleExec.getStartParams())) {
+            cmdParam.put(CMD_PARAM_START_PARAMS, JSONUtils.toJsonString(materializeLightHandleExec.getStartParams()));
+        }
+        command.setCommandParam(JSONUtils.toJsonString(cmdParam));
+        command.setExecutorId(userId);
+        command.setWarningGroupId(warningGroupId);
+        command.setProcessInstancePriority(Priority.MEDIUM);
+        command.setWorkerGroup(Constants.DEFAULT_WORKER_GROUP);
+        command.setEnvironmentCode(-1L);
+        command.setDryRun(0);
+        command.setProcessDefinitionVersion(processDefinition.getVersion());
+        command.setProcessInstanceId(0);
+        processService.createCommand(command);
+        Map<String, Object> result = new HashMap<>();
+        result.put(Constants.STATUS, Status.SUCCESS);
+        result.put(Constants.DATA_LIST, command);
         return result;
     }
 

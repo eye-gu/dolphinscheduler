@@ -6,8 +6,11 @@
 package org.apache.dolphinscheduler.api.controller;
 
 import static org.apache.dolphinscheduler.api.enums.Status.CREATE_TASK_DEFINITION_ERROR;
+import static org.apache.dolphinscheduler.api.enums.Status.START_PROCESS_INSTANCE_ERROR;
 import static org.apache.dolphinscheduler.api.enums.Status.UPDATE_TASK_DEFINITION_ERROR;
 
+import org.apache.dolphinscheduler.api.aspect.AccessLogAnnotation;
+import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleExec;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleProcessDefinition;
 import org.apache.dolphinscheduler.api.exceptions.ApiException;
 import org.apache.dolphinscheduler.api.service.MaterializeLightHandleService;
@@ -48,6 +51,7 @@ public class MaterializeLightHandleController extends BaseController {
     })
     @PostMapping(value = "/create")
     @ApiException(CREATE_TASK_DEFINITION_ERROR)
+    @AccessLogAnnotation
     public Result create(@ApiIgnore @RequestBody MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition) throws Exception {
         return returnDataList(materializeLightHandleService.create(materializeLightHandleProcessDefinition));
     }
@@ -60,7 +64,17 @@ public class MaterializeLightHandleController extends BaseController {
     })
     @PostMapping(value = "/update")
     @ApiException(UPDATE_TASK_DEFINITION_ERROR)
+    @AccessLogAnnotation
     public Result update(@ApiIgnore @RequestBody MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition) throws Exception {
         return returnDataList(materializeLightHandleService.update(materializeLightHandleProcessDefinition));
+    }
+
+
+    @ApiOperation(value = "exec", notes = "EXEC")
+    @PostMapping(value = "/exec")
+    @ApiException(START_PROCESS_INSTANCE_ERROR)
+    @AccessLogAnnotation
+    public Result exec(@RequestBody MaterializeLightHandleExec materializeLightHandleExec) throws Exception {
+        return returnDataList(materializeLightHandleService.exec(materializeLightHandleExec));
     }
 }
