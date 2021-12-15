@@ -7,6 +7,7 @@ package org.apache.dolphinscheduler.plugin.task.asyncplatform;
 
 import org.apache.dolphinscheduler.plugin.task.api.AbstractTaskExecutor;
 import org.apache.dolphinscheduler.spi.task.AbstractParameters;
+import org.apache.dolphinscheduler.spi.task.TaskConstants;
 import org.apache.dolphinscheduler.spi.task.request.TaskRequest;
 
 /**
@@ -34,7 +35,7 @@ public class AsyncPlatformTask extends AbstractTaskExecutor {
 
     @Override
     public void handle() throws Exception {
-
+        super.setExitStatusCode(TaskConstants.EXIT_CODE_SUCCESS);
     }
 
     @Override
