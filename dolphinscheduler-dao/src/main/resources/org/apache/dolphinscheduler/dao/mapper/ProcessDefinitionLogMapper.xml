@@ -23,7 +23,7 @@
        id, code, name, version, description, project_code,
         release_state, user_id,global_params, flag, locations,
          warning_group_id, timeout, tenant_id,operator, operate_time, create_time,
-          update_time
+          update_time,external_code,feature
     </sql>
     <select id="queryByDefinitionName" resultType="org.apache.dolphinscheduler.dao.entity.ProcessDefinitionLog">
         select pd.id, pd.code, pd.name, pd.version, pd.description, pd.project_code,

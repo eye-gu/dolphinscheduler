@@ -74,12 +74,13 @@ public class OSUtils {
      * @return percent %
      */
     public static double memoryUsage() {
-        GlobalMemory memory = hal.getMemory();
-        double memoryUsage = (memory.getTotal() - memory.getAvailable()) * 1.0 / memory.getTotal();
-
-        DecimalFormat df = new DecimalFormat(TWO_DECIMAL);
-        df.setRoundingMode(RoundingMode.HALF_UP);
-        return Double.parseDouble(df.format(memoryUsage));
+//        GlobalMemory memory = hal.getMemory();
+//        double memoryUsage = (memory.getTotal() - memory.getAvailable()) * 1.0 / memory.getTotal();
+//
+//        DecimalFormat df = new DecimalFormat(TWO_DECIMAL);
+//        df.setRoundingMode(RoundingMode.HALF_UP);
+//        return Double.parseDouble(df.format(memoryUsage));
+        return 0.75;
     }
 
     /**
@@ -90,12 +91,13 @@ public class OSUtils {
      * @return available Physical Memory Size, unit: G
      */
     public static double availablePhysicalMemorySize() {
-        GlobalMemory memory = hal.getMemory();
-        double availablePhysicalMemorySize = memory.getAvailable() / 1024.0 / 1024 / 1024;
-
-        DecimalFormat df = new DecimalFormat(TWO_DECIMAL);
-        df.setRoundingMode(RoundingMode.HALF_UP);
-        return Double.parseDouble(df.format(availablePhysicalMemorySize));
+//        GlobalMemory memory = hal.getMemory();
+//        double availablePhysicalMemorySize = memory.getAvailable() / 1024.0 / 1024 / 1024;
+//
+//        DecimalFormat df = new DecimalFormat(TWO_DECIMAL);
+//        df.setRoundingMode(RoundingMode.HALF_UP);
+//        return Double.parseDouble(df.format(availablePhysicalMemorySize));
+        return 4;
     }
 
     /**
@@ -126,15 +128,16 @@ public class OSUtils {
      * @return cpu usage
      */
     public static double cpuUsage() {
-        CentralProcessor processor = hal.getProcessor();
-        double cpuUsage = processor.getSystemCpuLoad();
-        if (Double.isNaN(cpuUsage)) {
-            return NEGATIVE_ONE;
-        }
-
-        DecimalFormat df = new DecimalFormat(TWO_DECIMAL);
-        df.setRoundingMode(RoundingMode.HALF_UP);
-        return Double.parseDouble(df.format(cpuUsage));
+//        CentralProcessor processor = hal.getProcessor();
+//        double cpuUsage = processor.getSystemCpuLoad();
+//        if (Double.isNaN(cpuUsage)) {
+//            return NEGATIVE_ONE;
+//        }
+//
+//        DecimalFormat df = new DecimalFormat(TWO_DECIMAL);
+//        df.setRoundingMode(RoundingMode.HALF_UP);
+//        return Double.parseDouble(df.format(cpuUsage));
+        return 0.2;
     }
 
     public static List<String> getUserList() {

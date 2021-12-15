@@ -164,4 +164,7 @@ public interface ProcessDefinitionMapper extends BaseMapper<ProcessDefinition> {
      * @return project ids list
      */
     List<Integer> listProjectIds();
+
+
+    ProcessDefinition queryByExternalCode(@Param("externalCode") String externalCode);
 }

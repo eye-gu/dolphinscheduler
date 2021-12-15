@@ -32,14 +32,14 @@ import org.springframework.context.annotation.ComponentScan;
 @ComponentScan
 public class StandaloneServer {
     public static void main(String[] args) throws Exception {
-        final TestingServer server = new TestingServer(true);
-        System.setProperty("registry.servers", server.getConnectString());
+//        final TestingServer server = new TestingServer(true);
+//        System.setProperty("registry.servers", server.getConnectString());
 
         new SpringApplicationBuilder(
             ApiApplicationServer.class,
             MasterServer.class,
             WorkerServer.class,
             AlertServer.class
-        ).profiles("master", "worker", "api", "alert", "h2", "standalone").run(args);
+        ).profiles("master", "worker", "api", "alert", "mysql", "standalone").run(args);
     }
 }

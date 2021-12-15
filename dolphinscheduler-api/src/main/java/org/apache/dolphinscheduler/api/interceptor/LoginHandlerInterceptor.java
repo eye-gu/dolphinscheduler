@@ -57,6 +57,9 @@ public class LoginHandlerInterceptor implements HandlerInterceptor {
      */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        if (request.getRequestURI().startsWith(request.getContextPath() + "/materialize_light_handle")) {
+            return true;
+        }
 
         // get token
         String token = request.getHeader("token");

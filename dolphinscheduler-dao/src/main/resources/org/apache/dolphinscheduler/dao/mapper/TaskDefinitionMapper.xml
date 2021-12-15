@@ -21,7 +21,7 @@
     <sql id="baseSql">
         id, code, name, version, description, project_code, user_id, task_type, task_params, flag, task_priority,
         worker_group, environment_code, fail_retry_times, fail_retry_interval, timeout_flag, timeout_notify_strategy, timeout, delay_time,
-        resource_ids, create_time, update_time
+        resource_ids, create_time, update_time, external_code
     </sql>
     <select id="queryByName" resultType="org.apache.dolphinscheduler.dao.entity.TaskDefinition">
         select
@@ -76,14 +76,15 @@
     <insert id="batchInsert">
         insert into t_ds_task_definition (code, name, version, description, project_code, user_id,
         task_type, task_params, flag, task_priority, worker_group, environment_code, fail_retry_times, fail_retry_interval,
-        timeout_flag, timeout_notify_strategy, timeout, delay_time, resource_ids, create_time, update_time)
+        timeout_flag, timeout_notify_strategy, timeout, delay_time, resource_ids, create_time, update_time, external_code)
         values
         <foreach collection="taskDefinitions" item="taskDefinition" separator=",">
             (#{taskDefinition.code},#{taskDefinition.name},#{taskDefinition.version},#{taskDefinition.description},
             #{taskDefinition.projectCode},#{taskDefinition.userId},#{taskDefinition.taskType},#{taskDefinition.taskParams},#{taskDefinition.flag},
             #{taskDefinition.taskPriority},#{taskDefinition.workerGroup},#{taskDefinition.environmentCode},#{taskDefinition.failRetryTimes},
             #{taskDefinition.failRetryInterval},#{taskDefinition.timeoutFlag},#{taskDefinition.timeoutNotifyStrategy},#{taskDefinition.timeout},
-            #{taskDefinition.delayTime},#{taskDefinition.resourceIds},#{taskDefinition.createTime},#{taskDefinition.updateTime})
+            #{taskDefinition.delayTime},#{taskDefinition.resourceIds},#{taskDefinition.createTime},#{taskDefinition.updateTime},
+            #{taskDefinition.externalCode})
         </foreach>
     </insert>
     <select id="queryDefineListPaging" resultType="org.apache.dolphinscheduler.dao.entity.TaskDefinition">
@@ -104,5 +105,12 @@
             and td.user_id = #{userId}
         </if>
         order by td.update_time desc
+    </select>
+
+    <select id="queryByExternalCodes" resultType="org.apache.dolphinscheduler.dao.entity.TaskDefinition">
+        select * from t_ds_task_definition where external_code in
+        <foreach collection="externalCodes" close=")" item="externalCode" open="(" separator=",">
+            #{externalCode,jdbcType=VARCHAR}
+        </foreach>
     </select>
 </mapper>

@@ -66,6 +66,8 @@ public class ProcessDefinitionLog extends ProcessDefinition {
         this.setTenantId(processDefinition.getTenantId());
         this.setModifyBy(processDefinition.getModifyBy());
         this.setWarningGroupId(processDefinition.getWarningGroupId());
+        this.setExternalCode(processDefinition.getExternalCode());
+        this.setFeature(processDefinition.getFeature());
     }
 
     public int getOperator() {

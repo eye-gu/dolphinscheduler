@@ -207,6 +207,11 @@
             <artifactId>hadoop-aws</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+
         <!-- just for test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

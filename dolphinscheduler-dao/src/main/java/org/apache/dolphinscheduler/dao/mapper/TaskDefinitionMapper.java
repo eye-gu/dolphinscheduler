@@ -118,4 +118,6 @@ public interface TaskDefinitionMapper extends BaseMapper<TaskDefinition> {
                                                 @Param("searchVal") String searchVal,
                                                 @Param("userId") int userId,
                                                 @Param("isAdmin") boolean isAdmin);
+
+    List<TaskDefinition> queryByExternalCodes(@Param("externalCodes") List<String> externalCodes);
 }

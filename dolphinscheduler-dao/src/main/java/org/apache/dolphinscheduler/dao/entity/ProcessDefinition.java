@@ -168,6 +168,15 @@ public class ProcessDefinition {
     @TableField(exist = false)
     private int warningGroupId;
 
+    @TableField("external_code")
+    private String externalCode;
+
+    /**
+     * update_time
+     */
+    @TableField("feature")
+    private String feature;
+
     public ProcessDefinition() {
     }
 
@@ -396,6 +405,22 @@ public class ProcessDefinition {
 
     public void setWarningGroupId(int warningGroupId) {
         this.warningGroupId = warningGroupId;
+    }
+
+    public String getExternalCode() {
+        return externalCode;
+    }
+
+    public void setExternalCode(String externalCode) {
+        this.externalCode = externalCode;
+    }
+
+    public String getFeature() {
+        return feature;
+    }
+
+    public void setFeature(String feature) {
+        this.feature = feature;
     }
 
     @Override

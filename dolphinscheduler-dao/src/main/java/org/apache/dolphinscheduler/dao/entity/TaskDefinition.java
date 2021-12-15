@@ -194,6 +194,9 @@ public class TaskDefinition {
     @TableField(exist = false)
     private String modifyBy;
 
+    @TableField(value = "external_code")
+    private String externalCode;
+
     public TaskDefinition() {
     }
 
@@ -432,6 +435,14 @@ public class TaskDefinition {
 
     public void setEnvironmentCode(long environmentCode) {
         this.environmentCode = environmentCode;
+    }
+
+    public String getExternalCode() {
+        return externalCode;
+    }
+
+    public void setExternalCode(String externalCode) {
+        this.externalCode = externalCode;
     }
 
     @Override
