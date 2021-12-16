@@ -32,6 +32,7 @@ import static java.util.stream.Collectors.toSet;
 import org.apache.dolphinscheduler.common.Constants;
 import org.apache.dolphinscheduler.common.enums.AuthorizationType;
 import org.apache.dolphinscheduler.common.enums.CommandType;
+import org.apache.dolphinscheduler.common.enums.DataType;
 import org.apache.dolphinscheduler.common.enums.Direct;
 import org.apache.dolphinscheduler.common.enums.ExecutionStatus;
 import org.apache.dolphinscheduler.common.enums.FailureStrategy;
@@ -49,6 +50,8 @@ import org.apache.dolphinscheduler.common.process.Property;
 import org.apache.dolphinscheduler.common.process.ResourceInfo;
 import org.apache.dolphinscheduler.common.task.AbstractParameters;
 import org.apache.dolphinscheduler.common.task.TaskTimeoutParameter;
+import org.apache.dolphinscheduler.common.task.self.Feature;
+import org.apache.dolphinscheduler.common.task.self.Param;
 import org.apache.dolphinscheduler.common.task.subprocess.SubProcessParameters;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils.CodeGenerateException;
@@ -118,6 +121,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -716,15 +720,7 @@ public class ProcessService {
         ProcessInstance processInstance;
         ProcessDefinition processDefinition;
         CommandType commandType = command.getCommandType();
-        String key = String.format("%d-%d", command.getProcessDefinitionCode(), command.getProcessDefinitionVersion());
-        if (processDefinitionCacheMaps.containsKey(key)) {
-            processDefinition = processDefinitionCacheMaps.get(key);
-        } else {
-            processDefinition = this.findProcessDefinition(command.getProcessDefinitionCode(), command.getProcessDefinitionVersion());
-            if (processDefinition != null) {
-                processDefinitionCacheMaps.put(key, processDefinition);
-            }
-        }
+        processDefinition = this.findProcessDefinition(command.getProcessDefinitionCode(), command.getProcessDefinitionVersion());
         if (processDefinition == null) {
             logger.error("cannot find the work process define! define code : {}", command.getProcessDefinitionCode());
             return null;
@@ -854,6 +850,31 @@ public class ProcessService {
                 break;
         }
         processInstance.setState(runStatus);
+
+        Feature feature = JSONUtils.parseObject(processDefinition.getFeature(), Feature.class);
+        if (feature != null && CollectionUtils.isNotEmpty(feature.getGlobalParams())) {
+            List<Property> globalParamList = JSONUtils.parseObject(processInstance.getGlobalParams(), new TypeReference<List<Property>>() {});
+            if (globalParamList == null) {
+                globalParamList = new ArrayList<>();
+            }
+            globalParamList = globalParamList.stream().filter(p -> !"".equals(p.getValue())).collect(Collectors.toList());
+            Map<String, Property> globalParamMap = globalParamList.stream()
+                .collect(Collectors.toMap(Property::getProp, Function.identity()));
+            for (Param param : feature.getGlobalParams()) {
+                if (globalParamMap.containsKey(param.getName())) {
+                    continue;
+                }
+                // todo
+                Property property = new Property();
+                property.setProp(param.getName());
+                property.setValue(param.getName() + "1");
+                property.setDirect(Direct.IN);
+                property.setType(DataType.valueOf(param.getType()));
+                globalParamList.add(property);
+            }
+            processInstance.setGlobalParams(JSONUtils.toJsonString(globalParamList));
+        }
+
         return processInstance;
     }
 

@@ -3,9 +3,7 @@
  * Copyright (c) 2021-2021 All Rights Reserved.
  */
 
-package org.apache.dolphinscheduler.api.dto.materialize;
-
-import org.apache.dolphinscheduler.common.task.self.Param;
+package org.apache.dolphinscheduler.common.task.self;
 
 import java.util.List;
 

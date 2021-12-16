@@ -6,10 +6,8 @@
 package org.apache.dolphinscheduler.api.service.impl;
 
 import static org.apache.dolphinscheduler.api.enums.Status.CREATE_TASK_DEFINITION_ERROR;
-import static org.apache.dolphinscheduler.common.Constants.CMD_PARAM_START_NODES;
 import static org.apache.dolphinscheduler.common.Constants.CMD_PARAM_START_PARAMS;
 
-import org.apache.dolphinscheduler.api.dto.materialize.Feature;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleExec;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleProcessDefinition;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleTaskDefinition;
@@ -19,17 +17,22 @@ import org.apache.dolphinscheduler.api.service.MaterializeLightHandleService;
 import org.apache.dolphinscheduler.common.Constants;
 import org.apache.dolphinscheduler.common.enums.CommandType;
 import org.apache.dolphinscheduler.common.enums.ConditionType;
+import org.apache.dolphinscheduler.common.enums.DataType;
+import org.apache.dolphinscheduler.common.enums.Direct;
 import org.apache.dolphinscheduler.common.enums.FailureStrategy;
 import org.apache.dolphinscheduler.common.enums.Flag;
 import org.apache.dolphinscheduler.common.enums.Priority;
+import org.apache.dolphinscheduler.common.enums.ReleaseState;
 import org.apache.dolphinscheduler.common.enums.TaskDependType;
 import org.apache.dolphinscheduler.common.enums.TaskTimeoutStrategy;
 import org.apache.dolphinscheduler.common.enums.TaskType;
 import org.apache.dolphinscheduler.common.enums.TimeoutFlag;
 import org.apache.dolphinscheduler.common.enums.WarningType;
+import org.apache.dolphinscheduler.common.process.Property;
 import org.apache.dolphinscheduler.common.task.self.AsyncPlatformParameters;
+import org.apache.dolphinscheduler.common.task.self.Feature;
+import org.apache.dolphinscheduler.common.task.self.Param;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
-import org.apache.dolphinscheduler.common.utils.DateUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.Command;
 import org.apache.dolphinscheduler.dao.entity.ProcessDefinition;
@@ -43,7 +46,6 @@ import org.apache.dolphinscheduler.service.process.ProcessService;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -171,7 +173,6 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         processDefinition.setId(existProcessDefinition.getId());
 
 
-
         List<ProcessTaskRelationLog> taskRelationList = new ArrayList<>();
         for (MaterializeLightHandleTaskDefinition materializeLightHandleTaskDefinition : materializeLightHandleProcessDefinition.getTasks()) {
             TaskDefinition existTask = existExternalMap.get(materializeLightHandleTaskDefinition.getExternalCode());
@@ -224,8 +225,14 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
     public Map<String, Object> exec(MaterializeLightHandleExec materializeLightHandleExec) throws Exception {
         int warningGroupId = 1;
         int userId = 1;
+        Map<String, Object> result = new HashMap<>();
 
         ProcessDefinition processDefinition = processDefinitionMapper.queryByExternalCode(materializeLightHandleExec.getExternalCode());
+        if (processDefinition.getReleaseState() != ReleaseState.ONLINE) {
+            // check process definition online
+            putMsg(result, Status.PROCESS_DEFINE_NOT_RELEASE, materializeLightHandleExec.getExternalCode());
+            return result;
+        }
         Command command = new Command();
 
         command.setCommandType(CommandType.START_PROCESS);
@@ -248,7 +255,6 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         command.setProcessDefinitionVersion(processDefinition.getVersion());
         command.setProcessInstanceId(0);
         processService.createCommand(command);
-        Map<String, Object> result = new HashMap<>();
         result.put(Constants.STATUS, Status.SUCCESS);
         result.put(Constants.DATA_LIST, command);
         return result;
@@ -256,11 +262,24 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
 
     private ProcessDefinition build(long projectCode, int userId, int tenantId, long code,
                                     MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition) {
+        List<Property> properties = Collections.emptyList();
+        List<Param> params = materializeLightHandleProcessDefinition.getGlobalParams();
+        if (CollectionUtils.isNotEmpty(params)) {
+            properties = new ArrayList<>(params.size());
+            for (Param param : params) {
+                Property property = new Property();
+                property.setProp(param.getName());
+                property.setDirect(Direct.IN);
+                property.setType(DataType.valueOf(param.getType()));
+                property.setValue("");
+                properties.add(property);
+            }
+        }
         ProcessDefinition processDefinition = new ProcessDefinition(projectCode,
             materializeLightHandleProcessDefinition.getName() + "-" + materializeLightHandleProcessDefinition.getExternalCode(),
             code,
             materializeLightHandleProcessDefinition.getDescription(),
-            null, null,
+            JSONUtils.toJsonString(properties), null,
             materializeLightHandleProcessDefinition.getTimeout(), userId, tenantId);
         processDefinition.setExternalCode(materializeLightHandleProcessDefinition.getExternalCode());
         Feature feature = new Feature();
