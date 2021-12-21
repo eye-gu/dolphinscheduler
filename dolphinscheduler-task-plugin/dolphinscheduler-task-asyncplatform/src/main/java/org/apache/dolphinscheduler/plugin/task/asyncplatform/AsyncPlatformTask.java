@@ -10,10 +10,11 @@ import org.apache.dolphinscheduler.spi.task.AbstractParameters;
 import org.apache.dolphinscheduler.spi.task.TaskConstants;
 import org.apache.dolphinscheduler.spi.task.request.TaskRequest;
 
+import org.apache.spark.launcher.SparkAppHandle;
+
 /**
  * @author eye.gu@aloudata.com
  * @version 1
- * @date 2021-12-14 17:36
  */
 public class AsyncPlatformTask extends AbstractTaskExecutor {
 
@@ -25,12 +26,13 @@ public class AsyncPlatformTask extends AbstractTaskExecutor {
      */
     protected AsyncPlatformTask(TaskRequest taskRequest) {
         super(taskRequest);
+        asyncPlatformParameters = new AsyncPlatformParameters();
     }
 
     @Override
     public void init() {
         super.init();
-        asyncPlatformParameters = new AsyncPlatformParameters();
+
     }
 
     @Override
@@ -41,5 +43,11 @@ public class AsyncPlatformTask extends AbstractTaskExecutor {
     @Override
     public AbstractParameters getParameters() {
         return asyncPlatformParameters;
+    }
+
+
+    @Override
+    public void cancelApplication(boolean status) throws Exception {
+        super.cancelApplication(status);
     }
 }

@@ -32,7 +32,6 @@ import springfox.documentation.annotations.ApiIgnore;
 /**
  * @author eye.gu@aloudata.com
  * @version 1
- * @date 2021-12-14 10:59
  */
 @Api(tags = "MATERIALIZE_LIGHT_HANDLE")
 @RestController

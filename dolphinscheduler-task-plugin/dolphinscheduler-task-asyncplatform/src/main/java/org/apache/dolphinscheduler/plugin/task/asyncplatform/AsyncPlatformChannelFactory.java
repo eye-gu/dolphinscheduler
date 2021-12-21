@@ -16,7 +16,6 @@ import com.google.auto.service.AutoService;
 /**
  * @author eye.gu@aloudata.com
  * @version 1
- * @date 2021-12-14 17:35
  */
 @AutoService(TaskChannelFactory.class)
 public class AsyncPlatformChannelFactory implements TaskChannelFactory {

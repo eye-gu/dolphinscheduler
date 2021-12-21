@@ -14,7 +14,6 @@ import java.util.List;
 /**
  * @author eye.gu@aloudata.com
  * @version 1
- * @date 2021-12-14 17:36
  */
 public class AsyncPlatformParameters extends AbstractParameters {
     @Override

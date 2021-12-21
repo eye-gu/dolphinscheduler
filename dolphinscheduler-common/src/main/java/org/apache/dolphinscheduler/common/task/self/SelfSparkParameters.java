@@ -14,7 +14,6 @@ import java.util.List;
 /**
  * @author eye.gu@aloudata.com
  * @version 1
- * @date 2021-12-14 16:01
  */
 public class SelfSparkParameters extends AbstractParameters {
     @Override

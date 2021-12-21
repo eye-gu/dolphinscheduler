@@ -21,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 /**
  * @author eye.gu@aloudata.com
  * @version 1
- * @date 2021-12-15 21:02
  */
 public class ZhSender {
 

@@ -57,6 +57,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,7 +66,6 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * @author eye.gu@aloudata.com
  * @version 1
- * @date 2021-12-14 16:33
  */
 @Service
 @Slf4j
@@ -80,14 +80,14 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
     @Autowired
     private ProcessDefinitionMapper processDefinitionMapper;
 
+    @Autowired
+    private MaterialLightHandleConfig materialLightHandleConfig;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> create(MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition) throws Exception {
-        long projectCode = 3845369012064L;
-        int userId = 1;
-        int tenantId = 1;
         User loginUser = new User();
-        loginUser.setId(userId);
+        loginUser.setId(materialLightHandleConfig.getUserId());
 
         List<TaskDefinitionLog> taskDefinitionLogs = new ArrayList<>();
         Map<String, Long> external2code = new HashMap<>(materializeLightHandleProcessDefinition.getTasks().size());
@@ -113,7 +113,9 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             }
         }
 
-        ProcessDefinition processDefinition = build(projectCode, userId, tenantId, CodeGenerateUtils.getInstance().genCode(), materializeLightHandleProcessDefinition);
+        ProcessDefinition processDefinition = build(materialLightHandleConfig.getProjectCode(),
+            materialLightHandleConfig.getUserId(), materialLightHandleConfig.getTenantId(),
+            CodeGenerateUtils.getInstance().genCode(), materializeLightHandleProcessDefinition);
 
         Map<String, Object> result = new HashMap<>();
         int saveTaskResult = processService.saveTaskDefine(loginUser, processDefinition.getProjectCode(), taskDefinitionLogs);
@@ -143,11 +145,8 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> update(MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition) throws Exception {
-        long projectCode = 3845369012064L;
-        int userId = 1;
-        int tenantId = 1;
         User loginUser = new User();
-        loginUser.setId(userId);
+        loginUser.setId(materialLightHandleConfig.getUserId());
 
         List<String> externalCodes = new ArrayList<>();
         for (MaterializeLightHandleTaskDefinition materializeLightHandleTaskDefinition : materializeLightHandleProcessDefinition.getTasks()) {
@@ -169,7 +168,9 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         }
 
         ProcessDefinition existProcessDefinition = processDefinitionMapper.queryByExternalCode(materializeLightHandleProcessDefinition.getExternalCode());
-        ProcessDefinition processDefinition = build(projectCode, userId, tenantId, existProcessDefinition.getCode(), materializeLightHandleProcessDefinition);
+        ProcessDefinition processDefinition = build(materialLightHandleConfig.getProjectCode(),
+            materialLightHandleConfig.getUserId(), materialLightHandleConfig.getTenantId(),
+            existProcessDefinition.getCode(), materializeLightHandleProcessDefinition);
         processDefinition.setId(existProcessDefinition.getId());
 
 
@@ -194,7 +195,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         }
 
         Map<String, Object> result = new HashMap<>();
-        int saveTaskResult = processService.saveTaskDefine(loginUser, projectCode, taskDefinitionLogs);
+        int saveTaskResult = processService.saveTaskDefine(loginUser, materialLightHandleConfig.getProjectCode(), taskDefinitionLogs);
         if (saveTaskResult == Constants.EXIT_CODE_SUCCESS) {
             log.info("The task has not changed, so skip");
         }
@@ -208,7 +209,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             putMsg(result, Status.UPDATE_PROCESS_DEFINITION_ERROR);
             throw new ServiceException(Status.UPDATE_PROCESS_DEFINITION_ERROR);
         }
-        int insertResult = processService.saveTaskRelation(loginUser, projectCode,
+        int insertResult = processService.saveTaskRelation(loginUser, materialLightHandleConfig.getProjectCode(),
             processDefinition.getCode(), insertVersion, taskRelationList, taskDefinitionLogs);
         if (insertResult == Constants.EXIT_CODE_SUCCESS) {
             putMsg(result, Status.SUCCESS);
@@ -223,8 +224,6 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> exec(MaterializeLightHandleExec materializeLightHandleExec) throws Exception {
-        int warningGroupId = 1;
-        int userId = 1;
         Map<String, Object> result = new HashMap<>();
 
         ProcessDefinition processDefinition = processDefinitionMapper.queryByExternalCode(materializeLightHandleExec.getExternalCode());
@@ -246,8 +245,8 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             cmdParam.put(CMD_PARAM_START_PARAMS, JSONUtils.toJsonString(materializeLightHandleExec.getStartParams()));
         }
         command.setCommandParam(JSONUtils.toJsonString(cmdParam));
-        command.setExecutorId(userId);
-        command.setWarningGroupId(warningGroupId);
+        command.setExecutorId(materialLightHandleConfig.getUserId());
+        command.setWarningGroupId(materialLightHandleConfig.getWarningGroupId());
         command.setProcessInstancePriority(Priority.MEDIUM);
         command.setWorkerGroup(Constants.DEFAULT_WORKER_GROUP);
         command.setEnvironmentCode(-1L);

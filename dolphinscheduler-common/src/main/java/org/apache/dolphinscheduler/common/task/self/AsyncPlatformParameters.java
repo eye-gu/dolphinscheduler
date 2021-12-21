@@ -16,7 +16,6 @@ import lombok.Data;
 /**
  * @author eye.gu@aloudata.com
  * @version 1
- * @date 2021-12-14 15:59
  */
 @Data
 public class AsyncPlatformParameters extends AbstractParameters {

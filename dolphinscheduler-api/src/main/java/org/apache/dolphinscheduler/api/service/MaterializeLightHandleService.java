@@ -13,7 +13,6 @@ import java.util.Map;
 /**
  * @author eye.gu@aloudata.com
  * @version 1
- * @date 2021-12-14 16:32
  */
 public interface MaterializeLightHandleService {
 

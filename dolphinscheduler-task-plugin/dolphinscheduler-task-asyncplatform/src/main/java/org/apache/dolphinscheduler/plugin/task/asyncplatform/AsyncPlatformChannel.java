@@ -12,7 +12,6 @@ import org.apache.dolphinscheduler.spi.task.request.TaskRequest;
 /**
  * @author eye.gu@aloudata.com
  * @version 1
- * @date 2021-12-14 17:33
  */
 public class AsyncPlatformChannel implements TaskChannel {
     @Override

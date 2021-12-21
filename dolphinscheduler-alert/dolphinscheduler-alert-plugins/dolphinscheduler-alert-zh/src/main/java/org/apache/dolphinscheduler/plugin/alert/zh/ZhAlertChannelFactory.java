@@ -18,7 +18,6 @@ import com.google.auto.service.AutoService;
 /**
  * @author eye.gu@aloudata.com
  * @version 1
- * @date 2021-12-15 20:57
  */
 @AutoService(AlertChannelFactory.class)
 public class ZhAlertChannelFactory implements AlertChannelFactory {
