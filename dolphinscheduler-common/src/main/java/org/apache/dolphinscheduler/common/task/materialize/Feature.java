@@ -3,7 +3,7 @@
  * Copyright (c) 2021-2021 All Rights Reserved.
  */
 
-package org.apache.dolphinscheduler.common.task.self;
+package org.apache.dolphinscheduler.common.task.materialize;
 
 import java.util.List;
 
@@ -14,7 +14,8 @@ import lombok.Data;
  * @version 1
  */
 @Data
-public class Sql {
-    private String sqlTemplate;
-    private List<Param> params;
+public class Feature {
+
+    private List<Param> globalParams;
+
 }

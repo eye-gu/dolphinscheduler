@@ -3,7 +3,7 @@
  * Copyright (c) 2021-2021 All Rights Reserved.
  */
 
-package org.apache.dolphinscheduler.plugin.task.asyncplatform;
+package org.apache.dolphinscheduler.plugin.task.materialize;
 
 import org.apache.dolphinscheduler.spi.params.base.PluginParams;
 import org.apache.dolphinscheduler.spi.task.TaskChannel;
@@ -18,10 +18,10 @@ import com.google.auto.service.AutoService;
  * @version 1
  */
 @AutoService(TaskChannelFactory.class)
-public class AsyncPlatformChannelFactory implements TaskChannelFactory {
+public class MaterializeChannelFactory implements TaskChannelFactory {
     @Override
     public String getName() {
-        return "ASYNC_PLATFORM";
+        return "MATERIALIZE";
     }
 
     @Override
@@ -31,6 +31,6 @@ public class AsyncPlatformChannelFactory implements TaskChannelFactory {
 
     @Override
     public TaskChannel create() {
-        return new AsyncPlatformChannel();
+        return new MaterializeChannel();
     }
 }

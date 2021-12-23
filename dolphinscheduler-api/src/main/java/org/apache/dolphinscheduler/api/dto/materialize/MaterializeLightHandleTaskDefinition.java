@@ -5,9 +5,9 @@
 
 package org.apache.dolphinscheduler.api.dto.materialize;
 
-import org.apache.dolphinscheduler.common.task.self.ReadConfig;
-import org.apache.dolphinscheduler.common.task.self.Sql;
-import org.apache.dolphinscheduler.common.task.self.StoreConfig;
+import org.apache.dolphinscheduler.common.task.materialize.ReadConfig;
+import org.apache.dolphinscheduler.common.task.materialize.Sql;
+import org.apache.dolphinscheduler.common.task.materialize.StoreConfig;
 
 import java.util.List;
 

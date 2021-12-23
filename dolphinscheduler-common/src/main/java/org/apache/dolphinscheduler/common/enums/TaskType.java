@@ -55,8 +55,7 @@ public enum TaskType {
     WATERDROP(13, "WATERDROP"),
     SWITCH(14, "SWITCH"),
     PIGEON(15, "PIGEON"),
-    ASYNC_PLATFORM(16, "ASYNC_PLATFORM"),
-    SELF_SPARK(17, "SELF_SPARK"),
+    MATERIALIZE(16, "MATERIALIZE"),
     ;
 
     TaskType(int code, String desc) {

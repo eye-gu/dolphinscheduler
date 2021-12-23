@@ -3,7 +3,7 @@
  * Copyright (c) 2021-2021 All Rights Reserved.
  */
 
-package org.apache.dolphinscheduler.common.task.self;
+package org.apache.dolphinscheduler.common.task.materialize;
 
 import org.apache.dolphinscheduler.common.process.ResourceInfo;
 import org.apache.dolphinscheduler.common.task.AbstractParameters;
@@ -11,11 +11,19 @@ import org.apache.dolphinscheduler.common.task.AbstractParameters;
 import java.util.Collections;
 import java.util.List;
 
+import lombok.Data;
+
 /**
  * @author eye.gu@aloudata.com
  * @version 1
  */
-public class SelfSparkParameters extends AbstractParameters {
+@Data
+public class MaterializeParameters extends AbstractParameters {
+
+    private ReadConfig readConfig;
+    private StoreConfig storeConfig;
+    private List<Sql> sqlLists;
+
     @Override
     public boolean checkParameters() {
         return true;

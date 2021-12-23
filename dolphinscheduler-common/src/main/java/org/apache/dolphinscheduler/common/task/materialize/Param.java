@@ -3,9 +3,11 @@
  * Copyright (c) 2021-2021 All Rights Reserved.
  */
 
-package org.apache.dolphinscheduler.common.task.self;
+package org.apache.dolphinscheduler.common.task.materialize;
 
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @author eye.gu@aloudata.com
@@ -20,4 +22,5 @@ public class Param {
     private String config;
     private String defaultValue;
     private ReadConfig readConfig;
+    private List<Param> childParams;
 }

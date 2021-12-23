@@ -447,7 +447,7 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.dolphinscheduler</groupId>
-                <artifactId>dolphinscheduler-task-asyncplatform</artifactId>
+                <artifactId>dolphinscheduler-task-materialize</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -846,6 +846,12 @@
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>1.18.22</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-launcher_2.12</artifactId>
+                <version>3.1.2</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

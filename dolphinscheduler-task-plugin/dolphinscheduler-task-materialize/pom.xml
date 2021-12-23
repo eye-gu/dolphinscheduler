@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>dolphinscheduler-task-asyncplatform</artifactId>
+    <artifactId>dolphinscheduler-task-materialize</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -22,6 +22,16 @@
             <groupId>org.apache.dolphinscheduler</groupId>
             <artifactId>dolphinscheduler-task-api</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-launcher_2.12</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.dolphinscheduler</groupId>
+            <artifactId>dolphinscheduler-common</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

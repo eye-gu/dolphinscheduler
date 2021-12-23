@@ -29,9 +29,9 @@ import org.apache.dolphinscheduler.common.enums.TaskType;
 import org.apache.dolphinscheduler.common.enums.TimeoutFlag;
 import org.apache.dolphinscheduler.common.enums.WarningType;
 import org.apache.dolphinscheduler.common.process.Property;
-import org.apache.dolphinscheduler.common.task.self.AsyncPlatformParameters;
-import org.apache.dolphinscheduler.common.task.self.Feature;
-import org.apache.dolphinscheduler.common.task.self.Param;
+import org.apache.dolphinscheduler.common.task.materialize.MaterializeParameters;
+import org.apache.dolphinscheduler.common.task.materialize.Feature;
+import org.apache.dolphinscheduler.common.task.materialize.Param;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.Command;
@@ -57,7 +57,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -291,12 +290,12 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
                                     MaterializeLightHandleTaskDefinition materializeLightHandleTaskDefinition) {
         TaskDefinitionLog taskDefinitionLog = new TaskDefinitionLog();
         // todo
-        AsyncPlatformParameters asyncPlatformParameters = new AsyncPlatformParameters();
-        asyncPlatformParameters.setReadConfig(materializeLightHandleTaskDefinition.getReadConfig());
-        asyncPlatformParameters.setStoreConfig(materializeLightHandleTaskDefinition.getStoreConfig());
-        asyncPlatformParameters.setSqlLists(materializeLightHandleTaskDefinition.getSqlLists());
-        asyncPlatformParameters.setLocalParams(Collections.emptyList());
-        taskDefinitionLog.setTaskParams(JSONUtils.toJsonString(asyncPlatformParameters));
+        MaterializeParameters materializeParameters = new MaterializeParameters();
+        materializeParameters.setReadConfig(materializeLightHandleTaskDefinition.getReadConfig());
+        materializeParameters.setStoreConfig(materializeLightHandleTaskDefinition.getStoreConfig());
+        materializeParameters.setSqlLists(materializeLightHandleTaskDefinition.getSqlLists());
+        materializeParameters.setLocalParams(Collections.emptyList());
+        taskDefinitionLog.setTaskParams(JSONUtils.toJsonString(materializeParameters));
         taskDefinitionLog.setTimeout(materializeLightHandleTaskDefinition.getTimeout());
         taskDefinitionLog.setDescription(materializeLightHandleTaskDefinition.getDescription());
         taskDefinitionLog.setName(materializeLightHandleTaskDefinition.getName() + "-" + materializeLightHandleTaskDefinition.getExternalCode());
@@ -307,7 +306,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         taskDefinitionLog.setExternalCode(materializeLightHandleTaskDefinition.getExternalCode());
         taskDefinitionLog.setFlag(Flag.YES);
         taskDefinitionLog.setCode(code);
-        taskDefinitionLog.setTaskType(TaskType.ASYNC_PLATFORM.getDesc());
+        taskDefinitionLog.setTaskType(TaskType.MATERIALIZE.getDesc());
         taskDefinitionLog.setTaskPriority(Priority.MEDIUM);
         taskDefinitionLog.setWorkerGroup(Constants.DEFAULT_WORKER_GROUP);
         taskDefinitionLog.setTimeoutNotifyStrategy(TaskTimeoutStrategy.WARN);

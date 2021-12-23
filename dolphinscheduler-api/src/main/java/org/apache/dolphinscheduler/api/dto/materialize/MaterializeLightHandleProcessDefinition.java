@@ -5,7 +5,7 @@
 
 package org.apache.dolphinscheduler.api.dto.materialize;
 
-import org.apache.dolphinscheduler.common.task.self.Param;
+import org.apache.dolphinscheduler.common.task.materialize.Param;
 
 import java.util.List;
 
