@@ -29,6 +29,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
@@ -614,6 +615,13 @@ public class HadoopUtils implements Closeable {
         String end = Constants.COLON + split2[1];
 
         return start + activeRM + end;
+    }
+
+    public void create(String file, byte[] data) throws IOException {
+        try (FSDataOutputStream in = fs.create(new Path(file))) {
+            in.write(data);
+            in.flush();
+        }
     }
 
     @Override
