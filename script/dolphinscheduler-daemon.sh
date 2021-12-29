@@ -96,6 +96,7 @@ elif [ "$command" = "logger-server" ]; then
 elif [ "$command" = "standalone-server" ]; then
   CLASS=org.apache.dolphinscheduler.server.StandaloneServer
   export SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE},standalone,${DATABASE_TYPE}"
+  export DOLPHINSCHEDULER_OPTS="$DOLPHINSCHEDULER_OPTS -Dlogging.config=classpath:logback-worker.xml"
 else
   echo "Error: No command named '$command' was found."
   exit 1

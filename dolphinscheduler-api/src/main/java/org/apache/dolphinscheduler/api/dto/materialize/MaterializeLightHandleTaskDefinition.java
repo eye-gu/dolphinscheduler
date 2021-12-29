@@ -54,6 +54,9 @@ public class MaterializeLightHandleTaskDefinition {
      */
     private List<String> preExternalCodes;
 
+    /**
+     * 外部数据源, HIVE代表是kylin数据源
+     */
     private ReadConfig readConfig;
     private StoreConfig storeConfig;
     private List<Sql> sqlLists;

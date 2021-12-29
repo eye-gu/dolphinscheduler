@@ -25,7 +25,7 @@ import java.util.List;
 public class MaterializeParameters extends AbstractParameters {
     private ReadConfig readConfig;
     private StoreConfig storeConfig;
-    private List<Sql> sqlLists;
+    private List<Sql> sqlList;
 
     private SparkParameters sparkParameters;
 

@@ -52,6 +52,7 @@ import org.apache.dolphinscheduler.common.task.AbstractParameters;
 import org.apache.dolphinscheduler.common.task.TaskTimeoutParameter;
 import org.apache.dolphinscheduler.common.task.materialize.Feature;
 import org.apache.dolphinscheduler.common.task.materialize.Param;
+import org.apache.dolphinscheduler.common.task.materialize.ParamUtils;
 import org.apache.dolphinscheduler.common.task.subprocess.SubProcessParameters;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils.CodeGenerateException;
@@ -117,6 +118,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -864,12 +866,15 @@ public class ProcessService {
                 if (globalParamMap.containsKey(param.getName())) {
                     continue;
                 }
-                // todo
                 Property property = new Property();
                 property.setProp(param.getName());
-                property.setValue(param.getName() + "1");
+                try {
+                    property.setValue(ParamUtils.paramValue(param));
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("failed parse param value", e);
+                }
                 property.setDirect(Direct.IN);
-                property.setType(DataType.valueOf(param.getType()));
+                property.setType(DataType.valueOf(param.getType().toUpperCase(Locale.ROOT)));
                 globalParamList.add(property);
             }
             processInstance.setGlobalParams(JSONUtils.toJsonString(globalParamList));

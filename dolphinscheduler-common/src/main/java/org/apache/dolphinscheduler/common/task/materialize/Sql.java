@@ -15,6 +15,12 @@ import lombok.Data;
  */
 @Data
 public class Sql {
+    /**
+     * sql模板
+     */
     private String sqlTemplate;
+    /**
+     * 该sql的参数,为kylin的in准备
+     */
     private List<Param> params;
 }

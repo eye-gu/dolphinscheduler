@@ -293,7 +293,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         MaterializeParameters materializeParameters = new MaterializeParameters();
         materializeParameters.setReadConfig(materializeLightHandleTaskDefinition.getReadConfig());
         materializeParameters.setStoreConfig(materializeLightHandleTaskDefinition.getStoreConfig());
-        materializeParameters.setSqlLists(materializeLightHandleTaskDefinition.getSqlLists());
+        materializeParameters.setSqlList(materializeLightHandleTaskDefinition.getSqlLists());
         materializeParameters.setLocalParams(Collections.emptyList());
         MaterialLightHandleConfig.SparkConfig sparkConfig = materialLightHandleConfig.getSpark();
         MaterializeParameters.SparkParameters sparkParameters = new MaterializeParameters.SparkParameters();
