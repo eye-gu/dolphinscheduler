@@ -116,8 +116,8 @@ public class MaterializeTask extends AbstractTaskExecutor {
                 for (Param param : sql.getParams()) {
                     ParamEntity paramEntity = new ParamEntity();
                     paramEntity.setName(param.getName());
-                    paramEntity.setType(param.getType());
-                    paramEntity.setValue(ParamUtils.paramValue(param));
+                    paramEntity.setType(ParamUtils.convertToDataType(param).name());
+                    paramEntity.setValue(JSONUtils.toJsonString(ParamUtils.paramValue(param)));
                     paramEntities.add(paramEntity);
                 }
             }

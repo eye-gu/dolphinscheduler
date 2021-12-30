@@ -26,5 +26,5 @@ public class StoreConfig {
     private String saveMode;
     private MetaData metaData;
     private Boolean needDelete;
-    private PartiotionConfig partiotionConfig;
+    private PartitionConfig partitionConfig;
 }

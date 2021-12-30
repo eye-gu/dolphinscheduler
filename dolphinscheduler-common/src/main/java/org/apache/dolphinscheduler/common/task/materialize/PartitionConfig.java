@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class PartiotionConfig {
+public class PartitionConfig {
 
     private String filedName;
     private String type;

@@ -17,7 +17,6 @@ import org.apache.dolphinscheduler.api.service.MaterializeLightHandleService;
 import org.apache.dolphinscheduler.common.Constants;
 import org.apache.dolphinscheduler.common.enums.CommandType;
 import org.apache.dolphinscheduler.common.enums.ConditionType;
-import org.apache.dolphinscheduler.common.enums.DataType;
 import org.apache.dolphinscheduler.common.enums.Direct;
 import org.apache.dolphinscheduler.common.enums.FailureStrategy;
 import org.apache.dolphinscheduler.common.enums.Flag;
@@ -32,6 +31,7 @@ import org.apache.dolphinscheduler.common.process.Property;
 import org.apache.dolphinscheduler.common.task.materialize.MaterializeParameters;
 import org.apache.dolphinscheduler.common.task.materialize.Feature;
 import org.apache.dolphinscheduler.common.task.materialize.Param;
+import org.apache.dolphinscheduler.common.task.materialize.ParamUtils;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.Command;
@@ -268,7 +268,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
                 Property property = new Property();
                 property.setProp(param.getName());
                 property.setDirect(Direct.IN);
-                property.setType(DataType.valueOf(param.getType()));
+                property.setType(ParamUtils.convertToDataType(param));
                 property.setValue("");
                 properties.add(property);
             }
@@ -289,7 +289,6 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
     private TaskDefinitionLog build(long code, int version,
                                     MaterializeLightHandleTaskDefinition materializeLightHandleTaskDefinition) {
         TaskDefinitionLog taskDefinitionLog = new TaskDefinitionLog();
-        // todo
         MaterializeParameters materializeParameters = new MaterializeParameters();
         materializeParameters.setReadConfig(materializeLightHandleTaskDefinition.getReadConfig());
         materializeParameters.setStoreConfig(materializeLightHandleTaskDefinition.getStoreConfig());

@@ -32,7 +32,6 @@ import static java.util.stream.Collectors.toSet;
 import org.apache.dolphinscheduler.common.Constants;
 import org.apache.dolphinscheduler.common.enums.AuthorizationType;
 import org.apache.dolphinscheduler.common.enums.CommandType;
-import org.apache.dolphinscheduler.common.enums.DataType;
 import org.apache.dolphinscheduler.common.enums.Direct;
 import org.apache.dolphinscheduler.common.enums.ExecutionStatus;
 import org.apache.dolphinscheduler.common.enums.FailureStrategy;
@@ -118,7 +117,6 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -869,12 +867,12 @@ public class ProcessService {
                 Property property = new Property();
                 property.setProp(param.getName());
                 try {
-                    property.setValue(ParamUtils.paramValue(param));
+                    property.setValue(JSONUtils.toJsonString(ParamUtils.paramValue(param)));
                 } catch (Exception e) {
                     throw new IllegalArgumentException("failed parse param value", e);
                 }
                 property.setDirect(Direct.IN);
-                property.setType(DataType.valueOf(param.getType().toUpperCase(Locale.ROOT)));
+                property.setType(ParamUtils.convertToDataType(param));
                 globalParamList.add(property);
             }
             processInstance.setGlobalParams(JSONUtils.toJsonString(globalParamList));
