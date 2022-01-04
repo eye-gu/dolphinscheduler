@@ -18,6 +18,10 @@ public class StoreConfig {
     private String ip;
     private String port;
     private String schema;
+    /**
+     * 数据库
+     */
+    private String database;
     private String userName;
     private String password;
     private String tableName;

@@ -33,6 +33,10 @@ public class ReadConfig {
      */
     private String schema;
     /**
+     * 数据库
+     */
+    private String database;
+    /**
      * 用户名
      */
     private String userName;

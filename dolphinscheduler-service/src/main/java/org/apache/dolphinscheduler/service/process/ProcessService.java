@@ -112,6 +112,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -853,6 +854,11 @@ public class ProcessService {
 
         Feature feature = JSONUtils.parseObject(processDefinition.getFeature(), Feature.class);
         if (feature != null && CollectionUtils.isNotEmpty(feature.getGlobalParams())) {
+            Map<String, String>  startParamMap = Collections.emptyMap();
+            if (cmdParam != null) {
+                String startParamJson = cmdParam.get(Constants.CMD_PARAM_START_PARAMS);
+                startParamMap = JSONUtils.toMap(startParamJson);
+            }
             List<Property> globalParamList = JSONUtils.parseObject(processInstance.getGlobalParams(), new TypeReference<List<Property>>() {});
             if (globalParamList == null) {
                 globalParamList = new ArrayList<>();
@@ -867,7 +873,7 @@ public class ProcessService {
                 Property property = new Property();
                 property.setProp(param.getName());
                 try {
-                    property.setValue(JSONUtils.toJsonString(ParamUtils.paramValue(param)));
+                    property.setValue(JSONUtils.toJsonString(ParamUtils.paramValue(startParamMap, param)));
                 } catch (Exception e) {
                     throw new IllegalArgumentException("failed parse param value", e);
                 }
