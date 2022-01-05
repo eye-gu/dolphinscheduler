@@ -3,8 +3,11 @@ package org.apache.dolphinscheduler.common.task.materialize;
 import org.apache.dolphinscheduler.common.enums.DataType;
 import org.apache.dolphinscheduler.spi.utils.JSONUtils;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
@@ -24,9 +27,7 @@ public class ParamUtils {
 
     private static final DateTimeFormatter date_formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    private static final DateTimeFormatter time_formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-
-    private static final DateTimeFormatter timestamp_formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter datetime_formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private static final Pattern total_replace_Holder_pattern = Pattern.compile("^'\\$\\{(.*)}'$");
 
@@ -34,16 +35,15 @@ public class ParamUtils {
 
     static {
         Set<String> tmp = new HashSet<>();
-        tmp.add("INTEGER");
-        tmp.add("LONG");
-        tmp.add("FLOAT");
-        tmp.add("DOUBLE");
+        tmp.add(ParamTypeEnum.INTEGER.name());
+        tmp.add(ParamTypeEnum.REAL.name());
         numericalTypes = Collections.unmodifiableSet(tmp);
     }
 
     public static DataType convertToDataType(Param param) {
-        return param.getArray() ? DataType.valueOf("ARRAY_" + param.getType().toUpperCase(Locale.ROOT))
-            : DataType.valueOf(param.getType().toUpperCase(Locale.ROOT));
+        ParamTypeEnum paramTypeEnum = ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT));
+        return param.getArray() ? DataType.valueOf("ARRAY_" + paramTypeEnum.getDataType().name())
+            : paramTypeEnum.getDataType();
     }
 
     public static Object paramValue(Map<String, String> context, Param param) throws Exception {
@@ -78,7 +78,7 @@ public class ParamUtils {
                 return functionValue(context, param, paramValue);
             case "EXEC_PARAM":
                 String value = context.get(paramValue.getConfig());
-                return convertListByType(value, param.getType());
+                return convertListByType(value, ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT)));
             default:
                 throw new IllegalArgumentException("not support param from:" + paramValue.getFrom());
         }
@@ -94,7 +94,7 @@ public class ParamUtils {
                 return singleConstantValue(context, param, paramValue);
             case "EXEC_PARAM":
                 String value = context.get(paramValue.getConfig());
-                return convertByType(value, param.getType());
+                return convertByType(value, ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT)));
             default:
                 throw new IllegalArgumentException("not support param from:" + paramValue.getFrom());
         }
@@ -123,6 +123,7 @@ public class ParamUtils {
         // 计算偏移量, 负数向前推
         // 间隔天
         private Integer intervalDays;
+        private Integer intervalWeeks;
         private Integer intervalMonths;
         private Integer intervalYears;
     }
@@ -171,108 +172,83 @@ public class ParamUtils {
     }
 
     public static Object singleConstantValue(Map<String, String> context, Param param, ParamValue paramValue) {
-        return convertByType(paramValue.getConfig(), param.getType());
+        return convertByType(paramValue.getConfig(), ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT)));
     }
 
     public static List<Object> listConstantValue(Map<String, String> context, Param param, ParamValue paramValue) {
-        return convertListByType(paramValue.getConfig(), param.getType());
+        return convertListByType(paramValue.getConfig(), ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT)));
     }
 
-    public static List<Object> convertListByType(String value, String type) {
-        switch (type.toUpperCase(Locale.ROOT)) {
-            case "INTEGER":
+    public static List<Object> convertListByType(String value, ParamTypeEnum type) {
+        switch (type) {
+            case INTEGER:
                 return convertListObject(JSONUtils.toList(value, Integer.class));
-            case "LONG":
-                return convertListObject(JSONUtils.toList(value, Long.class));
-            case "FLOAT":
-                return convertListObject(JSONUtils.toList(value, Float.class));
-            case "DOUBLE":
+            case REAL:
                 return convertListObject(JSONUtils.toList(value, Double.class));
+            case DATE:
+            case DATETIME:
+            case STRING:
             default:
                 return convertListObject(JSONUtils.toList(value, String.class));
         }
     }
 
-    public static Object convertByType(String value, String type) {
-        switch (type.toUpperCase(Locale.ROOT)) {
-            case "INTEGER":
+    public static Object convertByType(String value, ParamTypeEnum type) {
+        switch (type) {
+            case INTEGER:
                 return Integer.valueOf(value);
-            case "LONG":
-                return Long.valueOf(value);
-            case "FLOAT":
-                return Float.valueOf(value);
-            case "DOUBLE":
+            case REAL:
                 return Double.valueOf(value);
+            case DATE:
+            case DATETIME:
+            case STRING:
             default:
                 return value;
         }
     }
 
     public static Object singleJdbcValue(Map<String, String> context, Param param, ParamValue paramValue) throws Exception {
-//        Map<String, Object> childValue = paramValues(paramValue.getChildParams());
-//        String sql = paramValue.getConfig();
-//        sql = replaceSqlHolder(sql, childValue);
-//        ResultGetFunction getter = convertToDataType(param.getType());
-//        ReadConfig readConfig = paramValue.getReadConfig();
-//        String jdbcUrl = jdbcUrl(readConfig);
-//        try (Connection connection = DriverManager.getConnection(jdbcUrl, readConfig.getUserName(), readConfig.getPassword());
-//             Statement statement = connection.createStatement()) {
-//            statement.setQueryTimeout(60);
-//            ResultSet resultSet = statement.executeQuery(sql);
-//            if (resultSet.next()) {
-//                return String.valueOf(getter.getFirst(resultSet));
-//            }
-//            resultSet.close();
-//        }
-//        return null;
-
-        return mock(param.getType());
-    }
-
-    private static Object mock(String type) {
-        switch (type.toUpperCase(Locale.ROOT)) {
-            case "INTEGER":
-                return 1000;
-            case "LONG":
-                return 1001L;
-            case "FLOAT":
-                return 1002.1f;
-            case "DOUBLE":
-                return 1003.1;
-            case "DATE":
-                return "2022-01-05";
-            case "TIME":
-                return "13:12:00";
-            case "TIMESTAMP":
-                return "2022-01-04 13:12:00";
-            case "BOOLEAN":
-                return "true";
-            default:
-                return "999";
+        Map<String, Object> childValue = paramValues(context, paramValue.getChildParams());
+        String sql = paramValue.getConfig();
+        sql = replaceSqlHolder(sql, childValue);
+        ResultGetFunction getter = convertToDataType(ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT)));
+        ReadConfig readConfig = paramValue.getReadConfig();
+        String jdbcUrl = jdbcUrl(readConfig);
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, readConfig.getUserName(), readConfig.getPassword());
+             Statement statement = connection.createStatement()) {
+            statement.setQueryTimeout(60);
+            ResultSet resultSet = statement.executeQuery(sql);
+            if (resultSet.next()) {
+                return String.valueOf(getter.getFirst(resultSet));
+            }
+            resultSet.close();
         }
+        return null;
+
+//        return mock(ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT)));
     }
 
     public static List<Object> listJdbcValue(Map<String, String> context, Param param, ParamValue paramValue) throws Exception {
-//        Map<String, Object> childValue = paramValues(paramValue.getChildParams());
-//        String sql = paramValue.getConfig();
-//        sql = replaceSqlHolder(sql, childValue);
-//        ResultGetFunction getter = convertToDataType(param.getType());
-//        ReadConfig readConfig = paramValue.getReadConfig();
-//        String jdbcUrl = jdbcUrl(readConfig);
-//        List<Object> result = new ArrayList<>();
-//        try (Connection connection = DriverManager.getConnection(jdbcUrl, readConfig.getUserName(), readConfig.getPassword());
-//             Statement statement = connection.createStatement()) {
-//            statement.setQueryTimeout(60);
-//            ResultSet resultSet = statement.executeQuery(sql);
-//            while (resultSet.next()) {
-//                result.add(getter.getFirst(resultSet));
-//            }
-//            resultSet.close();
-//        }
-//        return result;
+        Map<String, Object> childValue = paramValues(context, paramValue.getChildParams());
+        String sql = paramValue.getConfig();
+        sql = replaceSqlHolder(sql, childValue);
+        ResultGetFunction getter = convertToDataType(ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT)));
+        ReadConfig readConfig = paramValue.getReadConfig();
+        String jdbcUrl = jdbcUrl(readConfig);
+        List<Object> result = new ArrayList<>();
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, readConfig.getUserName(), readConfig.getPassword());
+             Statement statement = connection.createStatement()) {
+            statement.setQueryTimeout(60);
+            ResultSet resultSet = statement.executeQuery(sql);
+            while (resultSet.next()) {
+                result.add(getter.getFirst(resultSet));
+            }
+            resultSet.close();
+        }
+        return result;
 
 
-        return Collections.singletonList(mock(param.getType()));
+//        return Collections.singletonList(mock(ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT))));
     }
 
 
@@ -288,24 +264,15 @@ public class ParamUtils {
             + readConfig.getSchema();
     }
 
-    private static ResultGetFunction convertToDataType(String type) {
-        switch (type.toUpperCase(Locale.ROOT)) {
-            case "INTEGER":
+    private static ResultGetFunction convertToDataType(ParamTypeEnum type) {
+        switch (type) {
+            case INTEGER:
                 return resultSet -> resultSet.getInt(1);
-            case "LONG":
-                return resultSet -> resultSet.getLong(1);
-            case "FLOAT":
-                return resultSet -> resultSet.getFloat(1);
-            case "DOUBLE":
+            case REAL:
                 return resultSet -> resultSet.getDouble(1);
-//            case "DATE":
-//                return resultSet -> resultSet.getDate(1);
-//            case "TIME":
-//                return resultSet -> resultSet.getTime(1);
-//            case "TIMESTAMP":
-//                return resultSet -> resultSet.getTimestamp(1);
-//            case "BOOLEAN":
-//                return resultSet -> resultSet.getBoolean(1);
+            case DATE:
+            case DATETIME:
+            case STRING:
             default:
                 return resultSet -> resultSet.getString(1);
         }
@@ -314,6 +281,22 @@ public class ParamUtils {
     @FunctionalInterface
     private interface ResultGetFunction {
         Object getFirst(ResultSet resultSet) throws SQLException;
+    }
+
+    private static Object mock(ParamTypeEnum type) {
+        switch (type) {
+            case INTEGER:
+                return 1000;
+            case REAL:
+                return 1001.1;
+            case DATE:
+                return "2022-01-05";
+            case DATETIME:
+                return "2022-01-04 13:12:00";
+            case STRING:
+            default:
+                return "abc";
+        }
     }
 
     public static boolean numerical(String type) {
@@ -396,8 +379,8 @@ public class ParamUtils {
         return allDate;
     }
 
-    public static LocalDate calAnchorPointOffset(LocalDate point, AnchorPointWithOffset anchorPointWithOffset) throws Exception {
-        return intervalDate(point, anchorPointWithOffset.getIntervalDays(), anchorPointWithOffset.getIntervalMonths(), anchorPointWithOffset.getIntervalYears());
+    public static LocalDate calAnchorPointOffset(LocalDate point, AnchorPointWithOffset anchorPointWithOffset) {
+        return intervalDate(point, anchorPointWithOffset.getIntervalDays(), anchorPointWithOffset.getIntervalMonths(), anchorPointWithOffset.getIntervalYears(), anchorPointWithOffset.getIntervalWeeks());
     }
 
     public static LocalDate calAnchorPoint(Map<String, String> context, AnchorPoint anchorPoint) throws Exception {
@@ -432,7 +415,7 @@ public class ParamUtils {
         }
     }
 
-    public static LocalDate intervalDate(LocalDate localDate, Integer intervalDays, Integer intervalMonths, Integer intervalYears) {
+    public static LocalDate intervalDate(LocalDate localDate, Integer intervalDays, Integer intervalMonths, Integer intervalYears, Integer intervalWeeks) {
         if (intervalDays != null) {
             localDate = localDate.plusDays(intervalDays);
         }
@@ -441,6 +424,9 @@ public class ParamUtils {
         }
         if (intervalYears != null) {
             localDate = localDate.plusYears(intervalYears);
+        }
+        if (intervalWeeks != null) {
+            localDate = localDate.plusWeeks(intervalWeeks);
         }
         return localDate;
     }

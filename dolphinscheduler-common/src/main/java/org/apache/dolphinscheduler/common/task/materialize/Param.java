@@ -22,11 +22,11 @@ public class Param {
     private String name;
 
     /**
+     * @see ParamTypeEnum
      * 类型
-     * VARCHAR,INTEGER,LONG,FLOAT,DOUBLE,DATE,TIME,TIMESTAMP,BOOLEAN
-     * date, "YYYY-MM-DD"
-     * time, "HH:MM:SS"
-     * time stamp "YYYY-MM-DD HH:MM:SS"
+     * INTEGER,REAL,STRING,DATE,DATETIME
+     * DATE, "YYYY-MM-DD"
+     * DATETIME "YYYY-MM-DD HH:MM:SS"
      */
     private String type;
 
