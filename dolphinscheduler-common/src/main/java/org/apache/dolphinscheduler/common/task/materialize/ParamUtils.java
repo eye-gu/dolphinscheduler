@@ -402,11 +402,13 @@ public class ParamUtils {
 
     public static LocalDate calAnchorPoint(Map<String, String> context, AnchorPoint anchorPoint) throws Exception {
         ParamValue paramValue = anchorPoint.getDate();
+        LocalDate localDate;
         if (paramValue == null) {
-            return LocalDate.now();
+            localDate = LocalDate.now();
+        } else {
+            String date = (String) singleValue(context, buildSingleDateParam(""), paramValue);
+            localDate = LocalDate.parse(date, date_formatter);
         }
-        String date = (String) singleValue(context, buildSingleDateParam(""), paramValue);
-        LocalDate localDate = LocalDate.parse(date, date_formatter);
         if (StringUtils.isBlank(anchorPoint.getType())) {
             return localDate;
         }
