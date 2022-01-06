@@ -59,5 +59,5 @@ public class MaterializeLightHandleTaskDefinition {
      */
     private ReadConfig readConfig;
     private StoreConfig storeConfig;
-    private List<Sql> sqlLists;
+    private List<Sql> sqlList;
 }
