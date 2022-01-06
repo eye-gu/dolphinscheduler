@@ -26,7 +26,10 @@ import org.apache.spark.launcher.SparkLauncher;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author eye.gu@aloudata.com
@@ -113,11 +116,17 @@ public class MaterializeTask extends AbstractTaskExecutor {
                 }
             }
             if (CollectionUtils.isNotEmpty(sql.getParams())) {
+                Map<String, String> globalParamsMap = Collections.emptyMap();
+                if (CollectionUtils.isNotEmpty(globalParams)) {
+                    globalParamsMap = globalParams.stream().collect(Collectors.toMap(Property::getProp, Property::getValue));
+                }
                 for (Param param : sql.getParams()) {
                     ParamEntity paramEntity = new ParamEntity();
                     paramEntity.setName(param.getName());
                     paramEntity.setType(ParamUtils.convertToDataType(param).name());
-                    paramEntity.setValue(JSONUtils.toJsonString(ParamUtils.paramValue(null, param)));
+                    String value = ParamUtils.paramStrValue(globalParamsMap, param);
+                    paramEntity.setValue(value);
+                    logger.info("{} type {} value {}", param.getName(), paramEntity.getType(), value);
                     paramEntities.add(paramEntity);
                 }
             }

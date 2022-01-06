@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,6 +23,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import lombok.Data;
+
+import org.apache.commons.lang.StringUtils;
 
 public class ParamUtils {
 
@@ -44,6 +47,20 @@ public class ParamUtils {
         ParamTypeEnum paramTypeEnum = ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT));
         return param.getArray() ? DataType.valueOf("ARRAY_" + paramTypeEnum.getDataType().name())
             : paramTypeEnum.getDataType();
+    }
+
+    public static String paramStrValue(Map<String, String> context, Param param) throws Exception {
+        Object o = paramValue(context, param);
+        if (o == null) {
+            return null;
+        }
+        if (o instanceof String) {
+            return (String) o;
+        }
+        if (o instanceof Collection) {
+            return JSONUtils.toJsonString(o);
+        }
+        return String.valueOf(o);
     }
 
     public static Object paramValue(Map<String, String> context, Param param) throws Exception {
@@ -73,7 +90,7 @@ public class ParamUtils {
             case "SQL_QUERY":
                 return listJdbcValue(context, param, paramValue);
             case "CONSTANT":
-                return listConstantValue(context, param, paramValue);
+                return Collections.singletonList(singleConstantValue(context, param, paramValue));
             case "FUNCTION":
                 return functionValue(context, param, paramValue);
             case "EXEC_PARAM":
@@ -219,7 +236,7 @@ public class ParamUtils {
             statement.setQueryTimeout(60);
             ResultSet resultSet = statement.executeQuery(sql);
             if (resultSet.next()) {
-                return String.valueOf(getter.getFirst(resultSet));
+                return getter.getFirst(resultSet);
             }
             resultSet.close();
         }
@@ -260,8 +277,8 @@ public class ParamUtils {
 
 
     public static String jdbcUrl(ReadConfig readConfig) {
-        return "jdbc:" + readConfig.getType().toLowerCase(Locale.ROOT) + "//" + readConfig.getIp() + ":" + readConfig.getPort() + "/"
-            + readConfig.getSchema();
+        return "jdbc:" + readConfig.getType().toLowerCase(Locale.ROOT) + "://" + readConfig.getIp() + ":" + readConfig.getPort() + "/"
+            + readConfig.getDatabase();
     }
 
     private static ResultGetFunction convertToDataType(ParamTypeEnum type) {
@@ -335,7 +352,7 @@ public class ParamUtils {
             return sql;
         }
         for (Map.Entry<String, Object> entry : holderValues.entrySet()) {
-            if (entry.getValue() instanceof Collections) {
+            if (entry.getValue() instanceof Collection) {
                 String replaceValue = JSONUtils.toJsonString(entry.getValue());
                 sql = sql.replace("'${" + entry.getKey() + "}'", replaceValue.substring(1, replaceValue.length() - 1));
             } else {
@@ -385,8 +402,14 @@ public class ParamUtils {
 
     public static LocalDate calAnchorPoint(Map<String, String> context, AnchorPoint anchorPoint) throws Exception {
         ParamValue paramValue = anchorPoint.getDate();
+        if (paramValue == null) {
+            return LocalDate.now();
+        }
         String date = (String) singleValue(context, buildSingleDateParam(""), paramValue);
         LocalDate localDate = LocalDate.parse(date, date_formatter);
+        if (StringUtils.isBlank(anchorPoint.getType())) {
+            return localDate;
+        }
         switch (anchorPoint.getType().toUpperCase(Locale.ROOT)) {
             case "MONTH_END":
                 return localDate.with(TemporalAdjusters.lastDayOfMonth());

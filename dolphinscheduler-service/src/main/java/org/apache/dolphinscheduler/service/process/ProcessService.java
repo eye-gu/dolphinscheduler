@@ -32,6 +32,7 @@ import static java.util.stream.Collectors.toSet;
 import org.apache.dolphinscheduler.common.Constants;
 import org.apache.dolphinscheduler.common.enums.AuthorizationType;
 import org.apache.dolphinscheduler.common.enums.CommandType;
+import org.apache.dolphinscheduler.common.enums.DataType;
 import org.apache.dolphinscheduler.common.enums.Direct;
 import org.apache.dolphinscheduler.common.enums.ExecutionStatus;
 import org.apache.dolphinscheduler.common.enums.FailureStrategy;
@@ -852,36 +853,48 @@ public class ProcessService {
         }
         processInstance.setState(runStatus);
 
-        Feature feature = JSONUtils.parseObject(processDefinition.getFeature(), Feature.class);
-        if (feature != null && CollectionUtils.isNotEmpty(feature.getGlobalParams())) {
-            Map<String, String>  startParamMap = Collections.emptyMap();
+        if (StringUtils.isNotBlank(processDefinition.getExternalCode())) {
+            Map<String, Property> globalParamMap = new HashMap<>();
+
+            Map<String, String> startParamMap = Collections.emptyMap();
             if (cmdParam != null) {
                 String startParamJson = cmdParam.get(Constants.CMD_PARAM_START_PARAMS);
                 startParamMap = JSONUtils.toMap(startParamJson);
+                if (startParamMap == null) {
+                    startParamMap = Collections.emptyMap();
+                }
             }
-            List<Property> globalParamList = JSONUtils.parseObject(processInstance.getGlobalParams(), new TypeReference<List<Property>>() {});
-            if (globalParamList == null) {
-                globalParamList = new ArrayList<>();
+            Feature feature = JSONUtils.parseObject(processDefinition.getFeature(), Feature.class);
+            if (feature != null && CollectionUtils.isNotEmpty(feature.getGlobalParams())) {
+                for (Param param : feature.getGlobalParams()) {
+                    Property property = new Property();
+                    property.setProp(param.getName());
+                    property.setDirect(Direct.IN);
+                    property.setType(ParamUtils.convertToDataType(param));
+                    if (startParamMap.containsKey(param.getName())) {
+                        property.setValue(startParamMap.get(param.getName()));
+                    } else {
+                        try {
+                            property.setValue(ParamUtils.paramStrValue(startParamMap, param));
+                        } catch (Exception e) {
+                            throw new IllegalArgumentException("failed parse param value", e);
+                        }
+                    }
+                    globalParamMap.put(property.getProp(), property);
+                }
             }
-            globalParamList = globalParamList.stream().filter(p -> !"".equals(p.getValue())).collect(Collectors.toList());
-            Map<String, Property> globalParamMap = globalParamList.stream()
-                .collect(Collectors.toMap(Property::getProp, Function.identity()));
-            for (Param param : feature.getGlobalParams()) {
-                if (globalParamMap.containsKey(param.getName())) {
+            for (Map.Entry<String, String> entry : startParamMap.entrySet()) {
+                if (globalParamMap.containsKey(entry.getKey())) {
                     continue;
                 }
                 Property property = new Property();
-                property.setProp(param.getName());
-                try {
-                    property.setValue(JSONUtils.toJsonString(ParamUtils.paramValue(startParamMap, param)));
-                } catch (Exception e) {
-                    throw new IllegalArgumentException("failed parse param value", e);
-                }
+                property.setProp(entry.getKey());
                 property.setDirect(Direct.IN);
-                property.setType(ParamUtils.convertToDataType(param));
-                globalParamList.add(property);
+                property.setType(DataType.VARCHAR);
+                property.setValue(entry.getValue());
+                globalParamMap.put(property.getProp(), property);
             }
-            processInstance.setGlobalParams(JSONUtils.toJsonString(globalParamList));
+            processInstance.setGlobalParams(JSONUtils.toJsonString(globalParamMap.values()));
         }
 
         return processInstance;
