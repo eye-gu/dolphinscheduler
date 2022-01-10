@@ -10,7 +10,6 @@ import lombok.Data;
 import org.apache.dolphinscheduler.common.task.materialize.ReadConfig;
 import org.apache.dolphinscheduler.common.task.materialize.Sql;
 import org.apache.dolphinscheduler.common.task.materialize.StoreConfig;
-import org.apache.dolphinscheduler.common.task.spark.SparkParameters;
 import org.apache.dolphinscheduler.spi.task.AbstractParameters;
 import org.apache.dolphinscheduler.spi.task.ResourceInfo;
 
@@ -31,6 +30,7 @@ public class MaterializeParameters extends AbstractParameters {
 
     private Integer timeout;
 
+    private String externalCode;
 
 
     @Data

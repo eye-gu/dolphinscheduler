@@ -10,6 +10,7 @@ import lombok.Data;
 import org.apache.dolphinscheduler.common.task.materialize.Param;
 import org.apache.dolphinscheduler.common.task.materialize.ParamUtils;
 import org.apache.dolphinscheduler.common.task.materialize.ReadConfig;
+import org.apache.dolphinscheduler.common.task.materialize.ReadConfigTypeEnum;
 import org.apache.dolphinscheduler.common.task.materialize.Sql;
 import org.apache.dolphinscheduler.common.task.materialize.StoreConfig;
 import org.apache.dolphinscheduler.common.utils.HadoopUtils;
@@ -21,10 +22,20 @@ import org.apache.dolphinscheduler.spi.task.request.TaskRequest;
 import org.apache.dolphinscheduler.spi.utils.JSONUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.spark.launcher.SparkAppHandle;
 import org.apache.spark.launcher.SparkLauncher;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,6 +57,8 @@ public class MaterializeTask extends AbstractTaskExecutor {
 
     private final List<Property> globalParams;
 
+    private final String executePath;
+
     /**
      * constructor
      *
@@ -56,6 +69,7 @@ public class MaterializeTask extends AbstractTaskExecutor {
         materializeParameters = JSONUtils.parseObject(taskRequest.getTaskParams(), MaterializeParameters.class);
         taskInstanceId = taskRequest.getTaskInstanceId();
         globalParams = JSONUtils.toList(taskRequest.getGlobalParams(), Property.class);
+        executePath = taskRequest.getExecutePath();
     }
 
     @Override
@@ -98,52 +112,102 @@ public class MaterializeTask extends AbstractTaskExecutor {
     }
 
     private boolean spark() throws Exception {
+        TaskEntity task = buildTaskEntity();
+
+        HadoopUtils.getInstance().create(buildHdfsValueFilePath(), JSONUtils.toJsonString(task).getBytes(StandardCharsets.UTF_8));
+
+        SparkAppHandle handle = buildAndStartSpark();
+        boolean result = sparkRunComplete(handle);
+
+        cleanHdfs();
+        return result;
+    }
+
+    private TaskEntity buildTaskEntity() throws Exception {
         Map<String, String> globalParamsMap = Collections.emptyMap();
         if (CollectionUtils.isNotEmpty(globalParams)) {
             globalParamsMap = globalParams.stream().collect(Collectors.toMap(Property::getProp, Property::getValue));
         }
 
         TaskEntity task = new TaskEntity();
-        task.setReadConfig(materializeParameters.getReadConfig());
+        ReadConfig readConfig = materializeParameters.getReadConfig();
+        if (readConfig != null) {
+            handleReadConfig(globalParamsMap, readConfig);
+        }
+        task.setReadConfig(readConfig);
         StoreConfig storeConfig = materializeParameters.getStoreConfig();
-        if (storeConfig != null && "gaussdb".equalsIgnoreCase(storeConfig.getType())
-            && StringUtils.isBlank(storeConfig.getTableName())) {
-            storeConfig.setTableName(globalParamsMap.get("__tableName"));
+        if (storeConfig != null) {
+            handleStoreConfig(globalParamsMap, storeConfig);
         }
         task.setStoreConfig(storeConfig);
         List<SqlEntity> sqlEntities = new ArrayList<>();
         for (Sql sql : materializeParameters.getSqlList()) {
             SqlEntity sqlEntity = new SqlEntity();
             sqlEntity.setSqlTemplate(sql.getSqlTemplate());
-            List<ParamEntity> paramEntities = new ArrayList<>();
-            sqlEntity.setParams(paramEntities);
-            if (CollectionUtils.isNotEmpty(globalParams)) {
-                for (Property property : globalParams) {
-                    ParamEntity paramEntity = new ParamEntity();
-                    paramEntity.setName(property.getProp());
-                    paramEntity.setType(property.getType().name());
-                    paramEntity.setValue(property.getValue());
-                    paramEntities.add(paramEntity);
-                }
-            }
-            if (CollectionUtils.isNotEmpty(sql.getParams())) {
-                for (Param param : sql.getParams()) {
-                    ParamEntity paramEntity = new ParamEntity();
-                    paramEntity.setName(param.getName());
-                    paramEntity.setType(ParamUtils.convertToDataType(param).name());
-                    String value = ParamUtils.paramStrValue(globalParamsMap, param);
-                    paramEntity.setValue(value);
-                    logger.info("{} type {} value {}", param.getName(), paramEntity.getType(), value);
-                    paramEntities.add(paramEntity);
-                }
-            }
+            sqlEntity.setParams(buildSqlParamEntity(globalParamsMap, sql.getParams()));
             sqlEntities.add(sqlEntity);
         }
         task.setSqlList(sqlEntities);
+        return task;
+    }
 
-        String file = "/material_light_handle/" + taskInstanceId;
-        HadoopUtils.getInstance().create(file, JSONUtils.toJsonString(task).getBytes(StandardCharsets.UTF_8));
+    private List<ParamEntity> buildSqlParamEntity(Map<String, String> globalParamsMap, List<Param> sqlParams) throws Exception {
+        List<ParamEntity> paramEntities = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(globalParams)) {
+            for (Property property : globalParams) {
+                if (property.getProp().startsWith(ParamUtils.SYSTEM_PARAM_PREFIX)) {
+                    continue;
+                }
+                if (ParamUtils.INVALID_IN_BIX.equalsIgnoreCase(property.getValue())) {
+                    continue;
+                }
+                ParamEntity paramEntity = new ParamEntity();
+                paramEntity.setName(property.getProp());
+                paramEntity.setType(property.getType().name());
+                paramEntity.setValue(property.getValue());
+                paramEntities.add(paramEntity);
+            }
+        }
+        if (CollectionUtils.isNotEmpty(sqlParams)) {
+            for (Param param : sqlParams) {
+                String type = ParamUtils.convertToDataType(param).name();
+                String value = ParamUtils.paramStrValue(globalParamsMap, param);
+                if (value == null) {
+                    logger.info("{} type {} value is null", param.getName(), type);
+                    continue;
+                }
+                ParamEntity paramEntity = new ParamEntity();
+                paramEntity.setName(param.getName());
+                paramEntity.setType(type);
+                paramEntity.setValue(value);
+                logger.info("{} type {} value {}", param.getName(), type, value);
+                paramEntities.add(paramEntity);
+            }
+        }
+        return paramEntities;
+    }
 
+    private void handleStoreConfig(Map<String, String> globalParamsMap, StoreConfig storeConfig) {
+        if (ReadConfigTypeEnum.GAUSSDB.name().equalsIgnoreCase(storeConfig.getType())
+            && StringUtils.isBlank(storeConfig.getTableName())) {
+            storeConfig.setTableName(globalParamsMap.get(ParamUtils.RESULT_TABLE_NAME));
+        }
+    }
+
+    private void handleReadConfig(Map<String, String> globalParamsMap, ReadConfig readConfig) throws Exception {
+        if (ReadConfigTypeEnum.ECS.name().equalsIgnoreCase(readConfig.getType())) {
+            String url = globalParamsMap.get(ParamUtils.ECS_URL_PREFIX + materializeParameters.getExternalCode());
+            String fileName = executePath + File.separator + readConfig.getMetaData().getTableName();
+            logger.info("download {} to local:{}", url, fileName);
+            downloadToLocal(url, fileName);
+            String dstHdfsPath = buildHdfsTmpFilePath() + "/" + readConfig.getMetaData().getTableName();
+            logger.info("copy local file {} to hdfs:{}", fileName, dstHdfsPath);
+            HadoopUtils.getInstance().copyLocalToHdfs(fileName, dstHdfsPath, true, true);
+            readConfig.setPath(dstHdfsPath);
+        }
+    }
+
+    private SparkAppHandle buildAndStartSpark() throws IOException {
         MaterializeParameters.SparkParameters sparkParameters = materializeParameters.getSparkParameters();
         SparkLauncher launcher = new SparkLauncher()
             .setSparkHome(sparkParameters.getHome())
@@ -167,22 +231,25 @@ public class MaterializeTask extends AbstractTaskExecutor {
         if (sparkParameters.getNumExecutors() != 0) {
             launcher.addSparkArg("--total-executor-cores", String.valueOf(sparkParameters.getNumExecutors()));
         }
-        SparkAppHandle handle = launcher.startApplication(new SparkAppHandle.Listener() {
+        logger.info("start application");
+        return launcher.startApplication(new SparkAppHandle.Listener() {
             @Override
-            public void stateChanged(SparkAppHandle handle) {
-                logger.info("state change:{}", handle.getState());
+            public void stateChanged(SparkAppHandle handle1) {
+                logger.info("state change:{}", handle1.getState());
             }
 
             @Override
-            public void infoChanged(SparkAppHandle handle) {
-                logger.info("info change:{}", handle.getAppId());
+            public void infoChanged(SparkAppHandle handle1) {
+                logger.info("info change:{}", handle1.getAppId());
             }
         });
+    }
+
+    private boolean sparkRunComplete(SparkAppHandle handle) {
         while (!handle.getState().isFinal()) {
             if (Thread.currentThread().isInterrupted()) {
                 logger.error("thread interrupt");
                 handle.stop();
-                HadoopUtils.getInstance().delete(file, true);
                 return false;
             }
             try {
@@ -195,14 +262,12 @@ public class MaterializeTask extends AbstractTaskExecutor {
                 if (System.currentTimeMillis() - start > 8 * 60 * 60 * 1000) {
                     logger.error("maximum limit exceeded for 8 hours");
                     handle.stop();
-                    HadoopUtils.getInstance().delete(file, true);
                     return false;
                 }
             } else {
                 if (System.currentTimeMillis() - start > materializeParameters.getTimeout() * 60 * 1000) {
                     logger.error("timeout {} minutes", materializeParameters.getTimeout());
                     handle.stop();
-                    HadoopUtils.getInstance().delete(file, true);
                     return false;
                 }
             }
@@ -210,16 +275,42 @@ public class MaterializeTask extends AbstractTaskExecutor {
         if (!handle.getState().equals(SparkAppHandle.State.FINISHED)) {
             logger.error("spark job failed:{}", handle.getState());
             handle.getError().ifPresent(e -> logger.error("spark job failed", e));
-            HadoopUtils.getInstance().delete(file, true);
             return false;
         }
-        HadoopUtils.getInstance().delete(file, true);
         return true;
+    }
+
+    private String buildHdfsValueFilePath() {
+        return "/material_light_handle/" + taskInstanceId;
+    }
+
+    private String buildHdfsTmpFilePath() {
+        return "/material_light_handle/tmp/" + taskInstanceId;
+    }
+
+    private void cleanHdfs() {
+        try {
+            logger.info("clean hdfs...");
+            HadoopUtils.getInstance().delete(buildHdfsValueFilePath(), true);
+            HadoopUtils.getInstance().delete(buildHdfsTmpFilePath(), true);
+        } catch (Exception e) {
+            logger.error("clean hdfs failed", e);
+        }
     }
 
     private boolean asyncPlatform() {
         // todo
         return true;
+    }
+
+    private void downloadToLocal(String url, String localFileName) throws Exception {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpGet get = new HttpGet(url);
+        try (CloseableHttpResponse httpResponse = httpClient.execute(get)) {
+            HttpEntity entity = httpResponse.getEntity();
+            InputStream inputStream = entity.getContent();
+            IOUtils.copy(inputStream, new FileOutputStream(localFileName));
+        }
     }
 
 

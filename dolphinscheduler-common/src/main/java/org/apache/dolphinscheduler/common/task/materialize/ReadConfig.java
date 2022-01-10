@@ -16,7 +16,7 @@ import java.util.List;
 @Data
 public class ReadConfig {
     /**
-     * mysql/gaussdb/hive
+     * mysql/gaussdb/hive/ecs
      * 内部hive不需要配置readconfig对象, 所以hive代表是kylin
      */
     private String type;

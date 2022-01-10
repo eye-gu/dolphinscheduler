@@ -875,7 +875,11 @@ public class ProcessService {
                         property.setValue(startParamMap.get(param.getName()));
                     } else {
                         try {
-                            property.setValue(ParamUtils.paramStrValue(startParamMap, param));
+                            String value = ParamUtils.paramStrValue(startParamMap, param);
+                            if (value == null) {
+                                continue;
+                            }
+                            property.setValue(value);
                         } catch (Exception e) {
                             throw new IllegalArgumentException("failed parse param value", e);
                         }

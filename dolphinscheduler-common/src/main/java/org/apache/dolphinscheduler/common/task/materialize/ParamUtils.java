@@ -22,30 +22,42 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 
 import org.apache.commons.lang.StringUtils;
 
 public class ParamUtils {
 
-    private static final DateTimeFormatter date_formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    private static final DateTimeFormatter datetime_formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    private static final Pattern total_replace_Holder_pattern = Pattern.compile("^'\\$\\{(.*)}'$");
+    private static final Pattern TOTAL_REPLACE_HOLDER_PATTERN = Pattern.compile("^'\\$\\{(.*)}'$");
 
-    public static Set<String> numericalTypes;
+    public static final Set<String> NUMERICAL_TYPES;
+
+    private static final String ARRAY_TYPE_PREFIX = "ARRAY_";
+
+    public static final String INVALID_IN_BIX = "unvalid_in_bix";
+
+    public static final String SYSTEM_PARAM_PREFIX = "__";
+
+    public static final String ECS_URL_PREFIX = "__task_ecs_";
+
+    public static final String RESULT_TABLE_NAME = "__tableName";
 
     static {
         Set<String> tmp = new HashSet<>();
         tmp.add(ParamTypeEnum.INTEGER.name());
         tmp.add(ParamTypeEnum.REAL.name());
-        numericalTypes = Collections.unmodifiableSet(tmp);
+        NUMERICAL_TYPES = Collections.unmodifiableSet(tmp);
     }
 
     public static DataType convertToDataType(Param param) {
         ParamTypeEnum paramTypeEnum = ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT));
-        return param.getArray() ? DataType.valueOf("ARRAY_" + paramTypeEnum.getDataType().name())
+        return param.getArray() ? DataType.valueOf(ARRAY_TYPE_PREFIX + paramTypeEnum.getDataType().name())
             : paramTypeEnum.getDataType();
     }
 
@@ -63,7 +75,15 @@ public class ParamUtils {
         return String.valueOf(o);
     }
 
-    public static Object paramValue(Map<String, String> context, Param param) throws Exception {
+    private static Object paramValue(Map<String, String> context, Param param) throws Exception {
+        String contextValue = context.get(param.getName());
+        if (StringUtils.isNotBlank(contextValue)) {
+            if (INVALID_IN_BIX.equalsIgnoreCase(contextValue)) {
+                return null;
+            } else {
+                return contextValue;
+            }
+        }
         if (!param.getArray()) {
             return singleValue(context, param, param.getParamValues().get(0));
         }
@@ -74,7 +94,7 @@ public class ParamUtils {
         return all;
     }
 
-    public static Map<String, Object> paramValues(Map<String, String> context, List<Param> params) throws Exception {
+    private static Map<String, Object> paramValues(Map<String, String> context, List<Param> params) throws Exception {
         if (params == null || params.size() == 0) {
             return Collections.emptyMap();
         }
@@ -85,15 +105,16 @@ public class ParamUtils {
         return paramValues;
     }
 
-    public static List<Object> listValue(Map<String, String> context, Param param, ParamValue paramValue) throws Exception {
-        switch (paramValue.getFrom().toUpperCase(Locale.ROOT)) {
-            case "SQL_QUERY":
+    private static List<Object> listValue(Map<String, String> context, Param param, ParamValue paramValue) throws Exception {
+        ParamValueFromEnum paramValueFromEnum = ParamValueFromEnum.valueOf(paramValue.getFrom().toUpperCase(Locale.ROOT));
+        switch (paramValueFromEnum) {
+            case SQL_QUERY:
                 return listJdbcValue(context, param, paramValue);
-            case "CONSTANT":
+            case CONSTANT:
                 return Collections.singletonList(singleConstantValue(context, param, paramValue));
-            case "FUNCTION":
+            case FUNCTION:
                 return functionValue(context, param, paramValue);
-            case "EXEC_PARAM":
+            case EXEC_PARAM:
                 String value = context.get(paramValue.getConfig());
                 return convertListByType(value, ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT)));
             default:
@@ -101,15 +122,16 @@ public class ParamUtils {
         }
     }
 
-    public static Object singleValue(Map<String, String> context, Param param, ParamValue paramValue) throws Exception {
-        switch (paramValue.getFrom().toUpperCase(Locale.ROOT)) {
-            case "SQL_QUERY":
+    private static Object singleValue(Map<String, String> context, Param param, ParamValue paramValue) throws Exception {
+        ParamValueFromEnum paramValueFromEnum = ParamValueFromEnum.valueOf(paramValue.getFrom().toUpperCase(Locale.ROOT));
+        switch (paramValueFromEnum) {
+            case SQL_QUERY:
                 return singleJdbcValue(context, param, paramValue);
-            case "FUNCTION":
+            case FUNCTION:
                 return functionValue(context, param, paramValue).get(0);
-            case "CONSTANT":
+            case CONSTANT:
                 return singleConstantValue(context, param, paramValue);
-            case "EXEC_PARAM":
+            case EXEC_PARAM:
                 String value = context.get(paramValue.getConfig());
                 return convertByType(value, ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT)));
             default:
@@ -153,7 +175,26 @@ public class ParamUtils {
         private String type;
     }
 
-    public static List<Object> functionValue(Map<String, String> context, Param param, ParamValue paramValue) throws Exception {
+    @AllArgsConstructor
+    @Getter
+    private enum FunctionTypeEnum {
+        ALL_MONTH_START,
+        ALL_MONTH_END,
+        MONTH_END,
+        MONTH_START,
+        YEAR_START,
+        YEAR_END,
+        LAST_MONTH_START,
+        LAST_MONTH_END,
+        LAST_YEAR_END,
+        LAST_YEAR_START,
+        TODAY,
+        YESTERDAY,
+        THE_DAY_BEFORE_YESTERDAY,
+        ;
+    }
+
+    private static List<Object> functionValue(Map<String, String> context, Param param, ParamValue paramValue) throws Exception {
         String config = paramValue.getConfig();
         Map<String, Object> childValue = paramValues(context, paramValue.getChildParams());
         FunctionConfig functionConfig = JSONUtils.parseObject(replaceSqlHolder(config, childValue), FunctionConfig.class);
@@ -164,7 +205,7 @@ public class ParamUtils {
             if (functionConfig.allDate != null && functionConfig.allDate) {
                 return convertListObject(allDate(point, offset));
             } else {
-                return Collections.singletonList(date_formatter.format(offset));
+                return Collections.singletonList(DATE_FORMATTER.format(offset));
             }
         } else {
             AnchorPointWithOffset start = functionConfig.getStart();
@@ -173,11 +214,12 @@ public class ParamUtils {
             LocalDate endDate = calAnchorPointOffset(calAnchorPoint(context, end.date), end);
             List<Object> result = new ArrayList<>();
             for (String type : functionConfig.getTypes()) {
-                switch (type.toUpperCase(Locale.ROOT)) {
-                    case "ALL_MONTH_START":
+                FunctionTypeEnum functionTypeEnum = FunctionTypeEnum.valueOf(type.toUpperCase(Locale.ROOT));
+                switch (functionTypeEnum) {
+                    case ALL_MONTH_START:
                         result.addAll(convertListObject(allMonthStart(startDate, endDate)));
                         break;
-                    case "ALL_MONTH_END":
+                    case ALL_MONTH_END:
                         result.addAll(convertListObject(allMonthEnd(startDate, endDate)));
                         break;
                     default:
@@ -188,15 +230,15 @@ public class ParamUtils {
         }
     }
 
-    public static Object singleConstantValue(Map<String, String> context, Param param, ParamValue paramValue) {
+    private static Object singleConstantValue(Map<String, String> context, Param param, ParamValue paramValue) {
         return convertByType(paramValue.getConfig(), ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT)));
     }
 
-    public static List<Object> listConstantValue(Map<String, String> context, Param param, ParamValue paramValue) {
+    private static List<Object> listConstantValue(Map<String, String> context, Param param, ParamValue paramValue) {
         return convertListByType(paramValue.getConfig(), ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT)));
     }
 
-    public static List<Object> convertListByType(String value, ParamTypeEnum type) {
+    private static List<Object> convertListByType(String value, ParamTypeEnum type) {
         switch (type) {
             case INTEGER:
                 return convertListObject(JSONUtils.toList(value, Integer.class));
@@ -210,7 +252,7 @@ public class ParamUtils {
         }
     }
 
-    public static Object convertByType(String value, ParamTypeEnum type) {
+    private static Object convertByType(String value, ParamTypeEnum type) {
         switch (type) {
             case INTEGER:
                 return Integer.valueOf(value);
@@ -224,7 +266,7 @@ public class ParamUtils {
         }
     }
 
-    public static Object singleJdbcValue(Map<String, String> context, Param param, ParamValue paramValue) throws Exception {
+    private static Object singleJdbcValue(Map<String, String> context, Param param, ParamValue paramValue) throws Exception {
         Map<String, Object> childValue = paramValues(context, paramValue.getChildParams());
         String sql = paramValue.getConfig();
         sql = replaceSqlHolder(sql, childValue);
@@ -245,7 +287,7 @@ public class ParamUtils {
 //        return mock(ParamTypeEnum.valueOf(param.getType().toUpperCase(Locale.ROOT)));
     }
 
-    public static List<Object> listJdbcValue(Map<String, String> context, Param param, ParamValue paramValue) throws Exception {
+    private static List<Object> listJdbcValue(Map<String, String> context, Param param, ParamValue paramValue) throws Exception {
         Map<String, Object> childValue = paramValues(context, paramValue.getChildParams());
         String sql = paramValue.getConfig();
         sql = replaceSqlHolder(sql, childValue);
@@ -269,14 +311,14 @@ public class ParamUtils {
     }
 
 
-    public static <T> List<Object> convertListObject(List<T> list) {
+    private static <T> List<Object> convertListObject(List<T> list) {
         List<Object> list1 = new ArrayList<>(list.size());
         list1.addAll(list);
         return list1;
     }
 
 
-    public static String jdbcUrl(ReadConfig readConfig) {
+    private static String jdbcUrl(ReadConfig readConfig) {
         return "jdbc:" + readConfig.getType().toLowerCase(Locale.ROOT) + "://" + readConfig.getIp() + ":" + readConfig.getPort() + "/"
             + readConfig.getDatabase();
     }
@@ -316,8 +358,8 @@ public class ParamUtils {
         }
     }
 
-    public static boolean numerical(String type) {
-        return numericalTypes.contains(type.toUpperCase(Locale.ROOT));
+    private static boolean numerical(String type) {
+        return NUMERICAL_TYPES.contains(type.toUpperCase(Locale.ROOT));
     }
 
     /**
@@ -347,11 +389,14 @@ public class ParamUtils {
      * @param holderValues
      * @return
      */
-    public static String replaceSqlHolder(String sql, Map<String, Object> holderValues) {
+    private static String replaceSqlHolder(String sql, Map<String, Object> holderValues) {
         if (sql == null || holderValues == null || holderValues.size() == 0) {
             return sql;
         }
         for (Map.Entry<String, Object> entry : holderValues.entrySet()) {
+            if (entry.getValue() == null) {
+                continue;
+            }
             if (entry.getValue() instanceof Collection) {
                 String replaceValue = JSONUtils.toJsonString(entry.getValue());
                 sql = sql.replace("'${" + entry.getKey() + "}'", replaceValue.substring(1, replaceValue.length() - 1));
@@ -362,27 +407,27 @@ public class ParamUtils {
         return sql;
     }
 
-    public static List<String> allMonthEnd(LocalDate startDate, LocalDate end) {
+    private static List<String> allMonthEnd(LocalDate startDate, LocalDate end) {
         LocalDate start = startDate.with(TemporalAdjusters.lastDayOfMonth());
         List<String> allMonthEnd = new ArrayList<>();
         while (!end.isBefore(start)) {
-            allMonthEnd.add(date_formatter.format(start));
+            allMonthEnd.add(DATE_FORMATTER.format(start));
             start = start.plusMonths(1).with(TemporalAdjusters.lastDayOfMonth());
         }
         return allMonthEnd;
     }
 
-    public static List<String> allMonthStart(LocalDate start, LocalDate endDate) {
+    private static List<String> allMonthStart(LocalDate start, LocalDate endDate) {
         LocalDate end = endDate.with(TemporalAdjusters.firstDayOfMonth());
         List<String> allMonthStart = new ArrayList<>();
         while (!end.isBefore(start)) {
-            allMonthStart.add(date_formatter.format(end));
+            allMonthStart.add(DATE_FORMATTER.format(end));
             end = end.minusMonths(1).with(TemporalAdjusters.firstDayOfMonth());
         }
         return allMonthStart;
     }
 
-    public static List<String> allDate(LocalDate start, LocalDate end) {
+    private static List<String> allDate(LocalDate start, LocalDate end) {
         if (start.isAfter(end)) {
             LocalDate tmp = start;
             start = end;
@@ -390,57 +435,58 @@ public class ParamUtils {
         }
         List<String> allDate = new ArrayList<>();
         while (!end.isBefore(start)) {
-            allDate.add(date_formatter.format(start));
+            allDate.add(DATE_FORMATTER.format(start));
             start = start.plusDays(1);
         }
         return allDate;
     }
 
-    public static LocalDate calAnchorPointOffset(LocalDate point, AnchorPointWithOffset anchorPointWithOffset) {
+    private static LocalDate calAnchorPointOffset(LocalDate point, AnchorPointWithOffset anchorPointWithOffset) {
         return intervalDate(point, anchorPointWithOffset.getIntervalDays(), anchorPointWithOffset.getIntervalMonths(), anchorPointWithOffset.getIntervalYears(), anchorPointWithOffset.getIntervalWeeks());
     }
 
-    public static LocalDate calAnchorPoint(Map<String, String> context, AnchorPoint anchorPoint) throws Exception {
+    private static LocalDate calAnchorPoint(Map<String, String> context, AnchorPoint anchorPoint) throws Exception {
         ParamValue paramValue = anchorPoint.getDate();
         LocalDate localDate;
         if (paramValue == null) {
             localDate = LocalDate.now();
         } else {
             String date = (String) singleValue(context, buildSingleDateParam(""), paramValue);
-            localDate = LocalDate.parse(date, date_formatter);
+            localDate = LocalDate.parse(date, DATE_FORMATTER);
         }
         if (StringUtils.isBlank(anchorPoint.getType())) {
             return localDate;
         }
-        switch (anchorPoint.getType().toUpperCase(Locale.ROOT)) {
-            case "MONTH_END":
+        FunctionTypeEnum functionTypeEnum = FunctionTypeEnum.valueOf(anchorPoint.getType().toUpperCase(Locale.ROOT));
+        switch (functionTypeEnum) {
+            case MONTH_END:
                 return localDate.with(TemporalAdjusters.lastDayOfMonth());
-            case "MONTH_START":
+            case MONTH_START:
                 return localDate.with(TemporalAdjusters.firstDayOfMonth());
-            case "YEAR_START":
+            case YEAR_START:
                 return localDate.with(TemporalAdjusters.firstDayOfYear());
-            case "YEAR_END":
+            case YEAR_END:
                 return localDate.with(TemporalAdjusters.lastDayOfYear());
-            case "LAST_MONTH_START":
+            case LAST_MONTH_START:
                 return localDate.minusMonths(1).with(TemporalAdjusters.firstDayOfMonth());
-            case "LAST_MONTH_END":
+            case LAST_MONTH_END:
                 return localDate.minusMonths(1).with(TemporalAdjusters.lastDayOfMonth());
-            case "LAST_YEAR_END":
+            case LAST_YEAR_END:
                 return localDate.minusYears(1).with(TemporalAdjusters.lastDayOfYear());
-            case "LAST_YEAR_START":
+            case LAST_YEAR_START:
                 return localDate.minusYears(1).with(TemporalAdjusters.firstDayOfYear());
-            case "TODAY":
+            case TODAY:
                 return localDate;
-            case "YESTERDAY":
+            case YESTERDAY:
                 return localDate.minusDays(1);
-            case "THE_DAY_BEFORE_YESTERDAY":
+            case THE_DAY_BEFORE_YESTERDAY:
                 return localDate.minusDays(2);
             default:
                 throw new IllegalArgumentException("not support anchor point type:" + anchorPoint.getType());
         }
     }
 
-    public static LocalDate intervalDate(LocalDate localDate, Integer intervalDays, Integer intervalMonths, Integer intervalYears, Integer intervalWeeks) {
+    private static LocalDate intervalDate(LocalDate localDate, Integer intervalDays, Integer intervalMonths, Integer intervalYears, Integer intervalWeeks) {
         if (intervalDays != null) {
             localDate = localDate.plusDays(intervalDays);
         }
@@ -456,10 +502,10 @@ public class ParamUtils {
         return localDate;
     }
 
-    public static Param buildSingleDateParam(String name) {
+    private static Param buildSingleDateParam(String name) {
         Param param = new Param();
         param.setName(name);
-        param.setType("DATE");
+        param.setType(ParamTypeEnum.DATE.name());
         param.setArray(false);
         return param;
     }

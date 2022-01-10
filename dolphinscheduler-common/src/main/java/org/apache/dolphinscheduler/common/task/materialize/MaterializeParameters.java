@@ -28,6 +28,7 @@ public class MaterializeParameters extends AbstractParameters {
 
     private Integer timeout;
 
+    private String externalCode;
 
 
     @Data

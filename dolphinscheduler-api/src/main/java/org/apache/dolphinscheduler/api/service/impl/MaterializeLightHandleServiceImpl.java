@@ -244,7 +244,12 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         if (startParams == null) {
             startParams = new HashMap<>(1);
         }
-        startParams.put("__tableName", materializeLightHandleExec.getTableName());
+        startParams.put(ParamUtils.RESULT_TABLE_NAME, materializeLightHandleExec.getResultTableName());
+        if (MapUtils.isNotEmpty(materializeLightHandleExec.getTaskEcsReadConfigUrl())) {
+            for (Map.Entry<String, String> entry : materializeLightHandleExec.getTaskEcsReadConfigUrl().entrySet()) {
+                startParams.put(ParamUtils.ECS_URL_PREFIX + entry.getKey(), entry.getValue());
+            }
+        }
         cmdParam.put(CMD_PARAM_START_PARAMS, JSONUtils.toJsonString(startParams));
         command.setCommandParam(JSONUtils.toJsonString(cmdParam));
         command.setExecutorId(materialLightHandleConfig.getUserId());
@@ -297,6 +302,8 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         materializeParameters.setStoreConfig(materializeLightHandleTaskDefinition.getStoreConfig());
         materializeParameters.setSqlList(materializeLightHandleTaskDefinition.getSqlList());
         materializeParameters.setLocalParams(Collections.emptyList());
+        materializeParameters.setTimeout(materializeLightHandleTaskDefinition.getTimeout());
+        materializeParameters.setExternalCode(materializeLightHandleTaskDefinition.getExternalCode());
         MaterialLightHandleConfig.SparkConfig sparkConfig = materialLightHandleConfig.getSpark();
         MaterializeParameters.SparkParameters sparkParameters = new MaterializeParameters.SparkParameters();
         sparkParameters.setDriverCores(sparkConfig.getDriverCores());
@@ -310,7 +317,6 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         sparkParameters.setMainJar(sparkConfig.getMainJar());
         sparkParameters.setDeployMode(sparkConfig.getDeployMode());
         materializeParameters.setSparkParameters(sparkParameters);
-        materializeParameters.setTimeout(materializeLightHandleTaskDefinition.getTimeout());
         taskDefinitionLog.setTaskParams(JSONUtils.toJsonString(materializeParameters));
         taskDefinitionLog.setTimeout(materializeLightHandleTaskDefinition.getTimeout());
         taskDefinitionLog.setDescription(materializeLightHandleTaskDefinition.getDescription());

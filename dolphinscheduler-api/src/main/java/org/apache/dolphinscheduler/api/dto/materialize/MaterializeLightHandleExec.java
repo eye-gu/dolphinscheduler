@@ -20,5 +20,7 @@ public class MaterializeLightHandleExec {
 
     private Map<String, String> startParams;
 
-    private String tableName;
+    private Map<String, String> taskEcsReadConfigUrl;
+
+    private String resultTableName;
 }
