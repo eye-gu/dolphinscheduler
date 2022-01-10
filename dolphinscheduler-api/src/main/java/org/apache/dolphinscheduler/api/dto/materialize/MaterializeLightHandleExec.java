@@ -19,4 +19,6 @@ public class MaterializeLightHandleExec {
     private String externalCode;
 
     private Map<String, String> startParams;
+
+    private String tableName;
 }

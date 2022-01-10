@@ -223,7 +223,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> exec(MaterializeLightHandleExec materializeLightHandleExec) throws Exception {
-        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> result = new HashMap<>(2);
 
         ProcessDefinition processDefinition = processDefinitionMapper.queryByExternalCode(materializeLightHandleExec.getExternalCode());
         if (processDefinition.getReleaseState() != ReleaseState.ONLINE) {
@@ -239,10 +239,13 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         command.setFailureStrategy(FailureStrategy.END);
         command.setWarningType(WarningType.FAILURE);
 
-        Map<String, String> cmdParam = new HashMap<>();
-        if (MapUtils.isNotEmpty(materializeLightHandleExec.getStartParams())) {
-            cmdParam.put(CMD_PARAM_START_PARAMS, JSONUtils.toJsonString(materializeLightHandleExec.getStartParams()));
+        Map<String, String> cmdParam = new HashMap<>(1);
+        Map<String, String> startParams = materializeLightHandleExec.getStartParams();
+        if (startParams == null) {
+            startParams = new HashMap<>(1);
         }
+        startParams.put("__tableName", materializeLightHandleExec.getTableName());
+        cmdParam.put(CMD_PARAM_START_PARAMS, JSONUtils.toJsonString(startParams));
         command.setCommandParam(JSONUtils.toJsonString(cmdParam));
         command.setExecutorId(materialLightHandleConfig.getUserId());
         command.setWarningGroupId(materialLightHandleConfig.getWarningGroupId());

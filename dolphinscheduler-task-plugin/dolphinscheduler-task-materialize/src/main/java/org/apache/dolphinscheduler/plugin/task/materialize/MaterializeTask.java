@@ -21,6 +21,7 @@ import org.apache.dolphinscheduler.spi.task.request.TaskRequest;
 import org.apache.dolphinscheduler.spi.utils.JSONUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.spark.launcher.SparkAppHandle;
 import org.apache.spark.launcher.SparkLauncher;
 
@@ -97,9 +98,19 @@ public class MaterializeTask extends AbstractTaskExecutor {
     }
 
     private boolean spark() throws Exception {
+        Map<String, String> globalParamsMap = Collections.emptyMap();
+        if (CollectionUtils.isNotEmpty(globalParams)) {
+            globalParamsMap = globalParams.stream().collect(Collectors.toMap(Property::getProp, Property::getValue));
+        }
+
         TaskEntity task = new TaskEntity();
         task.setReadConfig(materializeParameters.getReadConfig());
-        task.setStoreConfig(materializeParameters.getStoreConfig());
+        StoreConfig storeConfig = materializeParameters.getStoreConfig();
+        if (storeConfig != null && "gaussdb".equalsIgnoreCase(storeConfig.getType())
+            && StringUtils.isBlank(storeConfig.getTableName())) {
+            storeConfig.setTableName(globalParamsMap.get("__tableName"));
+        }
+        task.setStoreConfig(storeConfig);
         List<SqlEntity> sqlEntities = new ArrayList<>();
         for (Sql sql : materializeParameters.getSqlList()) {
             SqlEntity sqlEntity = new SqlEntity();
@@ -116,10 +127,6 @@ public class MaterializeTask extends AbstractTaskExecutor {
                 }
             }
             if (CollectionUtils.isNotEmpty(sql.getParams())) {
-                Map<String, String> globalParamsMap = Collections.emptyMap();
-                if (CollectionUtils.isNotEmpty(globalParams)) {
-                    globalParamsMap = globalParams.stream().collect(Collectors.toMap(Property::getProp, Property::getValue));
-                }
                 for (Param param : sql.getParams()) {
                     ParamEntity paramEntity = new ParamEntity();
                     paramEntity.setName(param.getName());
