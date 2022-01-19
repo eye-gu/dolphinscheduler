@@ -3,6 +3,7 @@ package org.apache.dolphinscheduler.common.task.materialize;
 import org.apache.dolphinscheduler.common.enums.DataType;
 import org.apache.dolphinscheduler.spi.utils.JSONUtils;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -44,9 +45,9 @@ public class ParamUtils {
 
     public static final String SYSTEM_PARAM_PREFIX = "__";
 
-    public static final String ECS_URL_PREFIX = "__task_ecs_";
+    public static final String READ_CONFIG = SYSTEM_PARAM_PREFIX + "readConfig";
 
-    public static final String RESULT_TABLE_NAME = "__tableName";
+    public static final String RESULT_STORE_CONFIG = SYSTEM_PARAM_PREFIX + "resultStoreConfig";
 
     static {
         Set<String> tmp = new HashSet<>();
@@ -508,6 +509,22 @@ public class ParamUtils {
         param.setType(ParamTypeEnum.DATE.name());
         param.setArray(false);
         return param;
+    }
+
+    public static void merge(Object dist, Object src) {
+        try {
+            Class<?> clazz = dist.getClass();
+            Field[] fields = clazz.getDeclaredFields();
+            for (Field field : fields) {
+                field.setAccessible(true);
+                Object value = field.get(src);
+                if (value != null) {
+                    field.set(dist, value);
+                }
+            }
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
 

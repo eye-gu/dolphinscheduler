@@ -16,8 +16,9 @@ import java.util.List;
 @Data
 public class ReadConfig {
     /**
-     * mysql/gaussdb/hive/ecs
+     * mysql/gaussdb/hive/file
      * 内部hive不需要配置readconfig对象, 所以hive代表是kylin
+     * @see ReadOrStoreConfigTypeEnum
      */
     private String type;
     /**
@@ -45,6 +46,11 @@ public class ReadConfig {
      */
     private String password;
     /**
+     * 数据源id / 文件名
+     * 确定一个唯一的数据源信息, 和传入是的信息映射
+     */
+    private String datasourceId;
+    /**
      * 拉取的表列表
      */
     private List<TableNode> tableList;
@@ -52,6 +58,8 @@ public class ReadConfig {
      * hdfs路径
      */
     private String path;
+
+    private String fileType;
     /**
      * 元数据
      */

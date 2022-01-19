@@ -61,6 +61,7 @@ import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.common.utils.ParameterUtils;
 import org.apache.dolphinscheduler.common.utils.TaskParametersUtils;
 import org.apache.dolphinscheduler.dao.entity.Command;
+import org.apache.dolphinscheduler.dao.entity.CommandProcessInstanceRelation;
 import org.apache.dolphinscheduler.dao.entity.DagData;
 import org.apache.dolphinscheduler.dao.entity.DataSource;
 import org.apache.dolphinscheduler.dao.entity.Environment;
@@ -82,6 +83,7 @@ import org.apache.dolphinscheduler.dao.entity.Tenant;
 import org.apache.dolphinscheduler.dao.entity.UdfFunc;
 import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.dao.mapper.CommandMapper;
+import org.apache.dolphinscheduler.dao.mapper.CommandProcessInstanceRelationMapper;
 import org.apache.dolphinscheduler.dao.mapper.DataSourceMapper;
 import org.apache.dolphinscheduler.dao.mapper.EnvironmentMapper;
 import org.apache.dolphinscheduler.dao.mapper.ErrorCommandMapper;
@@ -132,6 +134,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
@@ -210,6 +215,9 @@ public class ProcessService {
     @Autowired
     private EnvironmentMapper environmentMapper;
 
+    @Autowired
+    private CommandProcessInstanceRelationMapper commandProcessInstanceRelationMapper;
+
     /**
      * handle Command (construct ProcessInstance from Command) , wrapped in transaction
      *
@@ -232,7 +240,27 @@ public class ProcessService {
         saveProcessInstance(processInstance);
         this.setSubProcessParam(processInstance);
         this.deleteCommandWithCheck(command.getId());
+        this.createCommandProcessInstanceRelation(command.getId(), processInstance.getId());
         return processInstance;
+    }
+
+    public void createCommandProcessInstanceRelation(int commandId, int processInstanceId) {
+        CommandProcessInstanceRelation commandProcessInstanceRelation = new CommandProcessInstanceRelation();
+        commandProcessInstanceRelation.setCommandId(commandId);
+        commandProcessInstanceRelation.setProcessInstanceId(processInstanceId);
+        commandProcessInstanceRelation.setCreateTime(new Date());
+        commandProcessInstanceRelationMapper.insert(commandProcessInstanceRelation);
+    }
+
+    public Integer queryProcessInstanceByCommandId(int commandId) {
+        LambdaQueryWrapper<CommandProcessInstanceRelation> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(CommandProcessInstanceRelation::getCommandId, commandId);
+        List<CommandProcessInstanceRelation> commandProcessInstanceRelations =
+            commandProcessInstanceRelationMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(commandProcessInstanceRelations)) {
+            return null;
+        }
+        return commandProcessInstanceRelations.get(0).getProcessInstanceId();
     }
 
     /**
@@ -2311,6 +2339,7 @@ public class ProcessService {
         int result;
         if (0 == processDefinition.getId()) {
             result = processDefineMapper.insert(processDefinitionLog);
+            processDefinition.setId(processDefinitionLog.getId());
         } else {
             processDefinitionLog.setId(processDefinition.getId());
             result = processDefineMapper.updateById(processDefinitionLog);

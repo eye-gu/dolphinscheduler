@@ -13,6 +13,7 @@ public class ParamValue {
      * CONSTANT : 常量
      * FUNCTION : 函数
      * EXEC_PARAM : 执行入参
+     * @see ParamValueFromEnum
      */
     private String from;
 

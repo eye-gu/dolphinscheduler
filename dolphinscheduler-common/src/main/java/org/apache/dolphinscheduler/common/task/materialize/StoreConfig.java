@@ -14,6 +14,9 @@ import lombok.Data;
 @Data
 public class StoreConfig {
 
+    /**
+     * @see ReadOrStoreConfigTypeEnum
+     */
     private String type;
     private String ip;
     private String port;
@@ -31,4 +34,9 @@ public class StoreConfig {
     private MetaData metaData;
     private Boolean needDelete;
     private PartitionConfig partitionConfig;
+    /**
+     * 存储文件类型
+     * excel csv dat
+     */
+    private String fileType;
 }

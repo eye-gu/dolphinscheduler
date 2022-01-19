@@ -162,4 +162,11 @@
         </if>
         order by instance.start_time desc
     </select>
+
+    <select id="findTaskListByProcessId" resultType="org.apache.dolphinscheduler.dao.entity.TaskInstance">
+        select
+        <include refid="baseSql"/>
+        from t_ds_task_instance
+        WHERE process_instance_id = #{processInstanceId}
+    </select>
 </mapper>

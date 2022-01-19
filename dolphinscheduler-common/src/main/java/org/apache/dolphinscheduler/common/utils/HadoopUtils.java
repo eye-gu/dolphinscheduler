@@ -42,6 +42,7 @@ import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -618,9 +619,16 @@ public class HadoopUtils implements Closeable {
     }
 
     public void create(String file, byte[] data) throws IOException {
-        try (FSDataOutputStream in = fs.create(new Path(file))) {
-            in.write(data);
-            in.flush();
+        try (FSDataOutputStream out = fs.create(new Path(file))) {
+            out.write(data);
+            out.flush();
+        }
+    }
+
+    public void create(String file, InputStream inputStream) throws IOException {
+        try (FSDataOutputStream out = fs.create(new Path(file))) {
+            IOUtils.copy(inputStream, out);
+            out.flush();
         }
     }
 

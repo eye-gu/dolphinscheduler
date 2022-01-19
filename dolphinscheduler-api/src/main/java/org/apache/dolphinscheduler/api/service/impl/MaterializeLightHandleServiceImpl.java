@@ -18,6 +18,7 @@ import org.apache.dolphinscheduler.common.Constants;
 import org.apache.dolphinscheduler.common.enums.CommandType;
 import org.apache.dolphinscheduler.common.enums.ConditionType;
 import org.apache.dolphinscheduler.common.enums.Direct;
+import org.apache.dolphinscheduler.common.enums.ExecutionStatus;
 import org.apache.dolphinscheduler.common.enums.FailureStrategy;
 import org.apache.dolphinscheduler.common.enums.Flag;
 import org.apache.dolphinscheduler.common.enums.Priority;
@@ -28,37 +29,54 @@ import org.apache.dolphinscheduler.common.enums.TaskType;
 import org.apache.dolphinscheduler.common.enums.TimeoutFlag;
 import org.apache.dolphinscheduler.common.enums.WarningType;
 import org.apache.dolphinscheduler.common.process.Property;
+import org.apache.dolphinscheduler.common.task.materialize.JobRunInfo;
+import org.apache.dolphinscheduler.common.task.materialize.JobStatus;
 import org.apache.dolphinscheduler.common.task.materialize.MaterializeParameters;
 import org.apache.dolphinscheduler.common.task.materialize.Feature;
 import org.apache.dolphinscheduler.common.task.materialize.Param;
 import org.apache.dolphinscheduler.common.task.materialize.ParamUtils;
+import org.apache.dolphinscheduler.common.task.materialize.ReadConfig;
+import org.apache.dolphinscheduler.common.task.materialize.ReadOrStoreConfigTypeEnum;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
+import org.apache.dolphinscheduler.common.utils.HadoopUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.Command;
+import org.apache.dolphinscheduler.dao.entity.ErrorCommand;
 import org.apache.dolphinscheduler.dao.entity.ProcessDefinition;
+import org.apache.dolphinscheduler.dao.entity.ProcessInstance;
 import org.apache.dolphinscheduler.dao.entity.ProcessTaskRelationLog;
 import org.apache.dolphinscheduler.dao.entity.TaskDefinition;
 import org.apache.dolphinscheduler.dao.entity.TaskDefinitionLog;
+import org.apache.dolphinscheduler.dao.entity.TaskInstance;
 import org.apache.dolphinscheduler.dao.entity.User;
+import org.apache.dolphinscheduler.dao.mapper.ErrorCommandMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProcessDefinitionMapper;
+import org.apache.dolphinscheduler.dao.mapper.ProcessTaskRelationLogMapper;
 import org.apache.dolphinscheduler.dao.mapper.TaskDefinitionMapper;
+import org.apache.dolphinscheduler.dao.mapper.TaskInstanceMapper;
 import org.apache.dolphinscheduler.service.process.ProcessService;
+import org.apache.dolphinscheduler.spi.utils.StringUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -82,9 +100,19 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
     @Autowired
     private MaterialLightHandleConfig materialLightHandleConfig;
 
+    @Autowired
+    private TaskInstanceMapper taskInstanceMapper;
+
+    @Autowired
+    private ProcessTaskRelationLogMapper processTaskRelationLogMapper;
+
+    @Autowired
+    private ErrorCommandMapper errorCommandMapper;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> create(MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition) throws Exception {
+    public Map<String, Object> create(MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition,
+                                      MultipartFile[] files) throws Exception {
         User loginUser = new User();
         loginUser.setId(materialLightHandleConfig.getUserId());
 
@@ -138,12 +166,15 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             putMsg(result, Status.CREATE_PROCESS_TASK_RELATION_ERROR);
             throw new ServiceException(Status.CREATE_PROCESS_TASK_RELATION_ERROR);
         }
+
+        uploadToHdfs(files);
         return result;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> update(MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition) throws Exception {
+    public Map<String, Object> update(MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition,
+                                      MultipartFile[] files) throws Exception {
         User loginUser = new User();
         loginUser.setId(materialLightHandleConfig.getUserId());
 
@@ -217,6 +248,8 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             putMsg(result, Status.UPDATE_PROCESS_DEFINITION_ERROR);
             throw new ServiceException(Status.UPDATE_PROCESS_DEFINITION_ERROR);
         }
+
+        uploadToHdfs(files);
         return result;
     }
 
@@ -242,12 +275,12 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         Map<String, String> cmdParam = new HashMap<>(1);
         Map<String, String> startParams = materializeLightHandleExec.getStartParams();
         if (startParams == null) {
-            startParams = new HashMap<>(1);
+            startParams = new HashMap<>();
         }
-        startParams.put(ParamUtils.RESULT_TABLE_NAME, materializeLightHandleExec.getResultTableName());
-        if (MapUtils.isNotEmpty(materializeLightHandleExec.getTaskEcsReadConfigUrl())) {
-            for (Map.Entry<String, String> entry : materializeLightHandleExec.getTaskEcsReadConfigUrl().entrySet()) {
-                startParams.put(ParamUtils.ECS_URL_PREFIX + entry.getKey(), entry.getValue());
+        startParams.put(ParamUtils.RESULT_STORE_CONFIG, JSONUtils.toJsonString(materializeLightHandleExec.getResultStoreConfig()));
+        if (CollectionUtils.isNotEmpty(materializeLightHandleExec.getReadConfigs())) {
+            for (ReadConfig readConfig : materializeLightHandleExec.getReadConfigs()) {
+                startParams.put(ParamUtils.READ_CONFIG + readConfig.getDatasourceId(), JSONUtils.toJsonString(readConfig));
             }
         }
         cmdParam.put(CMD_PARAM_START_PARAMS, JSONUtils.toJsonString(startParams));
@@ -264,6 +297,87 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         result.put(Constants.STATUS, Status.SUCCESS);
         result.put(Constants.DATA_LIST, command);
         return result;
+    }
+
+    @Override
+    public Map<String, Object> status(Integer commandId) {
+        Map<String, Object> result = new HashMap<>(2);
+
+        JobRunInfo jobRunInfo = new JobRunInfo();
+        jobRunInfo.setJobId(String.valueOf(commandId));
+        Integer processInstanceId = processService.queryProcessInstanceByCommandId(commandId);
+        if (processInstanceId == null) {
+            ErrorCommand errorCommand = errorCommandMapper.selectById(commandId);
+            if (errorCommand != null) {
+                ProcessDefinition processDefinition = processDefinitionMapper.queryByCode(errorCommand.getProcessDefinitionCode());
+                jobRunInfo.setJobStatus(JobStatus.FAILED);
+                jobRunInfo.setErrorMsg("启动失败");
+                if (processDefinition != null) {
+                    jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, taskSize(errorCommand.getProcessDefinitionCode(), processDefinition.getVersion())));
+                } else {
+                    jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
+                }
+                result.put(Constants.STATUS, Status.SUCCESS);
+                result.put(Constants.DATA_LIST, jobRunInfo);
+                return result;
+            }
+            jobRunInfo.setJobStatus(JobStatus.RUNNING);
+            jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
+            result.put(Constants.STATUS, Status.SUCCESS);
+            result.put(Constants.DATA_LIST, jobRunInfo);
+            return result;
+        }
+        ProcessInstance processInstance = processService.findProcessInstanceDetailById(processInstanceId);
+        ExecutionStatus status = processInstance.getState();
+        switch (status) {
+            case READY_PAUSE:
+            case PAUSE:
+            case READY_STOP:
+            case STOP:
+            case KILL:
+                jobRunInfo.setJobStatus(JobStatus.STOP);
+                break;
+            case SUCCESS:
+            case FORCED_SUCCESS:
+                jobRunInfo.setJobStatus(JobStatus.SUCCESS);
+                break;
+            case FAILURE:
+                jobRunInfo.setJobStatus(JobStatus.FAILED);
+                break;
+            default:
+                jobRunInfo.setJobStatus(JobStatus.RUNNING);
+                break;
+        }
+
+        List<TaskInstance> taskInstances = taskInstanceMapper.findTaskListByProcessId(processInstanceId);
+        int successSize = taskInstances.stream().filter(t -> t.getState().equals(ExecutionStatus.SUCCESS) || t.getState().equals(ExecutionStatus.FORCED_SUCCESS))
+                .collect(Collectors.groupingBy(TaskInstance::getTaskCode)).size();
+        jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, successSize, taskSize(processInstance.getProcessDefinitionCode(), processInstance.getProcessDefinitionVersion())));
+        if (jobRunInfo.getJobStatus().equals(JobStatus.FAILED)) {
+            Optional<TaskInstance> fail = taskInstances.stream().filter(t -> t.getState().equals(ExecutionStatus.FAILURE)).findFirst();
+            if (fail.isPresent()) {
+                jobRunInfo.setErrorMsg(fail.get().getName() + "失败");
+            } else {
+                jobRunInfo.setErrorMsg("未知异常");
+            }
+        }
+        result.put(Constants.STATUS, Status.SUCCESS);
+        result.put(Constants.DATA_LIST, jobRunInfo);
+        return result;
+    }
+
+    private int taskSize(long processCode, int processVersion) {
+        List<ProcessTaskRelationLog> processTaskRelationLogs = processTaskRelationLogMapper.queryByProcessCodeAndVersion(processCode, processVersion);
+        Set<Long> taskCodes = new HashSet<>();
+        for (ProcessTaskRelationLog processTaskRelationLog : processTaskRelationLogs) {
+            if (processTaskRelationLog.getPreTaskCode() != 0) {
+                taskCodes.add(processTaskRelationLog.getPreTaskCode());
+            }
+            if (processTaskRelationLog.getPostTaskCode() != 0) {
+                taskCodes.add(processTaskRelationLog.getPostTaskCode());
+            }
+        }
+        return taskCodes.size();
     }
 
     private ProcessDefinition build(long projectCode, int userId, int tenantId, long code,
@@ -298,7 +412,13 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
                                     MaterializeLightHandleTaskDefinition materializeLightHandleTaskDefinition) {
         TaskDefinitionLog taskDefinitionLog = new TaskDefinitionLog();
         MaterializeParameters materializeParameters = new MaterializeParameters();
-        materializeParameters.setReadConfig(materializeLightHandleTaskDefinition.getReadConfig());
+        ReadConfig readConfig = materializeLightHandleTaskDefinition.getReadConfig();
+        if (readConfig != null) {
+            if (ReadOrStoreConfigTypeEnum.FILE.name().equalsIgnoreCase(readConfig.getType())) {
+                readConfig.setPath("/material_light_handle/tmp/" + readConfig.getDatasourceId());
+            }
+        }
+        materializeParameters.setReadConfig(readConfig);
         materializeParameters.setStoreConfig(materializeLightHandleTaskDefinition.getStoreConfig());
         materializeParameters.setSqlList(materializeLightHandleTaskDefinition.getSqlList());
         materializeParameters.setLocalParams(Collections.emptyList());
@@ -348,5 +468,21 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         processTaskRelationLog.setPostTaskCode(postTaskCode);
         processTaskRelationLog.setPostTaskVersion(postTaskVersion);
         return processTaskRelationLog;
+    }
+
+    private void uploadToHdfs(MultipartFile[] files) throws IOException {
+        if (files != null) {
+            for (MultipartFile file : files) {
+                if (file == null) {
+                    continue;
+                }
+                if (StringUtils.isEmpty(file.getOriginalFilename())) {
+                    continue;
+                }
+                try (InputStream inputStream = file.getInputStream()) {
+                    HadoopUtils.getInstance().create("/material_light_handle/tmp/" + file.getOriginalFilename(), inputStream);
+                }
+            }
+        }
     }
 }

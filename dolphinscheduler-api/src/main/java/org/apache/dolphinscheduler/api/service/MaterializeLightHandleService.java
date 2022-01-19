@@ -10,15 +10,19 @@ import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandlePro
 
 import java.util.Map;
 
+import org.springframework.web.multipart.MultipartFile;
+
 /**
  * @author eye.gu@aloudata.com
  * @version 1
  */
 public interface MaterializeLightHandleService {
 
-    Map<String, Object> create(MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition) throws Exception;
+    Map<String, Object> create(MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition, MultipartFile[] files) throws Exception;
 
-    Map<String, Object> update(MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition) throws Exception;
+    Map<String, Object> update(MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition, MultipartFile[] files) throws Exception;
 
     Map<String, Object> exec(MaterializeLightHandleExec materializeLightHandleExec) throws Exception;
+
+    Map<String, Object> status(Integer commandId);
 }

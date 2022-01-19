@@ -10,7 +10,7 @@ import lombok.Data;
 import org.apache.dolphinscheduler.common.task.materialize.Param;
 import org.apache.dolphinscheduler.common.task.materialize.ParamUtils;
 import org.apache.dolphinscheduler.common.task.materialize.ReadConfig;
-import org.apache.dolphinscheduler.common.task.materialize.ReadConfigTypeEnum;
+import org.apache.dolphinscheduler.common.task.materialize.ReadOrStoreConfigTypeEnum;
 import org.apache.dolphinscheduler.common.task.materialize.Sql;
 import org.apache.dolphinscheduler.common.task.materialize.StoreConfig;
 import org.apache.dolphinscheduler.common.utils.HadoopUtils;
@@ -23,7 +23,6 @@ import org.apache.dolphinscheduler.spi.utils.JSONUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -32,7 +31,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.spark.launcher.SparkAppHandle;
 import org.apache.spark.launcher.SparkLauncher;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -131,15 +129,9 @@ public class MaterializeTask extends AbstractTaskExecutor {
 
         TaskEntity task = new TaskEntity();
         ReadConfig readConfig = materializeParameters.getReadConfig();
-        if (readConfig != null) {
-            handleReadConfig(globalParamsMap, readConfig);
-        }
-        task.setReadConfig(readConfig);
+        task.setReadConfig(handleReadConfig(globalParamsMap, readConfig));
         StoreConfig storeConfig = materializeParameters.getStoreConfig();
-        if (storeConfig != null) {
-            handleStoreConfig(globalParamsMap, storeConfig);
-        }
-        task.setStoreConfig(storeConfig);
+        task.setStoreConfig(handleStoreConfig(globalParamsMap, storeConfig));
         List<SqlEntity> sqlEntities = new ArrayList<>();
         for (Sql sql : materializeParameters.getSqlList()) {
             SqlEntity sqlEntity = new SqlEntity();
@@ -187,24 +179,31 @@ public class MaterializeTask extends AbstractTaskExecutor {
         return paramEntities;
     }
 
-    private void handleStoreConfig(Map<String, String> globalParamsMap, StoreConfig storeConfig) {
-        if (ReadConfigTypeEnum.GAUSSDB.name().equalsIgnoreCase(storeConfig.getType())
-            && StringUtils.isBlank(storeConfig.getTableName())) {
-            storeConfig.setTableName(globalParamsMap.get(ParamUtils.RESULT_TABLE_NAME));
+    private StoreConfig handleStoreConfig(Map<String, String> globalParamsMap, StoreConfig storeConfig) {
+        if (storeConfig == null) {
+            return null;
         }
+        if (ReadOrStoreConfigTypeEnum.GAUSSDB.name().equalsIgnoreCase(storeConfig.getType())
+                || ReadOrStoreConfigTypeEnum.ECS.name().equalsIgnoreCase(storeConfig.getType())) {
+            StoreConfig execStoreConfig = JSONUtils.parseObject(globalParamsMap.get(ParamUtils.RESULT_STORE_CONFIG), StoreConfig.class);
+            if (execStoreConfig == null) {
+                return storeConfig;
+            }
+            ParamUtils.merge(storeConfig, execStoreConfig);
+        }
+        return storeConfig;
     }
 
-    private void handleReadConfig(Map<String, String> globalParamsMap, ReadConfig readConfig) throws Exception {
-        if (ReadConfigTypeEnum.ECS.name().equalsIgnoreCase(readConfig.getType())) {
-            String url = globalParamsMap.get(ParamUtils.ECS_URL_PREFIX + materializeParameters.getExternalCode());
-            String fileName = executePath + File.separator + readConfig.getMetaData().getTableName();
-            logger.info("download {} to local:{}", url, fileName);
-            downloadToLocal(url, fileName);
-            String dstHdfsPath = buildHdfsTmpFilePath() + "/" + readConfig.getMetaData().getTableName();
-            logger.info("copy local file {} to hdfs:{}", fileName, dstHdfsPath);
-            HadoopUtils.getInstance().copyLocalToHdfs(fileName, dstHdfsPath, true, true);
-            readConfig.setPath(dstHdfsPath);
+    private ReadConfig handleReadConfig(Map<String, String> globalParamsMap, ReadConfig readConfig) {
+        if (readConfig == null) {
+            return null;
         }
+        ReadConfig execReadConfig = JSONUtils.parseObject(globalParamsMap.get(ParamUtils.READ_CONFIG + readConfig.getDatasourceId()), ReadConfig.class);
+        if (execReadConfig == null) {
+            return readConfig;
+        }
+        ParamUtils.merge(readConfig, execReadConfig);
+        return readConfig;
     }
 
     private SparkAppHandle buildAndStartSpark() throws IOException {
@@ -260,7 +259,7 @@ public class MaterializeTask extends AbstractTaskExecutor {
             // timeout
             if (materializeParameters.getTimeout() == null || materializeParameters.getTimeout().equals(0)) {
                 if (System.currentTimeMillis() - start > 8 * 60 * 60 * 1000) {
-                    logger.error("maximum limit exceeded for 8 hours");
+                    logger.error("exceeded maximum limit for 8 hours");
                     handle.stop();
                     return false;
                 }
@@ -292,7 +291,6 @@ public class MaterializeTask extends AbstractTaskExecutor {
         try {
             logger.info("clean hdfs...");
             HadoopUtils.getInstance().delete(buildHdfsValueFilePath(), true);
-            HadoopUtils.getInstance().delete(buildHdfsTmpFilePath(), true);
         } catch (Exception e) {
             logger.error("clean hdfs failed", e);
         }

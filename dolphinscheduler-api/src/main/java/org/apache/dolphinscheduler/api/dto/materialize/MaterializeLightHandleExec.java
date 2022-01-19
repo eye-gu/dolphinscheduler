@@ -7,6 +7,10 @@ package org.apache.dolphinscheduler.api.dto.materialize;
 
 import lombok.Data;
 
+import org.apache.dolphinscheduler.common.task.materialize.ReadConfig;
+import org.apache.dolphinscheduler.common.task.materialize.StoreConfig;
+
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -20,7 +24,7 @@ public class MaterializeLightHandleExec {
 
     private Map<String, String> startParams;
 
-    private Map<String, String> taskEcsReadConfigUrl;
+    private List<ReadConfig> readConfigs;
 
-    private String resultTableName;
+    private StoreConfig resultStoreConfig;
 }
