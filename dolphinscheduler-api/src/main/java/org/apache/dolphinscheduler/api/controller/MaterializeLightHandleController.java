@@ -58,7 +58,7 @@ public class MaterializeLightHandleController extends BaseController {
     @ApiException(CREATE_TASK_DEFINITION_ERROR)
     @AccessLogAnnotation
     public Result create(@RequestParam("materializeLightHandleProcessDefinition") @ApiIgnore String materializeLightHandleProcessDefinition,
-                         @RequestParam("files") MultipartFile[] files) throws Exception {
+                         @RequestParam(value = "files", required = false) MultipartFile[] files) throws Exception {
         return returnDataList(materializeLightHandleService.create(JSONUtils.parseObject(materializeLightHandleProcessDefinition, MaterializeLightHandleProcessDefinition.class), files));
     }
 
@@ -71,8 +71,8 @@ public class MaterializeLightHandleController extends BaseController {
     @PostMapping(value = "/update")
     @ApiException(UPDATE_TASK_DEFINITION_ERROR)
     @AccessLogAnnotation
-    public Result update(@ApiIgnore String materializeLightHandleProcessDefinition,
-                         @RequestParam("files") MultipartFile[] files) throws Exception {
+    public Result update(@RequestParam("materializeLightHandleProcessDefinition") @ApiIgnore String materializeLightHandleProcessDefinition,
+                         @RequestParam(value = "files", required = false) MultipartFile[] files) throws Exception {
         return returnDataList(materializeLightHandleService.update(JSONUtils.parseObject(materializeLightHandleProcessDefinition, MaterializeLightHandleProcessDefinition.class), files));
     }
 

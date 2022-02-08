@@ -119,7 +119,8 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         List<TaskDefinitionLog> taskDefinitionLogs = new ArrayList<>();
         Map<String, Long> external2code = new HashMap<>(materializeLightHandleProcessDefinition.getTasks().size());
         for (MaterializeLightHandleTaskDefinition materializeLightHandleTaskDefinition : materializeLightHandleProcessDefinition.getTasks()) {
-            TaskDefinitionLog taskDefinitionLog = build(CodeGenerateUtils.getInstance().genCode(), 0, materializeLightHandleTaskDefinition);
+            TaskDefinitionLog taskDefinitionLog = build(materializeLightHandleProcessDefinition.getExternalCode(),
+                CodeGenerateUtils.getInstance().genCode(), 0, materializeLightHandleTaskDefinition);
             taskDefinitionLogs.add(taskDefinitionLog);
 
             external2code.put(materializeLightHandleTaskDefinition.getExternalCode(), taskDefinitionLog.getCode());
@@ -167,7 +168,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             throw new ServiceException(Status.CREATE_PROCESS_TASK_RELATION_ERROR);
         }
 
-        uploadToHdfs(files);
+        uploadToHdfs(materializeLightHandleProcessDefinition.getExternalCode(), files);
         return result;
     }
 
@@ -190,7 +191,8 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         List<TaskDefinitionLog> taskDefinitionLogs = new ArrayList<>();
         for (MaterializeLightHandleTaskDefinition materializeLightHandleTaskDefinition : materializeLightHandleProcessDefinition.getTasks()) {
             TaskDefinition existTask = existExternalMap.get(materializeLightHandleTaskDefinition.getExternalCode());
-            TaskDefinitionLog taskDefinitionLog = build(existTask == null ? CodeGenerateUtils.getInstance().genCode() : existTask.getCode()
+            TaskDefinitionLog taskDefinitionLog = build(materializeLightHandleProcessDefinition.getExternalCode(),
+                existTask == null ? CodeGenerateUtils.getInstance().genCode() : existTask.getCode()
                 , existTask == null ? 0 : existTask.getVersion(), materializeLightHandleTaskDefinition);
             taskDefinitionLogs.add(taskDefinitionLog);
 
@@ -249,7 +251,8 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             throw new ServiceException(Status.UPDATE_PROCESS_DEFINITION_ERROR);
         }
 
-        uploadToHdfs(files);
+        HadoopUtils.getInstance().delete("/material_light_handle/tmp/" + materializeLightHandleProcessDefinition.getExternalCode(), true);
+        uploadToHdfs(materializeLightHandleProcessDefinition.getExternalCode(), files);
         return result;
     }
 
@@ -408,14 +411,14 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         return processDefinition;
     }
 
-    private TaskDefinitionLog build(long code, int version,
+    private TaskDefinitionLog build(String processExternalCode, long code, int version,
                                     MaterializeLightHandleTaskDefinition materializeLightHandleTaskDefinition) {
         TaskDefinitionLog taskDefinitionLog = new TaskDefinitionLog();
         MaterializeParameters materializeParameters = new MaterializeParameters();
         ReadConfig readConfig = materializeLightHandleTaskDefinition.getReadConfig();
         if (readConfig != null) {
             if (ReadOrStoreConfigTypeEnum.FILE.name().equalsIgnoreCase(readConfig.getType())) {
-                readConfig.setPath("/material_light_handle/tmp/" + readConfig.getDatasourceId());
+                readConfig.setPath("/material_light_handle/tmp/" + processExternalCode + "/" + readConfig.getDatasourceId());
             }
         }
         materializeParameters.setReadConfig(readConfig);
@@ -470,7 +473,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         return processTaskRelationLog;
     }
 
-    private void uploadToHdfs(MultipartFile[] files) throws IOException {
+    private void uploadToHdfs(String externalCode, MultipartFile[] files) throws IOException {
         if (files != null) {
             for (MultipartFile file : files) {
                 if (file == null) {
@@ -480,7 +483,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
                     continue;
                 }
                 try (InputStream inputStream = file.getInputStream()) {
-                    HadoopUtils.getInstance().create("/material_light_handle/tmp/" + file.getOriginalFilename(), inputStream);
+                    HadoopUtils.getInstance().create("/material_light_handle/tmp/" + externalCode + "/" + file.getOriginalFilename(), inputStream);
                 }
             }
         }

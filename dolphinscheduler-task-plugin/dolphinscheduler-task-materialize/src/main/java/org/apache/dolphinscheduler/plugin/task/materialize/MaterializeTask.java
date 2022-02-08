@@ -283,10 +283,6 @@ public class MaterializeTask extends AbstractTaskExecutor {
         return "/material_light_handle/" + taskInstanceId;
     }
 
-    private String buildHdfsTmpFilePath() {
-        return "/material_light_handle/tmp/" + taskInstanceId;
-    }
-
     private void cleanHdfs() {
         try {
             logger.info("clean hdfs...");
