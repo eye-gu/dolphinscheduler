@@ -511,7 +511,7 @@ public class ParamUtils {
         return param;
     }
 
-    public static void merge(Object dist, Object src) {
+    public static <T> void merge(T dist, T src) {
         try {
             Class<?> clazz = dist.getClass();
             Field[] fields = clazz.getDeclaredFields();

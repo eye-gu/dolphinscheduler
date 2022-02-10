@@ -113,6 +113,12 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> create(MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition,
                                       MultipartFile[] files) throws Exception {
+
+        ProcessDefinition existProcessDefinition = processDefinitionMapper.queryByExternalCode(materializeLightHandleProcessDefinition.getExternalCode());
+        if (existProcessDefinition != null) {
+            return this.update(materializeLightHandleProcessDefinition, files);
+        }
+
         User loginUser = new User();
         loginUser.setId(materialLightHandleConfig.getUserId());
 

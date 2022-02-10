@@ -39,4 +39,10 @@ public class StoreConfig {
      * excel csv dat
      */
     private String fileType;
+    /**
+     * 是否有表头
+     */
+    private Boolean withHeader;
+
+    private EcsConfig ecsConfig;
 }
