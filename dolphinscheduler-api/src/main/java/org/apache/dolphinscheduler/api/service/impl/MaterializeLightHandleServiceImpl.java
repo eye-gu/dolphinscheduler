@@ -49,6 +49,7 @@ import org.apache.dolphinscheduler.dao.entity.TaskDefinition;
 import org.apache.dolphinscheduler.dao.entity.TaskDefinitionLog;
 import org.apache.dolphinscheduler.dao.entity.TaskInstance;
 import org.apache.dolphinscheduler.dao.entity.User;
+import org.apache.dolphinscheduler.dao.mapper.CommandMapper;
 import org.apache.dolphinscheduler.dao.mapper.ErrorCommandMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProcessDefinitionMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProcessTaskRelationLogMapper;
@@ -108,6 +109,9 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
 
     @Autowired
     private ErrorCommandMapper errorCommandMapper;
+
+    @Autowired
+    private CommandMapper commandMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -329,14 +333,38 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
                 result.put(Constants.STATUS, Status.SUCCESS);
                 result.put(Constants.DATA_LIST, jobRunInfo);
                 return result;
+            } else {
+                Command command = commandMapper.selectById(commandId);
+                if (command != null) {
+                    ProcessDefinition processDefinition = processDefinitionMapper.queryByCode(command.getProcessDefinitionCode());
+                    jobRunInfo.setJobStatus(JobStatus.RUNNING);
+                    if (processDefinition != null) {
+                        jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, taskSize(command.getProcessDefinitionCode(), command.getProcessDefinitionVersion())));
+                    } else {
+                        jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
+                    }
+                    result.put(Constants.STATUS, Status.SUCCESS);
+                    result.put(Constants.DATA_LIST, jobRunInfo);
+                    return result;
+                } else {
+                    jobRunInfo.setJobStatus(JobStatus.FAILED);
+                    jobRunInfo.setErrorMsg("未找到该任务");
+                    jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
+                    result.put(Constants.STATUS, Status.SUCCESS);
+                    result.put(Constants.DATA_LIST, jobRunInfo);
+                    return result;
+                }
             }
-            jobRunInfo.setJobStatus(JobStatus.RUNNING);
+        }
+        ProcessInstance processInstance = processService.findProcessInstanceDetailById(processInstanceId);
+        if (processInstance == null) {
+            jobRunInfo.setJobStatus(JobStatus.FAILED);
+            jobRunInfo.setErrorMsg("未找到该任务");
             jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
             result.put(Constants.STATUS, Status.SUCCESS);
             result.put(Constants.DATA_LIST, jobRunInfo);
             return result;
         }
-        ProcessInstance processInstance = processService.findProcessInstanceDetailById(processInstanceId);
         ExecutionStatus status = processInstance.getState();
         switch (status) {
             case READY_PAUSE:
