@@ -72,6 +72,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -437,7 +438,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             code,
             materializeLightHandleProcessDefinition.getDescription(),
             JSONUtils.toJsonString(properties), null,
-            materializeLightHandleProcessDefinition.getTimeout(), userId, tenantId);
+            primaryIntGet(materializeLightHandleProcessDefinition::getTimeout), userId, tenantId);
         processDefinition.setExternalCode(materializeLightHandleProcessDefinition.getExternalCode());
         Feature feature = new Feature();
         feature.setGlobalParams(materializeLightHandleProcessDefinition.getGlobalParams());
@@ -459,7 +460,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         materializeParameters.setStoreConfig(materializeLightHandleTaskDefinition.getStoreConfig());
         materializeParameters.setSqlList(materializeLightHandleTaskDefinition.getSqlList());
         materializeParameters.setLocalParams(Collections.emptyList());
-        materializeParameters.setTimeout(materializeLightHandleTaskDefinition.getTimeout());
+        materializeParameters.setTimeout(primaryIntGet(materializeLightHandleTaskDefinition::getTimeout));
         materializeParameters.setExternalCode(materializeLightHandleTaskDefinition.getExternalCode());
         MaterialLightHandleConfig.SparkConfig sparkConfig = materialLightHandleConfig.getSpark();
         MaterializeParameters.SparkParameters sparkParameters = new MaterializeParameters.SparkParameters();
@@ -475,13 +476,13 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         sparkParameters.setDeployMode(sparkConfig.getDeployMode());
         materializeParameters.setSparkParameters(sparkParameters);
         taskDefinitionLog.setTaskParams(JSONUtils.toJsonString(materializeParameters));
-        taskDefinitionLog.setTimeout(materializeLightHandleTaskDefinition.getTimeout());
+        taskDefinitionLog.setTimeout(primaryIntGet(materializeLightHandleTaskDefinition::getTimeout));
         taskDefinitionLog.setDescription(materializeLightHandleTaskDefinition.getDescription());
         taskDefinitionLog.setName(materializeLightHandleTaskDefinition.getName() + "-" + materializeLightHandleTaskDefinition.getExternalCode());
-        taskDefinitionLog.setFailRetryTimes(materializeLightHandleTaskDefinition.getFailRetryTimes());
-        taskDefinitionLog.setFailRetryInterval(materializeLightHandleTaskDefinition.getFailRetryInterval());
-        taskDefinitionLog.setTimeoutFlag(materializeLightHandleTaskDefinition.getTimeout() > 0 ? TimeoutFlag.OPEN : TimeoutFlag.CLOSE);
-        taskDefinitionLog.setDelayTime(materializeLightHandleTaskDefinition.getDelayTime());
+        taskDefinitionLog.setFailRetryTimes(primaryIntGet(materializeLightHandleTaskDefinition::getFailRetryTimes));
+        taskDefinitionLog.setFailRetryInterval(primaryIntGet(materializeLightHandleTaskDefinition::getFailRetryInterval));
+        taskDefinitionLog.setTimeoutFlag(taskDefinitionLog.getTimeout() > 0 ? TimeoutFlag.OPEN : TimeoutFlag.CLOSE);
+        taskDefinitionLog.setDelayTime(primaryIntGet(materializeLightHandleTaskDefinition::getDelayTime));
         taskDefinitionLog.setExternalCode(materializeLightHandleTaskDefinition.getExternalCode());
         taskDefinitionLog.setFlag(Flag.YES);
         taskDefinitionLog.setCode(code);
@@ -505,6 +506,14 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         processTaskRelationLog.setPostTaskCode(postTaskCode);
         processTaskRelationLog.setPostTaskVersion(postTaskVersion);
         return processTaskRelationLog;
+    }
+
+    private int primaryIntGet(Supplier<Integer> supplier) {
+        Integer i = supplier.get();
+        if (i == null) {
+            return 0;
+        }
+        return i;
     }
 
     private void uploadToHdfs(String externalCode, MultipartFile[] files) throws IOException {
