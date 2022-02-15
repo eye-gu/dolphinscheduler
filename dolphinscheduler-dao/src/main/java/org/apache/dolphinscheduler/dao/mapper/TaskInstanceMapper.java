@@ -24,6 +24,7 @@ import org.apache.dolphinscheduler.dao.entity.TaskInstance;
 
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -75,4 +76,8 @@ public interface TaskInstanceMapper extends BaseMapper<TaskInstance> {
                                                     @Param("startTime") Date startTime,
                                                     @Param("endTime") Date endTime
     );
+
+
+    List<TaskInstance> findTaskListByProcessIds(@Param("processInstanceIds") Collection<Integer> processInstanceIds);
+
 }

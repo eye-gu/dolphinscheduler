@@ -115,6 +115,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
@@ -261,6 +262,12 @@ public class ProcessService {
             return null;
         }
         return commandProcessInstanceRelations.get(0).getProcessInstanceId();
+    }
+
+    public List<CommandProcessInstanceRelation> queryByCommandIds(Collection<Integer> commandIds) {
+        LambdaQueryWrapper<CommandProcessInstanceRelation> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(CommandProcessInstanceRelation::getCommandId, commandIds);
+        return commandProcessInstanceRelationMapper.selectList(wrapper);
     }
 
     /**

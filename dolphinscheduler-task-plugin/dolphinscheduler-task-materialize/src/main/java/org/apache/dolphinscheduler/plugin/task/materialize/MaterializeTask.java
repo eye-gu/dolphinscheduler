@@ -280,7 +280,7 @@ public class MaterializeTask extends AbstractTaskExecutor {
     }
 
     private String buildHdfsValueFilePath() {
-        return "/material_light_handle/" + taskInstanceId;
+        return "/tmp/material_light_handle/" + taskInstanceId;
     }
 
     private void cleanHdfs() {

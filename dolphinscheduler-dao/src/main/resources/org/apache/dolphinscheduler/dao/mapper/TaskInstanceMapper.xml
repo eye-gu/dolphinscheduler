@@ -169,4 +169,14 @@
         from t_ds_task_instance
         WHERE process_instance_id = #{processInstanceId}
     </select>
+
+    <select id="findTaskListByProcessIds" resultType="org.apache.dolphinscheduler.dao.entity.TaskInstance">
+        select
+        <include refid="baseSql"/>
+        from t_ds_task_instance
+        WHERE process_instance_id in
+        <foreach collection="processInstanceIds" item="i" open="(" separator="," close=")">
+            #{i}
+        </foreach>
+    </select>
 </mapper>

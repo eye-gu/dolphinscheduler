@@ -8,7 +8,9 @@ package org.apache.dolphinscheduler.api.service;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleExec;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleProcessDefinition;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,4 +27,6 @@ public interface MaterializeLightHandleService {
     Map<String, Object> exec(MaterializeLightHandleExec materializeLightHandleExec) throws Exception;
 
     Map<String, Object> status(Integer commandId);
+
+    Map<String, Object> statuses(Set<Integer> commandIds);
 }

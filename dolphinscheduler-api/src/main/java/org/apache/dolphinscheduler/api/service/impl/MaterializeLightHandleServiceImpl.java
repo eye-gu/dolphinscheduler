@@ -41,6 +41,7 @@ import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
 import org.apache.dolphinscheduler.common.utils.HadoopUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.Command;
+import org.apache.dolphinscheduler.dao.entity.CommandProcessInstanceRelation;
 import org.apache.dolphinscheduler.dao.entity.ErrorCommand;
 import org.apache.dolphinscheduler.dao.entity.ProcessDefinition;
 import org.apache.dolphinscheduler.dao.entity.ProcessInstance;
@@ -52,6 +53,7 @@ import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.dao.mapper.CommandMapper;
 import org.apache.dolphinscheduler.dao.mapper.ErrorCommandMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProcessDefinitionMapper;
+import org.apache.dolphinscheduler.dao.mapper.ProcessInstanceMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProcessTaskRelationLogMapper;
 import org.apache.dolphinscheduler.dao.mapper.TaskDefinitionMapper;
 import org.apache.dolphinscheduler.dao.mapper.TaskInstanceMapper;
@@ -63,6 +65,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -80,6 +83,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -113,6 +117,9 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
 
     @Autowired
     private CommandMapper commandMapper;
+
+    @Autowired
+    private ProcessInstanceMapper processInstanceMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -262,7 +269,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             throw new ServiceException(Status.UPDATE_PROCESS_DEFINITION_ERROR);
         }
 
-        HadoopUtils.getInstance().delete("/material_light_handle/tmp/" + materializeLightHandleProcessDefinition.getExternalCode(), true);
+        HadoopUtils.getInstance().delete("/tmp/material_light_handle/file/" + materializeLightHandleProcessDefinition.getExternalCode(), true);
         uploadToHdfs(materializeLightHandleProcessDefinition.getExternalCode(), files);
         return result;
     }
@@ -317,95 +324,89 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
     public Map<String, Object> status(Integer commandId) {
         Map<String, Object> result = new HashMap<>(2);
 
-        JobRunInfo jobRunInfo = new JobRunInfo();
-        jobRunInfo.setJobId(String.valueOf(commandId));
+
         Integer processInstanceId = processService.queryProcessInstanceByCommandId(commandId);
         if (processInstanceId == null) {
             ErrorCommand errorCommand = errorCommandMapper.selectById(commandId);
             if (errorCommand != null) {
                 ProcessDefinition processDefinition = processDefinitionMapper.queryByCode(errorCommand.getProcessDefinitionCode());
-                jobRunInfo.setJobStatus(JobStatus.FAILED);
-                jobRunInfo.setErrorMsg("启动失败");
-                if (processDefinition != null) {
-                    jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, taskSize(errorCommand.getProcessDefinitionCode(), processDefinition.getVersion())));
-                } else {
-                    jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
-                }
+                JobRunInfo jobRunInfo = build(commandId, errorCommand, processDefinition);
                 result.put(Constants.STATUS, Status.SUCCESS);
                 result.put(Constants.DATA_LIST, jobRunInfo);
                 return result;
             } else {
                 Command command = commandMapper.selectById(commandId);
                 if (command != null) {
-                    ProcessDefinition processDefinition = processDefinitionMapper.queryByCode(command.getProcessDefinitionCode());
-                    jobRunInfo.setJobStatus(JobStatus.RUNNING);
-                    if (processDefinition != null) {
-                        jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, taskSize(command.getProcessDefinitionCode(), command.getProcessDefinitionVersion())));
-                    } else {
-                        jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
-                    }
+                    JobRunInfo jobRunInfo = build(commandId, command);
                     result.put(Constants.STATUS, Status.SUCCESS);
                     result.put(Constants.DATA_LIST, jobRunInfo);
                     return result;
                 } else {
-                    jobRunInfo.setJobStatus(JobStatus.FAILED);
-                    jobRunInfo.setErrorMsg("未找到该任务");
-                    jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
+                    JobRunInfo jobRunInfo = build(commandId);
                     result.put(Constants.STATUS, Status.SUCCESS);
                     result.put(Constants.DATA_LIST, jobRunInfo);
                     return result;
                 }
             }
         }
-        ProcessInstance processInstance = processService.findProcessInstanceDetailById(processInstanceId);
-        if (processInstance == null) {
-            jobRunInfo.setJobStatus(JobStatus.FAILED);
-            jobRunInfo.setErrorMsg("未找到该任务");
-            jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
-            result.put(Constants.STATUS, Status.SUCCESS);
-            result.put(Constants.DATA_LIST, jobRunInfo);
-            return result;
-        }
-        ExecutionStatus status = processInstance.getState();
-        switch (status) {
-            case READY_PAUSE:
-            case PAUSE:
-            case READY_STOP:
-            case STOP:
-            case KILL:
-                jobRunInfo.setJobStatus(JobStatus.STOP);
-                break;
-            case SUCCESS:
-            case FORCED_SUCCESS:
-                jobRunInfo.setJobStatus(JobStatus.SUCCESS);
-                break;
-            case FAILURE:
-                jobRunInfo.setJobStatus(JobStatus.FAILED);
-                break;
-            default:
-                jobRunInfo.setJobStatus(JobStatus.RUNNING);
-                break;
-        }
-
         List<TaskInstance> taskInstances = taskInstanceMapper.findTaskListByProcessId(processInstanceId);
-        int successSize = taskInstances.stream().filter(t -> t.getState().equals(ExecutionStatus.SUCCESS) || t.getState().equals(ExecutionStatus.FORCED_SUCCESS))
-                .collect(Collectors.groupingBy(TaskInstance::getTaskCode)).size();
-        jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, successSize, taskSize(processInstance.getProcessDefinitionCode(), processInstance.getProcessDefinitionVersion())));
-        if (jobRunInfo.getJobStatus().equals(JobStatus.FAILED)) {
-            Optional<TaskInstance> fail = taskInstances.stream().filter(t -> t.getState().equals(ExecutionStatus.FAILURE)).findFirst();
-            if (fail.isPresent()) {
-                jobRunInfo.setErrorMsg(fail.get().getName() + "失败");
-            } else {
-                jobRunInfo.setErrorMsg("未知异常");
-            }
-        }
+        ProcessInstance processInstance = processService.findProcessInstanceDetailById(processInstanceId);
+        JobRunInfo jobRunInfo = build(processInstance, commandId, taskInstances);
         result.put(Constants.STATUS, Status.SUCCESS);
         result.put(Constants.DATA_LIST, jobRunInfo);
         return result;
     }
 
+    @Override
+    public Map<String, Object> statuses(Set<Integer> commandIds) {
+        Map<String, Object> result = new HashMap<>(2);
+
+
+        List<JobRunInfo> jobRunInfos = new ArrayList<>(commandIds.size());
+        List<CommandProcessInstanceRelation> commandProcessInstanceRelations = processService.queryByCommandIds(commandIds);
+
+        if (CollectionUtils.isNotEmpty(commandProcessInstanceRelations)) {
+            Map<Integer, Integer> commandIdProcessInstanceIdMap = commandProcessInstanceRelations.stream()
+                .collect(Collectors.toMap(CommandProcessInstanceRelation::getCommandId, CommandProcessInstanceRelation::getProcessInstanceId));
+            Collection<Integer> processInstanceIds = commandIdProcessInstanceIdMap.values();
+            List<ProcessInstance> processInstances = processInstanceMapper.selectBatchIds(processInstanceIds);
+            Map<Integer, ProcessInstance> processInstanceMap = processInstances.stream()
+                .collect(Collectors.toMap(ProcessInstance::getId, Function.identity()));
+            List<TaskInstance> taskInstances = taskInstanceMapper.findTaskListByProcessIds(processInstanceIds);
+            Map<Integer, List<TaskInstance>> processInstanceTaskMap = taskInstances.stream()
+                    .collect(Collectors.groupingBy(TaskInstance::getProcessInstanceId));
+            for (Map.Entry<Integer, Integer> entry : commandIdProcessInstanceIdMap.entrySet()) {
+                Integer commandId = entry.getKey();
+                commandIds.remove(commandId);
+                jobRunInfos.add(build(processInstanceMap.get(entry.getValue()), commandId, processInstanceTaskMap.get(entry.getValue())));
+            }
+        }
+
+        if (commandIds.size() > 0) {
+            List<ErrorCommand> errorCommands = errorCommandMapper.selectBatchIds(commandIds);
+            for (ErrorCommand errorCommand : errorCommands) {
+                commandIds.remove(errorCommand.getId());
+                jobRunInfos.add(build(errorCommand.getId(), errorCommand, null));
+            }
+        }
+
+        if (commandIds.size() > 0) {
+            List<Command> commands = commandMapper.selectBatchIds(commandIds);
+            for (Command command : commands) {
+                jobRunInfos.add(build(command.getId(), command));
+            }
+        }
+
+        result.put(Constants.STATUS, Status.SUCCESS);
+        result.put(Constants.DATA_LIST, jobRunInfos);
+        return result;
+    }
+
     private int taskSize(long processCode, int processVersion) {
         List<ProcessTaskRelationLog> processTaskRelationLogs = processTaskRelationLogMapper.queryByProcessCodeAndVersion(processCode, processVersion);
+        if (CollectionUtils.isEmpty(processTaskRelationLogs)) {
+            return 0;
+        }
         Set<Long> taskCodes = new HashSet<>();
         for (ProcessTaskRelationLog processTaskRelationLog : processTaskRelationLogs) {
             if (processTaskRelationLog.getPreTaskCode() != 0) {
@@ -453,7 +454,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         ReadConfig readConfig = materializeLightHandleTaskDefinition.getReadConfig();
         if (readConfig != null) {
             if (ReadOrStoreConfigTypeEnum.FILE.name().equalsIgnoreCase(readConfig.getType())) {
-                readConfig.setPath("/material_light_handle/tmp/" + processExternalCode + "/" + readConfig.getDatasourceId());
+                readConfig.setPath("/tmp/material_light_handle/file/" + processExternalCode + "/" + readConfig.getDatasourceId());
             }
         }
         materializeParameters.setReadConfig(readConfig);
@@ -508,6 +509,80 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         return processTaskRelationLog;
     }
 
+    private JobRunInfo build(ProcessInstance processInstance, Integer commandId, List<TaskInstance> taskInstances) {
+        JobRunInfo jobRunInfo = new JobRunInfo();
+        jobRunInfo.setJobId(String.valueOf(commandId));
+        if (processInstance == null) {
+            jobRunInfo.setJobStatus(JobStatus.FAILED);
+            jobRunInfo.setErrorMsg("未找到该任务");
+            jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
+            return jobRunInfo;
+        }
+        ExecutionStatus status = processInstance.getState();
+        switch (status) {
+            case READY_PAUSE:
+            case PAUSE:
+            case READY_STOP:
+            case STOP:
+            case KILL:
+                jobRunInfo.setJobStatus(JobStatus.STOP);
+                break;
+            case SUCCESS:
+            case FORCED_SUCCESS:
+                jobRunInfo.setJobStatus(JobStatus.SUCCESS);
+                break;
+            case FAILURE:
+                jobRunInfo.setJobStatus(JobStatus.FAILED);
+                break;
+            default:
+                jobRunInfo.setJobStatus(JobStatus.RUNNING);
+                break;
+        }
+
+        int successSize = taskInstances.stream().filter(t -> t.getState().equals(ExecutionStatus.SUCCESS) || t.getState().equals(ExecutionStatus.FORCED_SUCCESS))
+            .collect(Collectors.groupingBy(TaskInstance::getTaskCode)).size();
+        jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, successSize, taskSize(processInstance.getProcessDefinitionCode(), processInstance.getProcessDefinitionVersion())));
+        if (jobRunInfo.getJobStatus().equals(JobStatus.FAILED)) {
+            Optional<TaskInstance> fail = taskInstances.stream().filter(t -> t.getState().equals(ExecutionStatus.FAILURE)).findFirst();
+            if (fail.isPresent()) {
+                jobRunInfo.setErrorMsg(fail.get().getName() + "失败");
+            } else {
+                jobRunInfo.setErrorMsg("未知异常");
+            }
+        }
+        return jobRunInfo;
+    }
+
+    private JobRunInfo build(Integer commandId, Command command) {
+        JobRunInfo jobRunInfo = new JobRunInfo();
+        jobRunInfo.setJobId(String.valueOf(commandId));
+        jobRunInfo.setJobStatus(JobStatus.RUNNING);
+        jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, taskSize(command.getProcessDefinitionCode(), command.getProcessDefinitionVersion())));
+        return jobRunInfo;
+    }
+
+    private JobRunInfo build(Integer commandId, ErrorCommand errorCommand, ProcessDefinition processDefinition) {
+        JobRunInfo jobRunInfo = new JobRunInfo();
+        jobRunInfo.setJobId(String.valueOf(commandId));
+        jobRunInfo.setJobStatus(JobStatus.FAILED);
+        jobRunInfo.setErrorMsg("启动失败");
+        if (processDefinition != null) {
+            jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, taskSize(errorCommand.getProcessDefinitionCode(), processDefinition.getVersion())));
+        } else {
+            jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
+        }
+        return jobRunInfo;
+    }
+
+    private JobRunInfo build(Integer commandId) {
+        JobRunInfo jobRunInfo = new JobRunInfo();
+        jobRunInfo.setJobId(commandId.toString());
+        jobRunInfo.setJobStatus(JobStatus.FAILED);
+        jobRunInfo.setErrorMsg("未找到该任务");
+        jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
+        return jobRunInfo;
+    }
+
     private int primaryIntGet(Supplier<Integer> supplier) {
         Integer i = supplier.get();
         if (i == null) {
@@ -526,7 +601,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
                     continue;
                 }
                 try (InputStream inputStream = file.getInputStream()) {
-                    HadoopUtils.getInstance().create("/material_light_handle/tmp/" + externalCode + "/" + file.getOriginalFilename(), inputStream);
+                    HadoopUtils.getInstance().create("/tmp/material_light_handle/file/" + externalCode + "/" + file.getOriginalFilename(), inputStream);
                 }
             }
         }

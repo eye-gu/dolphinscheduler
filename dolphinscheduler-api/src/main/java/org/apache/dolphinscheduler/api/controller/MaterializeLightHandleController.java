@@ -13,6 +13,7 @@ import static org.apache.dolphinscheduler.api.enums.Status.UPDATE_TASK_DEFINITIO
 import org.apache.dolphinscheduler.api.aspect.AccessLogAnnotation;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleExec;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleProcessDefinition;
+import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleTaskDefinition;
 import org.apache.dolphinscheduler.api.exceptions.ApiException;
 import org.apache.dolphinscheduler.api.service.MaterializeLightHandleService;
 import org.apache.dolphinscheduler.api.utils.Result;
@@ -20,7 +21,6 @@ import org.apache.dolphinscheduler.common.utils.JSONUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +34,13 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import springfox.documentation.annotations.ApiIgnore;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author eye.gu@aloudata.com
@@ -59,7 +66,11 @@ public class MaterializeLightHandleController extends BaseController {
     @AccessLogAnnotation
     public Result create(@RequestParam("materializeLightHandleProcessDefinition") @ApiIgnore String materializeLightHandleProcessDefinition,
                          @RequestParam(value = "files", required = false) MultipartFile[] files) throws Exception {
-        return returnDataList(materializeLightHandleService.create(JSONUtils.parseObject(materializeLightHandleProcessDefinition, MaterializeLightHandleProcessDefinition.class), files));
+        MaterializeLightHandleProcessDefinition processDefinition = JSONUtils.parseObject(materializeLightHandleProcessDefinition, MaterializeLightHandleProcessDefinition.class);
+        if (invalid(processDefinition)) {
+            throw new IllegalArgumentException("processDefinition is invalid");
+        }
+        return returnDataList(materializeLightHandleService.create(processDefinition, files));
     }
 
     @ApiOperation(value = "update", notes = "UPDATE")
@@ -73,7 +84,11 @@ public class MaterializeLightHandleController extends BaseController {
     @AccessLogAnnotation
     public Result update(@RequestParam("materializeLightHandleProcessDefinition") @ApiIgnore String materializeLightHandleProcessDefinition,
                          @RequestParam(value = "files", required = false) MultipartFile[] files) throws Exception {
-        return returnDataList(materializeLightHandleService.update(JSONUtils.parseObject(materializeLightHandleProcessDefinition, MaterializeLightHandleProcessDefinition.class), files));
+        MaterializeLightHandleProcessDefinition processDefinition = JSONUtils.parseObject(materializeLightHandleProcessDefinition, MaterializeLightHandleProcessDefinition.class);
+        if (invalid(processDefinition)) {
+            throw new IllegalArgumentException("processDefinition is invalid");
+        }
+        return returnDataList(materializeLightHandleService.update(processDefinition, files));
     }
 
 
@@ -82,6 +97,9 @@ public class MaterializeLightHandleController extends BaseController {
     @ApiException(START_PROCESS_INSTANCE_ERROR)
     @AccessLogAnnotation
     public Result exec(@RequestBody MaterializeLightHandleExec materializeLightHandleExec) throws Exception {
+        if (materializeLightHandleExec == null || StringUtils.isBlank(materializeLightHandleExec.getExternalCode())) {
+            throw new IllegalArgumentException("exec process is invalid");
+        }
         return returnDataList(materializeLightHandleService.exec(materializeLightHandleExec));
     }
 
@@ -90,6 +108,48 @@ public class MaterializeLightHandleController extends BaseController {
     @ApiException(COUNT_PROCESS_INSTANCE_STATE_ERROR)
     @AccessLogAnnotation
     public Result status(@RequestParam Integer commandId) throws Exception {
+        if (commandId == null) {
+            throw new IllegalArgumentException("commandId is invalid");
+        }
         return returnDataList(materializeLightHandleService.status(commandId));
+    }
+
+    @ApiOperation(value = "statuses", notes = "STATUSES")
+    @GetMapping(value = "/statuses")
+    @ApiException(COUNT_PROCESS_INSTANCE_STATE_ERROR)
+    @AccessLogAnnotation
+    public Result statuses(@RequestParam Set<Integer> commandIds) throws Exception {
+        if (CollectionUtils.isEmpty(commandIds) || commandIds.size() > 100) {
+            throw new IllegalArgumentException("commandIds size must be between 1 and 100");
+        }
+        return returnDataList(materializeLightHandleService.statuses(commandIds));
+    }
+
+
+    private boolean invalid(MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition) {
+        if (materializeLightHandleProcessDefinition == null) {
+            return true;
+        }
+        if (StringUtils.isBlank(materializeLightHandleProcessDefinition.getName())) {
+            return true;
+        }
+        if (StringUtils.isBlank(materializeLightHandleProcessDefinition.getExternalCode())) {
+            return true;
+        }
+        if (CollectionUtils.isEmpty(materializeLightHandleProcessDefinition.getTasks())) {
+            return true;
+        }
+        for (MaterializeLightHandleTaskDefinition task : materializeLightHandleProcessDefinition.getTasks()) {
+            if (task == null) {
+                return true;
+            }
+            if (StringUtils.isBlank(task.getExternalCode())) {
+                return true;
+            }
+            if (StringUtils.isBlank(task.getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
