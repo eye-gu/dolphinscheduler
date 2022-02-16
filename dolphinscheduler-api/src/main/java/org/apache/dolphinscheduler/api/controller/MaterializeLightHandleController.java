@@ -19,6 +19,13 @@ import org.apache.dolphinscheduler.api.service.MaterializeLightHandleService;
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import java.io.IOException;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,13 +41,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import springfox.documentation.annotations.ApiIgnore;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * @author eye.gu@aloudata.com
@@ -64,9 +64,9 @@ public class MaterializeLightHandleController extends BaseController {
     @PostMapping(value = "/create")
     @ApiException(CREATE_TASK_DEFINITION_ERROR)
     @AccessLogAnnotation
-    public Result create(@RequestParam("materializeLightHandleProcessDefinition") @ApiIgnore String materializeLightHandleProcessDefinition,
+    public Result create(@RequestParam("materializeLightHandleProcessDefinition") @ApiIgnore MultipartFile materializeLightHandleProcessDefinition,
                          @RequestParam(value = "files", required = false) MultipartFile[] files) throws Exception {
-        MaterializeLightHandleProcessDefinition processDefinition = JSONUtils.parseObject(materializeLightHandleProcessDefinition, MaterializeLightHandleProcessDefinition.class);
+        MaterializeLightHandleProcessDefinition processDefinition = getFromFile(materializeLightHandleProcessDefinition);
         if (invalid(processDefinition)) {
             throw new IllegalArgumentException("processDefinition is invalid");
         }
@@ -82,9 +82,9 @@ public class MaterializeLightHandleController extends BaseController {
     @PostMapping(value = "/update")
     @ApiException(UPDATE_TASK_DEFINITION_ERROR)
     @AccessLogAnnotation
-    public Result update(@RequestParam("materializeLightHandleProcessDefinition") @ApiIgnore String materializeLightHandleProcessDefinition,
+    public Result update(@RequestParam("materializeLightHandleProcessDefinition") @ApiIgnore MultipartFile materializeLightHandleProcessDefinition,
                          @RequestParam(value = "files", required = false) MultipartFile[] files) throws Exception {
-        MaterializeLightHandleProcessDefinition processDefinition = JSONUtils.parseObject(materializeLightHandleProcessDefinition, MaterializeLightHandleProcessDefinition.class);
+        MaterializeLightHandleProcessDefinition processDefinition = getFromFile(materializeLightHandleProcessDefinition);
         if (invalid(processDefinition)) {
             throw new IllegalArgumentException("processDefinition is invalid");
         }
@@ -125,28 +125,49 @@ public class MaterializeLightHandleController extends BaseController {
         return returnDataList(materializeLightHandleService.statuses(commandIds));
     }
 
+    private MaterializeLightHandleProcessDefinition getFromFile(MultipartFile file) {
+        try {
+            String json = IOUtils.toString(file.getInputStream());
+            return JSONUtils.parseObject(json, MaterializeLightHandleProcessDefinition.class);
+        } catch (IOException e) {
+            log.error("parse process definition file error", e);
+            throw new IllegalArgumentException("parse process definition file error");
+        }
+    }
+
 
     private boolean invalid(MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition) {
         if (materializeLightHandleProcessDefinition == null) {
+            log.error("process is null");
             return true;
         }
         if (StringUtils.isBlank(materializeLightHandleProcessDefinition.getName())) {
+            log.error("process name is null");
             return true;
         }
         if (StringUtils.isBlank(materializeLightHandleProcessDefinition.getExternalCode())) {
+            log.error("process external code is null");
             return true;
         }
         if (CollectionUtils.isEmpty(materializeLightHandleProcessDefinition.getTasks())) {
+            log.error("process tasks is null");
             return true;
         }
         for (MaterializeLightHandleTaskDefinition task : materializeLightHandleProcessDefinition.getTasks()) {
             if (task == null) {
+                log.error("task is null");
                 return true;
             }
             if (StringUtils.isBlank(task.getExternalCode())) {
+                log.error("task external code is null");
                 return true;
             }
             if (StringUtils.isBlank(task.getName())) {
+                log.error("task name is null");
+                return true;
+            }
+            if (CollectionUtils.isEmpty(task.getSqlList())) {
+                log.error("task sql list is null");
                 return true;
             }
         }
