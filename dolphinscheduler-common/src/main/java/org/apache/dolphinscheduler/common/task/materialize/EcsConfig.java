@@ -5,13 +5,11 @@ import lombok.Data;
 @Data
 public class EcsConfig {
 
-    private String endPoint;
+    private String restEndPoint;
 
-    private String identity;
+    private String accessKey;
 
-    private String secretKey;
+    private String secretAccessKey;
 
-    private String bucket;
-
-    private String key;
+    private String bucketName;
 }

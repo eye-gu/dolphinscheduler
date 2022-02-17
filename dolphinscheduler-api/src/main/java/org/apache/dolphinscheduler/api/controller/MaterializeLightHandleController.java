@@ -7,6 +7,7 @@ package org.apache.dolphinscheduler.api.controller;
 
 import static org.apache.dolphinscheduler.api.enums.Status.COUNT_PROCESS_INSTANCE_STATE_ERROR;
 import static org.apache.dolphinscheduler.api.enums.Status.CREATE_TASK_DEFINITION_ERROR;
+import static org.apache.dolphinscheduler.api.enums.Status.QUERY_DETAIL_OF_PROCESS_DEFINITION_ERROR;
 import static org.apache.dolphinscheduler.api.enums.Status.START_PROCESS_INSTANCE_ERROR;
 import static org.apache.dolphinscheduler.api.enums.Status.UPDATE_TASK_DEFINITION_ERROR;
 
@@ -17,14 +18,26 @@ import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleTas
 import org.apache.dolphinscheduler.api.exceptions.ApiException;
 import org.apache.dolphinscheduler.api.service.MaterializeLightHandleService;
 import org.apache.dolphinscheduler.api.utils.Result;
+import org.apache.dolphinscheduler.common.Constants;
+import org.apache.dolphinscheduler.common.enums.CommandType;
+import org.apache.dolphinscheduler.common.enums.FailureStrategy;
+import org.apache.dolphinscheduler.common.enums.Priority;
+import org.apache.dolphinscheduler.common.enums.TaskDependType;
+import org.apache.dolphinscheduler.common.enums.WarningType;
+import org.apache.dolphinscheduler.common.task.materialize.JobRunInfo;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
+import org.apache.dolphinscheduler.dao.entity.Command;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,8 +52,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import springfox.documentation.annotations.ApiIgnore;
+
+import com.baomidou.mybatisplus.annotation.TableField;
 
 /**
  * @author eye.gu@aloudata.com
@@ -51,6 +67,8 @@ import springfox.documentation.annotations.ApiIgnore;
 @RequestMapping("/materialize_light_handle")
 @Slf4j
 public class MaterializeLightHandleController extends BaseController {
+
+    private static final String command_prefix = "materialize";
 
     @Autowired
     private MaterializeLightHandleService materializeLightHandleService;
@@ -64,12 +82,14 @@ public class MaterializeLightHandleController extends BaseController {
     @PostMapping(value = "/create")
     @ApiException(CREATE_TASK_DEFINITION_ERROR)
     @AccessLogAnnotation
-    public Result create(@RequestParam("materializeLightHandleProcessDefinition") @ApiIgnore MultipartFile materializeLightHandleProcessDefinition,
+    public Result create(@RequestParam(value = "externalCode") String externalCode,
+                         @RequestParam("materializeLightHandleProcessDefinition") MultipartFile materializeLightHandleProcessDefinition,
                          @RequestParam(value = "files", required = false) MultipartFile[] files) throws Exception {
         MaterializeLightHandleProcessDefinition processDefinition = getFromFile(materializeLightHandleProcessDefinition);
         if (invalid(processDefinition)) {
             throw new IllegalArgumentException("processDefinition is invalid");
         }
+        processDefinition.setExternalCode(externalCode);
         return returnDataList(materializeLightHandleService.create(processDefinition, files));
     }
 
@@ -82,12 +102,14 @@ public class MaterializeLightHandleController extends BaseController {
     @PostMapping(value = "/update")
     @ApiException(UPDATE_TASK_DEFINITION_ERROR)
     @AccessLogAnnotation
-    public Result update(@RequestParam("materializeLightHandleProcessDefinition") @ApiIgnore MultipartFile materializeLightHandleProcessDefinition,
+    public Result update(@RequestParam(value = "externalCode") String externalCode,
+                         @RequestParam("materializeLightHandleProcessDefinition") MultipartFile materializeLightHandleProcessDefinition,
                          @RequestParam(value = "files", required = false) MultipartFile[] files) throws Exception {
         MaterializeLightHandleProcessDefinition processDefinition = getFromFile(materializeLightHandleProcessDefinition);
         if (invalid(processDefinition)) {
             throw new IllegalArgumentException("processDefinition is invalid");
         }
+        processDefinition.setExternalCode(externalCode);
         return returnDataList(materializeLightHandleService.update(processDefinition, files));
     }
 
@@ -100,29 +122,68 @@ public class MaterializeLightHandleController extends BaseController {
         if (materializeLightHandleExec == null || StringUtils.isBlank(materializeLightHandleExec.getExternalCode())) {
             throw new IllegalArgumentException("exec process is invalid");
         }
-        return returnDataList(materializeLightHandleService.exec(materializeLightHandleExec));
+        Map<String, Object> result = materializeLightHandleService.exec(materializeLightHandleExec);
+        Command command = (Command) result.get(Constants.DATA_LIST);
+        if (command != null) {
+            result.put(Constants.DATA_LIST, convert(command));
+        }
+        return returnDataList(result);
     }
 
     @ApiOperation(value = "status", notes = "STATUS")
     @GetMapping(value = "/status")
     @ApiException(COUNT_PROCESS_INSTANCE_STATE_ERROR)
     @AccessLogAnnotation
-    public Result status(@RequestParam Integer commandId) throws Exception {
+    public Result status(@RequestParam String commandId) throws Exception {
         if (commandId == null) {
             throw new IllegalArgumentException("commandId is invalid");
         }
-        return returnDataList(materializeLightHandleService.status(commandId));
+        Map<String, Object> result = materializeLightHandleService.status(parsePrefix(commandId));
+        JobRunInfo jobRunInfo = (JobRunInfo) result.get(Constants.DATA_LIST);
+        if (jobRunInfo != null) {
+            result.put(Constants.DATA_LIST, convert(jobRunInfo));
+        }
+        return returnDataList(result);
     }
 
     @ApiOperation(value = "statuses", notes = "STATUSES")
     @GetMapping(value = "/statuses")
     @ApiException(COUNT_PROCESS_INSTANCE_STATE_ERROR)
     @AccessLogAnnotation
-    public Result statuses(@RequestParam Set<Integer> commandIds) throws Exception {
+    public Result statuses(@RequestParam List<String> commandIds) throws Exception {
         if (CollectionUtils.isEmpty(commandIds) || commandIds.size() > 100) {
             throw new IllegalArgumentException("commandIds size must be between 1 and 100");
         }
-        return returnDataList(materializeLightHandleService.statuses(commandIds));
+        Map<String, Object> result = materializeLightHandleService.statuses(commandIds.stream().map(this::parsePrefix).collect(Collectors.toSet()));
+        List<JobRunInfo> jobRunInfos = (List<JobRunInfo>) result.get(Constants.DATA_LIST);
+        if (CollectionUtils.isNotEmpty(jobRunInfos)) {
+            result.put(Constants.DATA_LIST, jobRunInfos.stream().map(this::convert).collect(Collectors.toList()));
+        }
+        return returnDataList(result);
+    }
+
+
+    private JobRunInfo convert(JobRunInfo jobRunInfo) {
+        jobRunInfo.setJobId(command_prefix + jobRunInfo.getJobId());
+        return jobRunInfo;
+    }
+
+    private ResultCommand convert(Command command) {
+        ResultCommand resultCommand = new ResultCommand();
+        resultCommand.setId(command_prefix + command.getId());
+        resultCommand.setCommandType(resultCommand.getCommandType());
+        resultCommand.setProcessDefinitionCode(resultCommand.getProcessDefinitionVersion());
+        resultCommand.setCommandParam(resultCommand.getCommandParam());
+        resultCommand.setProcessInstanceId(resultCommand.getProcessInstanceId());
+        resultCommand.setProcessDefinitionVersion(resultCommand.getProcessDefinitionVersion());
+        return resultCommand;
+    }
+
+    private Integer parsePrefix(String commandId) {
+        if (commandId.startsWith(command_prefix)) {
+            commandId = commandId.substring(command_prefix.length());
+        }
+        return Integer.valueOf(commandId);
     }
 
     private MaterializeLightHandleProcessDefinition getFromFile(MultipartFile file) {
@@ -141,14 +202,6 @@ public class MaterializeLightHandleController extends BaseController {
             log.error("process is null");
             return true;
         }
-        if (StringUtils.isBlank(materializeLightHandleProcessDefinition.getName())) {
-            log.error("process name is null");
-            return true;
-        }
-        if (StringUtils.isBlank(materializeLightHandleProcessDefinition.getExternalCode())) {
-            log.error("process external code is null");
-            return true;
-        }
         if (CollectionUtils.isEmpty(materializeLightHandleProcessDefinition.getTasks())) {
             log.error("process tasks is null");
             return true;
@@ -162,15 +215,36 @@ public class MaterializeLightHandleController extends BaseController {
                 log.error("task external code is null");
                 return true;
             }
-            if (StringUtils.isBlank(task.getName())) {
-                log.error("task name is null");
-                return true;
-            }
             if (CollectionUtils.isEmpty(task.getSqlList())) {
                 log.error("task sql list is null");
                 return true;
             }
         }
         return false;
+    }
+
+    @Data
+    private static class ResultCommand {
+        private String id;
+
+        /**
+         * command type
+         */
+        private CommandType commandType;
+
+        /**
+         * process definition code
+         */
+        private long processDefinitionCode;
+
+
+        /**
+         * command parameter, format json
+         */
+        private String commandParam;
+
+        private int processInstanceId;
+
+        private int processDefinitionVersion;
     }
 }

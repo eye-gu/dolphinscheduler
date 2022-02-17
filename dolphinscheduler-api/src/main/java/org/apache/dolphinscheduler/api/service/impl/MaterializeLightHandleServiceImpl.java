@@ -45,6 +45,7 @@ import org.apache.dolphinscheduler.dao.entity.CommandProcessInstanceRelation;
 import org.apache.dolphinscheduler.dao.entity.ErrorCommand;
 import org.apache.dolphinscheduler.dao.entity.ProcessDefinition;
 import org.apache.dolphinscheduler.dao.entity.ProcessInstance;
+import org.apache.dolphinscheduler.dao.entity.ProcessTaskRelation;
 import org.apache.dolphinscheduler.dao.entity.ProcessTaskRelationLog;
 import org.apache.dolphinscheduler.dao.entity.TaskDefinition;
 import org.apache.dolphinscheduler.dao.entity.TaskDefinitionLog;
@@ -55,6 +56,7 @@ import org.apache.dolphinscheduler.dao.mapper.ErrorCommandMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProcessDefinitionMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProcessInstanceMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProcessTaskRelationLogMapper;
+import org.apache.dolphinscheduler.dao.mapper.TaskDefinitionLogMapper;
 import org.apache.dolphinscheduler.dao.mapper.TaskDefinitionMapper;
 import org.apache.dolphinscheduler.dao.mapper.TaskInstanceMapper;
 import org.apache.dolphinscheduler.service.process.ProcessService;
@@ -85,6 +87,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
+
+import com.google.common.collect.Lists;
 
 /**
  * @author eye.gu@aloudata.com
@@ -120,6 +124,9 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
 
     @Autowired
     private ProcessInstanceMapper processInstanceMapper;
+
+    @Autowired
+    private TaskDefinitionLogMapper taskDefinitionLogMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -434,8 +441,16 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
                 properties.add(property);
             }
         }
+        String name;
+        if (StringUtils.isBlank(materializeLightHandleProcessDefinition.getName())) {
+            name = materializeLightHandleProcessDefinition.getExternalCode();
+        } else if (materializeLightHandleProcessDefinition.getName().contains(materializeLightHandleProcessDefinition.getExternalCode())) {
+            name = materializeLightHandleProcessDefinition.getName();
+        } else {
+            name = materializeLightHandleProcessDefinition.getName() + "-" + materializeLightHandleProcessDefinition.getExternalCode();
+        }
         ProcessDefinition processDefinition = new ProcessDefinition(projectCode,
-            materializeLightHandleProcessDefinition.getName() + "-" + materializeLightHandleProcessDefinition.getExternalCode(),
+            name,
             code,
             materializeLightHandleProcessDefinition.getDescription(),
             JSONUtils.toJsonString(properties), null,
@@ -479,7 +494,13 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         taskDefinitionLog.setTaskParams(JSONUtils.toJsonString(materializeParameters));
         taskDefinitionLog.setTimeout(primaryIntGet(materializeLightHandleTaskDefinition::getTimeout));
         taskDefinitionLog.setDescription(materializeLightHandleTaskDefinition.getDescription());
-        taskDefinitionLog.setName(materializeLightHandleTaskDefinition.getName() + "-" + materializeLightHandleTaskDefinition.getExternalCode());
+        if (StringUtils.isBlank(materializeLightHandleTaskDefinition.getName())) {
+            taskDefinitionLog.setName(materializeLightHandleTaskDefinition.getExternalCode());
+        } else if (materializeLightHandleTaskDefinition.getName().contains(materializeLightHandleTaskDefinition.getExternalCode())) {
+            taskDefinitionLog.setName(materializeLightHandleTaskDefinition.getName());
+        } else {
+            taskDefinitionLog.setName(materializeLightHandleTaskDefinition.getName() + "-" + materializeLightHandleTaskDefinition.getExternalCode());
+        }
         taskDefinitionLog.setFailRetryTimes(primaryIntGet(materializeLightHandleTaskDefinition::getFailRetryTimes));
         taskDefinitionLog.setFailRetryInterval(primaryIntGet(materializeLightHandleTaskDefinition::getFailRetryInterval));
         taskDefinitionLog.setTimeoutFlag(taskDefinitionLog.getTimeout() > 0 ? TimeoutFlag.OPEN : TimeoutFlag.CLOSE);

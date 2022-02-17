@@ -44,5 +44,15 @@ public class StoreConfig {
      */
     private Boolean withHeader;
 
+    /**
+     * 文件名, 和 filePath 拼在一起为ecs的key
+     */
+    private String fileName;
+
+    /**
+     * 文件路径
+     */
+    private String filePath;
+
     private EcsConfig ecsConfig;
 }
