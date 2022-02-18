@@ -469,6 +469,11 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         ReadConfig readConfig = materializeLightHandleTaskDefinition.getReadConfig();
         if (readConfig != null) {
             if (ReadOrStoreConfigTypeEnum.FILE.name().equalsIgnoreCase(readConfig.getType())) {
+                if (StringUtils.isBlank(readConfig.getFileType())) {
+                    readConfig.setType(readConfig.getFileType());
+                } else {
+                    readConfig.setType(ReadOrStoreConfigTypeEnum.EXCEL.name());
+                }
                 readConfig.setPath("/tmp/material_light_handle/file/" + processExternalCode + "/" + readConfig.getDatasourceId());
             }
         }
