@@ -400,7 +400,14 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         if (commandIds.size() > 0) {
             List<Command> commands = commandMapper.selectBatchIds(commandIds);
             for (Command command : commands) {
+                commandIds.remove(command.getId());
                 jobRunInfos.add(build(command.getId(), command));
+            }
+        }
+
+        if (commandIds.size() > 0) {
+            for (Integer commandId : commandIds) {
+                jobRunInfos.add(build(commandId));
             }
         }
 
