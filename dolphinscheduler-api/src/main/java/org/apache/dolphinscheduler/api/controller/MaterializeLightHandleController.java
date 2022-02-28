@@ -33,6 +33,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -86,10 +87,10 @@ public class MaterializeLightHandleController extends BaseController {
                          @RequestParam("materializeLightHandleProcessDefinition") MultipartFile materializeLightHandleProcessDefinition,
                          @RequestParam(value = "files", required = false) MultipartFile[] files) throws Exception {
         MaterializeLightHandleProcessDefinition processDefinition = getFromFile(materializeLightHandleProcessDefinition);
+        processDefinition.setExternalCode(externalCode);
         if (invalid(processDefinition)) {
             throw new IllegalArgumentException("processDefinition is invalid");
         }
-        processDefinition.setExternalCode(externalCode);
         return returnDataList(materializeLightHandleService.create(processDefinition, files));
     }
 
@@ -106,10 +107,10 @@ public class MaterializeLightHandleController extends BaseController {
                          @RequestParam("materializeLightHandleProcessDefinition") MultipartFile materializeLightHandleProcessDefinition,
                          @RequestParam(value = "files", required = false) MultipartFile[] files) throws Exception {
         MaterializeLightHandleProcessDefinition processDefinition = getFromFile(materializeLightHandleProcessDefinition);
+        processDefinition.setExternalCode(externalCode);
         if (invalid(processDefinition)) {
             throw new IllegalArgumentException("processDefinition is invalid");
         }
-        processDefinition.setExternalCode(externalCode);
         return returnDataList(materializeLightHandleService.update(processDefinition, files));
     }
 
@@ -218,6 +219,14 @@ public class MaterializeLightHandleController extends BaseController {
             if (CollectionUtils.isEmpty(task.getSqlList())) {
                 log.error("task sql list is null");
                 return true;
+            }
+            task.setExternalCode(materializeLightHandleProcessDefinition.getExternalCode() + "-" + task.getExternalCode());
+            if (CollectionUtils.isNotEmpty(task.getPreExternalCodes())) {
+                List<String> preCodes = new ArrayList<>(task.getPreExternalCodes().size());
+                for (String preExternalCode : task.getPreExternalCodes()) {
+                    preCodes.add(materializeLightHandleProcessDefinition.getExternalCode() + "-" + preExternalCode);
+                }
+                task.setPreExternalCodes(preCodes);
             }
         }
         return false;

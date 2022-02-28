@@ -276,7 +276,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             throw new ServiceException(Status.UPDATE_PROCESS_DEFINITION_ERROR);
         }
 
-        HadoopUtils.getInstance().delete("/tmp/material_light_handle/file/" + materializeLightHandleProcessDefinition.getExternalCode(), true);
+//        HadoopUtils.getInstance().delete("/tmp/material_light_handle/file/" + materializeLightHandleProcessDefinition.getExternalCode(), true);
         uploadToHdfs(materializeLightHandleProcessDefinition.getExternalCode(), files);
         return result;
     }
