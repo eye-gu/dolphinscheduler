@@ -27,4 +27,9 @@ public class MaterializeLightHandleExec {
     private List<ReadConfig> readConfigs;
 
     private StoreConfig resultStoreConfig;
+
+    /**
+     * 是否空跑
+     */
+    private Boolean dryRun;
 }

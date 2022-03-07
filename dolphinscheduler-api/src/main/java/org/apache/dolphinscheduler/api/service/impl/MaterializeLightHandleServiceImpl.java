@@ -29,6 +29,7 @@ import org.apache.dolphinscheduler.common.enums.TaskType;
 import org.apache.dolphinscheduler.common.enums.TimeoutFlag;
 import org.apache.dolphinscheduler.common.enums.WarningType;
 import org.apache.dolphinscheduler.common.process.Property;
+import org.apache.dolphinscheduler.common.task.materialize.JSONUtils;
 import org.apache.dolphinscheduler.common.task.materialize.JobRunInfo;
 import org.apache.dolphinscheduler.common.task.materialize.JobStatus;
 import org.apache.dolphinscheduler.common.task.materialize.MaterializeParameters;
@@ -39,7 +40,6 @@ import org.apache.dolphinscheduler.common.task.materialize.ReadConfig;
 import org.apache.dolphinscheduler.common.task.materialize.ReadOrStoreConfigTypeEnum;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
 import org.apache.dolphinscheduler.common.utils.HadoopUtils;
-import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.Command;
 import org.apache.dolphinscheduler.dao.entity.CommandProcessInstanceRelation;
 import org.apache.dolphinscheduler.dao.entity.ErrorCommand;
@@ -74,6 +74,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -310,6 +311,9 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             for (ReadConfig readConfig : materializeLightHandleExec.getReadConfigs()) {
                 startParams.put(ParamUtils.READ_CONFIG + readConfig.getDatasourceId(), JSONUtils.toJsonString(readConfig));
             }
+        }
+        if (Objects.nonNull(materializeLightHandleExec.getDryRun()) && materializeLightHandleExec.getDryRun()) {
+            startParams.put(ParamUtils.DRY_RUN, Boolean.TRUE.toString());
         }
         cmdParam.put(CMD_PARAM_START_PARAMS, JSONUtils.toJsonString(startParams));
         command.setCommandParam(JSONUtils.toJsonString(cmdParam));

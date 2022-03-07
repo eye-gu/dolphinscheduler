@@ -7,6 +7,8 @@ package org.apache.dolphinscheduler.common.task.materialize;
 
 import lombok.Data;
 
+import com.sun.tools.javac.util.List;
+
 /**
  * @author eye.gu@aloudata.com
  * @version 1
@@ -55,4 +57,9 @@ public class StoreConfig {
     private String filePath;
 
     private EcsConfig ecsConfig;
+
+    /**
+     * 列名别名
+     */
+    private List<String> colAliasNameList;
 }

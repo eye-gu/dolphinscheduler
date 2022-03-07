@@ -24,8 +24,8 @@ import org.apache.dolphinscheduler.common.enums.FailureStrategy;
 import org.apache.dolphinscheduler.common.enums.Priority;
 import org.apache.dolphinscheduler.common.enums.TaskDependType;
 import org.apache.dolphinscheduler.common.enums.WarningType;
+import org.apache.dolphinscheduler.common.task.materialize.JSONUtils;
 import org.apache.dolphinscheduler.common.task.materialize.JobRunInfo;
-import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.Command;
 
 import org.apache.commons.collections4.CollectionUtils;

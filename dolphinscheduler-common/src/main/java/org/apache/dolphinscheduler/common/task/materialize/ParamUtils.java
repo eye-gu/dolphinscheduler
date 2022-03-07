@@ -1,7 +1,6 @@
 package org.apache.dolphinscheduler.common.task.materialize;
 
 import org.apache.dolphinscheduler.common.enums.DataType;
-import org.apache.dolphinscheduler.spi.utils.JSONUtils;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
@@ -48,6 +47,8 @@ public class ParamUtils {
     public static final String READ_CONFIG = SYSTEM_PARAM_PREFIX + "readConfig";
 
     public static final String RESULT_STORE_CONFIG = SYSTEM_PARAM_PREFIX + "resultStoreConfig";
+
+    public static final String DRY_RUN = SYSTEM_PARAM_PREFIX + "dryRun";
 
     static {
         Set<String> tmp = new HashSet<>();

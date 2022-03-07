@@ -7,6 +7,7 @@ package org.apache.dolphinscheduler.plugin.task.materialize;
 
 import lombok.Data;
 
+import org.apache.dolphinscheduler.common.task.materialize.JSONUtils;
 import org.apache.dolphinscheduler.common.task.materialize.Param;
 import org.apache.dolphinscheduler.common.task.materialize.ParamUtils;
 import org.apache.dolphinscheduler.common.task.materialize.ReadConfig;
@@ -19,7 +20,7 @@ import org.apache.dolphinscheduler.spi.task.AbstractParameters;
 import org.apache.dolphinscheduler.spi.task.Property;
 import org.apache.dolphinscheduler.spi.task.TaskConstants;
 import org.apache.dolphinscheduler.spi.task.request.TaskRequest;
-import org.apache.dolphinscheduler.spi.utils.JSONUtils;
+import org.apache.dolphinscheduler.spi.utils.StringUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -140,6 +141,10 @@ public class MaterializeTask extends AbstractTaskExecutor {
             sqlEntities.add(sqlEntity);
         }
         task.setSqlList(sqlEntities);
+        String dryRun = globalParamsMap.get(ParamUtils.DRY_RUN);
+        if (Boolean.TRUE.toString().equalsIgnoreCase(dryRun)) {
+            task.setRunEmpty(true);
+        }
         return task;
     }
 
@@ -313,6 +318,7 @@ public class MaterializeTask extends AbstractTaskExecutor {
         private ReadConfig readConfig;
         private StoreConfig storeConfig;
         private List<SqlEntity> sqlList;
+        private Boolean runEmpty;
     }
 
     @Data
