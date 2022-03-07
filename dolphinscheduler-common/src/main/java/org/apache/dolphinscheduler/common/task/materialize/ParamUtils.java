@@ -145,18 +145,16 @@ public class ParamUtils {
     @Data
     private static class FunctionConfig {
         private AnchorPointWithOffset date;
-        // 是否取锚点和偏移量之间的所有日期
-        private Boolean allDate;
+        // All_DATE
+        private String anchorPointType;
 
         // 日期范围
-        private AnchorPointWithOffset start;
-        private AnchorPointWithOffset end;
+        private AnchorPoint start;
+        private AnchorPoint end;
         private List<String> types;
     }
 
     // 锚点和偏移量
-    // 如果外层 allDate 为 true, 那么会取锚点和偏移量之间的所有日期
-    // 否则只会取 偏移量的日期
     @Data
     private static class AnchorPointWithOffset {
         // 锚点日期
@@ -169,12 +167,18 @@ public class ParamUtils {
         private Integer intervalYears;
     }
 
+    // 锚点
     @Data
     private static class AnchorPoint {
         // 计算锚点的入参日期
         private ParamValue date;
         // 计算锚点的日期函数
         private String type;
+
+        private Integer intervalDays;
+        private Integer intervalWeeks;
+        private Integer intervalMonths;
+        private Integer intervalYears;
     }
 
     @AllArgsConstructor
@@ -204,16 +208,15 @@ public class ParamUtils {
             AnchorPointWithOffset date = functionConfig.getDate();
             LocalDate point = calAnchorPoint(context, date.date);
             LocalDate offset = calAnchorPointOffset(point, date);
-            if (functionConfig.allDate != null && functionConfig.allDate) {
+            if ("ALL_DATE".equalsIgnoreCase(functionConfig.anchorPointType)) {
                 return convertListObject(allDate(point, offset));
-            } else {
-                return Collections.singletonList(DATE_FORMATTER.format(offset));
             }
+            return convertListObject(allDate(point, offset));
         } else {
-            AnchorPointWithOffset start = functionConfig.getStart();
-            AnchorPointWithOffset end = functionConfig.getEnd();
-            LocalDate startDate = calAnchorPointOffset(calAnchorPoint(context, start.date), start);
-            LocalDate endDate = calAnchorPointOffset(calAnchorPoint(context, end.date), end);
+            AnchorPoint start = functionConfig.getStart();
+            AnchorPoint end = functionConfig.getEnd();
+            LocalDate startDate = calAnchorPoint(context, start);
+            LocalDate endDate = calAnchorPoint(context, end);
             List<Object> result = new ArrayList<>();
             for (String type : functionConfig.getTypes()) {
                 FunctionTypeEnum functionTypeEnum = FunctionTypeEnum.valueOf(type.toUpperCase(Locale.ROOT));
@@ -457,35 +460,48 @@ public class ParamUtils {
             localDate = LocalDate.parse(date, DATE_FORMATTER);
         }
         if (StringUtils.isBlank(anchorPoint.getType())) {
+            localDate = intervalDate(localDate, anchorPoint.getIntervalDays(), anchorPoint.getIntervalMonths(), anchorPoint.getIntervalYears(), anchorPoint.getIntervalWeeks());
             return localDate;
         }
         FunctionTypeEnum functionTypeEnum = FunctionTypeEnum.valueOf(anchorPoint.getType().toUpperCase(Locale.ROOT));
         switch (functionTypeEnum) {
             case MONTH_END:
-                return localDate.with(TemporalAdjusters.lastDayOfMonth());
+                localDate = localDate.with(TemporalAdjusters.lastDayOfMonth());
+                break;
             case MONTH_START:
-                return localDate.with(TemporalAdjusters.firstDayOfMonth());
+                localDate = localDate.with(TemporalAdjusters.firstDayOfMonth());
+                break;
             case YEAR_START:
-                return localDate.with(TemporalAdjusters.firstDayOfYear());
+                localDate = localDate.with(TemporalAdjusters.firstDayOfYear());
+                break;
             case YEAR_END:
-                return localDate.with(TemporalAdjusters.lastDayOfYear());
+                localDate = localDate.with(TemporalAdjusters.lastDayOfYear());
+                break;
             case LAST_MONTH_START:
-                return localDate.minusMonths(1).with(TemporalAdjusters.firstDayOfMonth());
+                localDate = localDate.minusMonths(1).with(TemporalAdjusters.firstDayOfMonth());
+                break;
             case LAST_MONTH_END:
-                return localDate.minusMonths(1).with(TemporalAdjusters.lastDayOfMonth());
+                localDate = localDate.minusMonths(1).with(TemporalAdjusters.lastDayOfMonth());
+                break;
             case LAST_YEAR_END:
-                return localDate.minusYears(1).with(TemporalAdjusters.lastDayOfYear());
+                localDate = localDate.minusYears(1).with(TemporalAdjusters.lastDayOfYear());
+                break;
             case LAST_YEAR_START:
-                return localDate.minusYears(1).with(TemporalAdjusters.firstDayOfYear());
+                localDate = localDate.minusYears(1).with(TemporalAdjusters.firstDayOfYear());
+                break;
             case TODAY:
-                return localDate;
+                break;
             case YESTERDAY:
-                return localDate.minusDays(1);
+                localDate = localDate.minusDays(1);
+                break;
             case THE_DAY_BEFORE_YESTERDAY:
-                return localDate.minusDays(2);
+                localDate = localDate.minusDays(2);
+                break;
             default:
                 throw new IllegalArgumentException("not support anchor point type:" + anchorPoint.getType());
         }
+        localDate = intervalDate(localDate, anchorPoint.getIntervalDays(), anchorPoint.getIntervalMonths(), anchorPoint.getIntervalYears(), anchorPoint.getIntervalWeeks());
+        return localDate;
     }
 
     private static LocalDate intervalDate(LocalDate localDate, Integer intervalDays, Integer intervalMonths, Integer intervalYears, Integer intervalWeeks) {
@@ -573,7 +589,7 @@ public class ParamUtils {
 
 
         functionConfig.setDate(end);
-        functionConfig.setAllDate(false);
+        functionConfig.setAnchorPointType("ALL_DATE");
 
 //        functionConfig.setStart(start);
 //        functionConfig.setEnd(end);

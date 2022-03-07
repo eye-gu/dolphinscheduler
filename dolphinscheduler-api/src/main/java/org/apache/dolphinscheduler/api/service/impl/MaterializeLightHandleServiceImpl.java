@@ -59,6 +59,8 @@ import org.apache.dolphinscheduler.dao.mapper.ProcessTaskRelationLogMapper;
 import org.apache.dolphinscheduler.dao.mapper.TaskDefinitionLogMapper;
 import org.apache.dolphinscheduler.dao.mapper.TaskDefinitionMapper;
 import org.apache.dolphinscheduler.dao.mapper.TaskInstanceMapper;
+import org.apache.dolphinscheduler.remote.command.StateEventChangeCommand;
+import org.apache.dolphinscheduler.remote.processor.StateEventCallbackService;
 import org.apache.dolphinscheduler.service.process.ProcessService;
 import org.apache.dolphinscheduler.spi.utils.StringUtils;
 
@@ -128,6 +130,9 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
 
     @Autowired
     private TaskDefinitionLogMapper taskDefinitionLogMapper;
+
+    @Autowired
+    private StateEventCallbackService stateEventCallbackService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -277,7 +282,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             throw new ServiceException(Status.UPDATE_PROCESS_DEFINITION_ERROR);
         }
 
-//        HadoopUtils.getInstance().delete("/tmp/material_light_handle/file/" + materializeLightHandleProcessDefinition.getExternalCode(), true);
+        HadoopUtils.getInstance().delete("/tmp/material_light_handle/file/" + materializeLightHandleProcessDefinition.getExternalCode(), true);
         uploadToHdfs(materializeLightHandleProcessDefinition.getExternalCode(), files);
         return result;
     }
@@ -420,6 +425,51 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         return result;
     }
 
+    @Override
+    public Map<String, Object> stop(Integer commandId) {
+        Map<String, Object> result = new HashMap<>(2);
+        Integer processInstanceId = processService.queryProcessInstanceByCommandId(commandId);
+        if (processInstanceId == null) {
+            putMsg(result, Status.PROCESS_INSTANCE_NOT_EXIST, commandId);
+            return result;
+        }
+        ProcessInstance processInstance = processService.findProcessInstanceDetailById(processInstanceId);
+        if (processInstance == null) {
+            putMsg(result, Status.PROCESS_INSTANCE_NOT_EXIST, processInstanceId);
+            return result;
+        }
+        if (processInstance.getState() == ExecutionStatus.READY_STOP) {
+            putMsg(result, Status.PROCESS_INSTANCE_ALREADY_CHANGED, processInstance.getName(), processInstance.getState());
+        } else {
+            result = updateProcessInstancePrepare(processInstance, CommandType.STOP, ExecutionStatus.READY_STOP);
+        }
+        return result;
+    }
+
+    private Map<String, Object> updateProcessInstancePrepare(ProcessInstance processInstance, CommandType commandType, ExecutionStatus executionStatus) {
+        Map<String, Object> result = new HashMap<>();
+
+        processInstance.setCommandType(commandType);
+        processInstance.addHistoryCmd(commandType);
+        processInstance.setState(executionStatus);
+        int update = processService.updateProcessInstance(processInstance);
+
+        // determine whether the process is normal
+        if (update > 0) {
+            String host = processInstance.getHost();
+            String address = host.split(":")[0];
+            int port = Integer.parseInt(host.split(":")[1]);
+            StateEventChangeCommand stateEventChangeCommand = new StateEventChangeCommand(
+                processInstance.getId(), 0, processInstance.getState(), processInstance.getId(), 0
+            );
+            stateEventCallbackService.sendResult(address, port, stateEventChangeCommand.convert2Command());
+            putMsg(result, Status.SUCCESS);
+        } else {
+            putMsg(result, Status.EXECUTE_PROCESS_INSTANCE_ERROR);
+        }
+        return result;
+    }
+
     private int taskSize(long processCode, int processVersion) {
         List<ProcessTaskRelationLog> processTaskRelationLogs = processTaskRelationLogMapper.queryByProcessCodeAndVersion(processCode, processVersion);
         if (CollectionUtils.isEmpty(processTaskRelationLogs)) {
@@ -480,7 +530,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         ReadConfig readConfig = materializeLightHandleTaskDefinition.getReadConfig();
         if (readConfig != null) {
             if (ReadOrStoreConfigTypeEnum.FILE.name().equalsIgnoreCase(readConfig.getType())) {
-                if (StringUtils.isBlank(readConfig.getFileType())) {
+                if (StringUtils.isNotBlank(readConfig.getFileType())) {
                     readConfig.setType(readConfig.getFileType());
                 } else {
                     readConfig.setType(ReadOrStoreConfigTypeEnum.EXCEL.name());

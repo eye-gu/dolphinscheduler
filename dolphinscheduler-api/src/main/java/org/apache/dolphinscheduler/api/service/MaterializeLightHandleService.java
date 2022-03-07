@@ -29,4 +29,7 @@ public interface MaterializeLightHandleService {
     Map<String, Object> status(Integer commandId);
 
     Map<String, Object> statuses(Set<Integer> commandIds);
+
+    Map<String, Object> stop(Integer commandId);
+
 }

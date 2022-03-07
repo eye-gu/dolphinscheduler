@@ -7,6 +7,7 @@ package org.apache.dolphinscheduler.api.controller;
 
 import static org.apache.dolphinscheduler.api.enums.Status.COUNT_PROCESS_INSTANCE_STATE_ERROR;
 import static org.apache.dolphinscheduler.api.enums.Status.CREATE_TASK_DEFINITION_ERROR;
+import static org.apache.dolphinscheduler.api.enums.Status.EXECUTE_PROCESS_INSTANCE_ERROR;
 import static org.apache.dolphinscheduler.api.enums.Status.QUERY_DETAIL_OF_PROCESS_DEFINITION_ERROR;
 import static org.apache.dolphinscheduler.api.enums.Status.START_PROCESS_INSTANCE_ERROR;
 import static org.apache.dolphinscheduler.api.enums.Status.UPDATE_TASK_DEFINITION_ERROR;
@@ -15,11 +16,13 @@ import org.apache.dolphinscheduler.api.aspect.AccessLogAnnotation;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleExec;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleProcessDefinition;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleTaskDefinition;
+import org.apache.dolphinscheduler.api.enums.Status;
 import org.apache.dolphinscheduler.api.exceptions.ApiException;
 import org.apache.dolphinscheduler.api.service.MaterializeLightHandleService;
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.Constants;
 import org.apache.dolphinscheduler.common.enums.CommandType;
+import org.apache.dolphinscheduler.common.enums.ExecutionStatus;
 import org.apache.dolphinscheduler.common.enums.FailureStrategy;
 import org.apache.dolphinscheduler.common.enums.Priority;
 import org.apache.dolphinscheduler.common.enums.TaskDependType;
@@ -27,6 +30,7 @@ import org.apache.dolphinscheduler.common.enums.WarningType;
 import org.apache.dolphinscheduler.common.task.materialize.JSONUtils;
 import org.apache.dolphinscheduler.common.task.materialize.JobRunInfo;
 import org.apache.dolphinscheduler.dao.entity.Command;
+import org.apache.dolphinscheduler.dao.entity.ProcessInstance;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -160,6 +164,18 @@ public class MaterializeLightHandleController extends BaseController {
         if (CollectionUtils.isNotEmpty(jobRunInfos)) {
             result.put(Constants.DATA_LIST, jobRunInfos.stream().map(this::convert).collect(Collectors.toList()));
         }
+        return returnDataList(result);
+    }
+
+    @ApiOperation(value = "stop", notes = "STOP")
+    @PostMapping(value = "/stop")
+    @ApiException(EXECUTE_PROCESS_INSTANCE_ERROR)
+    @AccessLogAnnotation
+    public Result stop(@RequestParam String commandId) throws Exception {
+        if (StringUtils.isBlank(commandId)) {
+            throw new IllegalArgumentException("commandId is invalid");
+        }
+        Map<String, Object> result = materializeLightHandleService.stop(parsePrefix(commandId));
         return returnDataList(result);
     }
 
