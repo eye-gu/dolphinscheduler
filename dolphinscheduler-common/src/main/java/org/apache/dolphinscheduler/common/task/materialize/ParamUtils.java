@@ -144,27 +144,18 @@ public class ParamUtils {
     // 函数config的json对象
     @Data
     private static class FunctionConfig {
-        private AnchorPointWithOffset date;
+        private AnchorPoint date;
         // All_DATE
         private String anchorPointType;
+        private Integer intervalDays;
+        private Integer intervalWeeks;
+        private Integer intervalMonths;
+        private Integer intervalYears;
 
         // 日期范围
         private AnchorPoint start;
         private AnchorPoint end;
         private List<String> types;
-    }
-
-    // 锚点和偏移量
-    @Data
-    private static class AnchorPointWithOffset {
-        // 锚点日期
-        private AnchorPoint date;
-        // 计算偏移量, 负数向前推
-        // 间隔天
-        private Integer intervalDays;
-        private Integer intervalWeeks;
-        private Integer intervalMonths;
-        private Integer intervalYears;
     }
 
     // 锚点
@@ -205,9 +196,12 @@ public class ParamUtils {
         Map<String, Object> childValue = paramValues(context, paramValue.getChildParams());
         FunctionConfig functionConfig = JSONUtils.parseObject(replaceSqlHolder(config, childValue), FunctionConfig.class);
         if (functionConfig.getDate() != null) {
-            AnchorPointWithOffset date = functionConfig.getDate();
-            LocalDate point = calAnchorPoint(context, date.date);
-            LocalDate offset = calAnchorPointOffset(point, date);
+            AnchorPoint date = functionConfig.getDate();
+            LocalDate point = calAnchorPoint(context, date);
+            if (StringUtils.isBlank(functionConfig.anchorPointType)) {
+                return Collections.singletonList(DATE_FORMATTER.format(point));
+            }
+            LocalDate offset = intervalDate(point, functionConfig.intervalDays, functionConfig.intervalMonths, functionConfig.intervalYears, functionConfig.intervalWeeks);
             if ("ALL_DATE".equalsIgnoreCase(functionConfig.anchorPointType)) {
                 return convertListObject(allDate(point, offset));
             }
@@ -446,10 +440,6 @@ public class ParamUtils {
         return allDate;
     }
 
-    private static LocalDate calAnchorPointOffset(LocalDate point, AnchorPointWithOffset anchorPointWithOffset) {
-        return intervalDate(point, anchorPointWithOffset.getIntervalDays(), anchorPointWithOffset.getIntervalMonths(), anchorPointWithOffset.getIntervalYears(), anchorPointWithOffset.getIntervalWeeks());
-    }
-
     private static LocalDate calAnchorPoint(Map<String, String> context, AnchorPoint anchorPoint) throws Exception {
         ParamValue paramValue = anchorPoint.getDate();
         LocalDate localDate;
@@ -576,19 +566,14 @@ public class ParamUtils {
         ParamValue function = new ParamValue();
         function.setFrom("FUNCTION");
         FunctionConfig functionConfig = new FunctionConfig();
-        AnchorPointWithOffset end = new AnchorPointWithOffset();
         AnchorPoint anchorPoint = new AnchorPoint();
         anchorPoint.setDate(constantParamValue);
         anchorPoint.setType("YESTERDAY");
-        end.setDate(anchorPoint);
-        end.setIntervalDays(-3);
-
-        AnchorPointWithOffset start = new AnchorPointWithOffset();
-        start.setDate(anchorPoint);
-        start.setIntervalMonths(-3);
 
 
-        functionConfig.setDate(end);
+
+
+        functionConfig.setDate(anchorPoint);
         functionConfig.setAnchorPointType("ALL_DATE");
 
 //        functionConfig.setStart(start);
