@@ -113,7 +113,8 @@ public class MaterializeTask extends AbstractTaskExecutor {
     private boolean spark() throws Exception {
         TaskEntity task = buildTaskEntity();
 
-        HadoopUtils.getInstance().create(buildHdfsValueFilePath(), JSONUtils.toJsonString(task).getBytes(StandardCharsets.UTF_8));
+        String str = JSONUtils.toJsonString(task);
+        HadoopUtils.getInstance().create(buildHdfsValueFilePath(), str.getBytes(StandardCharsets.UTF_8));
 
         SparkAppHandle handle = buildAndStartSpark();
         boolean result = sparkRunComplete(handle);

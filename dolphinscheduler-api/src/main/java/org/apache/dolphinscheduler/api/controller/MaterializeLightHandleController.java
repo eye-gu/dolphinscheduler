@@ -15,6 +15,7 @@ import static org.apache.dolphinscheduler.api.enums.Status.UPDATE_TASK_DEFINITIO
 import org.apache.dolphinscheduler.api.aspect.AccessLogAnnotation;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleExec;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleProcessDefinition;
+import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleStop;
 import org.apache.dolphinscheduler.api.dto.materialize.MaterializeLightHandleTaskDefinition;
 import org.apache.dolphinscheduler.api.enums.Status;
 import org.apache.dolphinscheduler.api.exceptions.ApiException;
@@ -171,11 +172,15 @@ public class MaterializeLightHandleController extends BaseController {
     @PostMapping(value = "/stop")
     @ApiException(EXECUTE_PROCESS_INSTANCE_ERROR)
     @AccessLogAnnotation
-    public Result stop(@RequestParam String commandId) throws Exception {
-        if (StringUtils.isBlank(commandId)) {
+    public Result stop(@RequestBody MaterializeLightHandleStop stop) throws Exception {
+        if (stop == null || StringUtils.isBlank(stop.getCommandId())) {
             throw new IllegalArgumentException("commandId is invalid");
         }
-        Map<String, Object> result = materializeLightHandleService.stop(parsePrefix(commandId));
+        Map<String, Object> result = materializeLightHandleService.stop(parsePrefix(stop.getCommandId()));
+        JobRunInfo jobRunInfo = (JobRunInfo) result.get(Constants.DATA_LIST);
+        if (jobRunInfo != null) {
+            result.put(Constants.DATA_LIST, convert(jobRunInfo));
+        }
         return returnDataList(result);
     }
 

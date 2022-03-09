@@ -427,22 +427,38 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
 
     @Override
     public Map<String, Object> stop(Integer commandId) {
+
         Map<String, Object> result = new HashMap<>(2);
+
+        int deleteCommandCnt = commandMapper.deleteById(commandId);
+        if (deleteCommandCnt > 0) {
+            result.put(Constants.STATUS, Status.SUCCESS);
+            result.put(Constants.DATA_LIST, buildStop(commandId));
+            return result;
+        }
+
         Integer processInstanceId = processService.queryProcessInstanceByCommandId(commandId);
         if (processInstanceId == null) {
-            putMsg(result, Status.PROCESS_INSTANCE_NOT_EXIST, commandId);
-            return result;
+            ErrorCommand errorCommand = errorCommandMapper.selectById(commandId);
+            if (errorCommand != null) {
+                ProcessDefinition processDefinition = processDefinitionMapper.queryByCode(errorCommand.getProcessDefinitionCode());
+                JobRunInfo jobRunInfo = build(commandId, errorCommand, processDefinition);
+                result.put(Constants.STATUS, Status.SUCCESS);
+                result.put(Constants.DATA_LIST, jobRunInfo);
+                return result;
+            } else {
+                result.put(Constants.STATUS, Status.SUCCESS);
+                result.put(Constants.DATA_LIST, build(commandId));
+                return result;
+            }
         }
         ProcessInstance processInstance = processService.findProcessInstanceDetailById(processInstanceId);
-        if (processInstance == null) {
-            putMsg(result, Status.PROCESS_INSTANCE_NOT_EXIST, processInstanceId);
-            return result;
-        }
-        if (processInstance.getState() == ExecutionStatus.READY_STOP) {
-            putMsg(result, Status.PROCESS_INSTANCE_ALREADY_CHANGED, processInstance.getName(), processInstance.getState());
-        } else {
-            result = updateProcessInstancePrepare(processInstance, CommandType.STOP, ExecutionStatus.READY_STOP);
-        }
+        updateProcessInstancePrepare(processInstance, CommandType.STOP, ExecutionStatus.READY_STOP);
+
+        List<TaskInstance> taskInstances = taskInstanceMapper.findTaskListByProcessId(processInstanceId);
+
+        result.put(Constants.STATUS, Status.SUCCESS);
+        result.put(Constants.DATA_LIST, build(processInstance, commandId, taskInstances));
         return result;
     }
 
@@ -596,6 +612,24 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         return processTaskRelationLog;
     }
 
+
+    private JobRunInfo buildStop(ProcessInstance processInstance, Integer commandId, List<TaskInstance> taskInstances) {
+        JobRunInfo jobRunInfo = new JobRunInfo();
+        jobRunInfo.setJobId(String.valueOf(commandId));
+        if (processInstance == null) {
+            jobRunInfo.setJobStatus(JobStatus.FAILED);
+            jobRunInfo.setErrorMsg("未找到该任务");
+            jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
+            return jobRunInfo;
+        }
+        jobRunInfo.setJobStatus(JobStatus.STOP);
+        int successSize = taskInstances.stream().filter(t -> t.getState().equals(ExecutionStatus.SUCCESS) || t.getState().equals(ExecutionStatus.FORCED_SUCCESS))
+            .collect(Collectors.groupingBy(TaskInstance::getTaskCode)).size();
+        jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, successSize, taskSize(processInstance.getProcessDefinitionCode(), processInstance.getProcessDefinitionVersion())));
+        return jobRunInfo;
+    }
+
+
     private JobRunInfo build(ProcessInstance processInstance, Integer commandId, List<TaskInstance> taskInstances) {
         JobRunInfo jobRunInfo = new JobRunInfo();
         jobRunInfo.setJobId(String.valueOf(commandId));
@@ -661,11 +695,31 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         return jobRunInfo;
     }
 
+    private JobRunInfo buildStop(Integer commandId, ErrorCommand errorCommand, ProcessDefinition processDefinition) {
+        JobRunInfo jobRunInfo = new JobRunInfo();
+        jobRunInfo.setJobId(String.valueOf(commandId));
+        jobRunInfo.setJobStatus(JobStatus.STOP);
+        if (processDefinition != null) {
+            jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, taskSize(errorCommand.getProcessDefinitionCode(), processDefinition.getVersion())));
+        } else {
+            jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
+        }
+        return jobRunInfo;
+    }
+
     private JobRunInfo build(Integer commandId) {
         JobRunInfo jobRunInfo = new JobRunInfo();
         jobRunInfo.setJobId(commandId.toString());
         jobRunInfo.setJobStatus(JobStatus.FAILED);
         jobRunInfo.setErrorMsg("未找到该任务");
+        jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
+        return jobRunInfo;
+    }
+
+    private JobRunInfo buildStop(Integer commandId) {
+        JobRunInfo jobRunInfo = new JobRunInfo();
+        jobRunInfo.setJobId(commandId.toString());
+        jobRunInfo.setJobStatus(JobStatus.STOP);
         jobRunInfo.setJobCompleteRate(String.format(JobRunInfo.JOB_COMPLETE_RATE_FORMAT, 0, 0));
         return jobRunInfo;
     }
