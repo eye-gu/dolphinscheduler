@@ -34,7 +34,14 @@ public class StoreConfig {
     private String distributeBy;
     private String saveMode;
     private MetaData metaData;
+    /**
+     * 是否允许删表
+     */
     private Boolean needDelete;
+    /**
+     * 是否分区覆盖
+     */
+    private Boolean coverData;
     private PartitionConfig partitionConfig;
     /**
      * 存储文件类型
