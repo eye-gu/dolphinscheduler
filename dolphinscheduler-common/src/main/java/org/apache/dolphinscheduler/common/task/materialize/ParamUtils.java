@@ -50,6 +50,8 @@ public class ParamUtils {
 
     public static final String DRY_RUN = SYSTEM_PARAM_PREFIX + "dryRun";
 
+    public static final String ALL_HIVE_TABLE_NAMES = SYSTEM_PARAM_PREFIX + "allHiveTableNames";
+
     static {
         Set<String> tmp = new HashSet<>();
         tmp.add(ParamTypeEnum.INTEGER.name());

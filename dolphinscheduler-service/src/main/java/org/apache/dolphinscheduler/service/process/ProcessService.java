@@ -888,6 +888,7 @@ public class ProcessService {
         }
         processInstance.setState(runStatus);
 
+        // merge global param
         if (StringUtils.isNotBlank(processDefinition.getExternalCode())) {
             Map<String, Property> globalParamMap = new HashMap<>();
 

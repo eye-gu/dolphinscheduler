@@ -50,6 +50,8 @@ public class MaterializeTask extends AbstractTaskExecutor {
 
     private final MaterializeParameters materializeParameters;
 
+    private final int processInstanceId;
+
     private final int taskInstanceId;
 
     private long start;
@@ -65,6 +67,7 @@ public class MaterializeTask extends AbstractTaskExecutor {
      */
     protected MaterializeTask(TaskRequest taskRequest) {
         super(taskRequest);
+        processInstanceId = taskRequest.getProcessInstanceId();
         materializeParameters = JSONUtils.parseObject(taskRequest.getTaskParams(), MaterializeParameters.class);
         taskInstanceId = taskRequest.getTaskInstanceId();
         globalParams = JSONUtils.toList(taskRequest.getGlobalParams(), Property.class);
@@ -146,6 +149,10 @@ public class MaterializeTask extends AbstractTaskExecutor {
         if (Boolean.TRUE.toString().equalsIgnoreCase(dryRun)) {
             task.setRunEmpty(true);
         }
+        String allTableNames = globalParamsMap.get(ParamUtils.ALL_HIVE_TABLE_NAMES);
+        if (StringUtils.isNotBlank(allTableNames)) {
+            task.setAllHiveTableNames(JSONUtils.toList(allTableNames, String.class));
+        }
         return task;
     }
 
@@ -219,7 +226,7 @@ public class MaterializeTask extends AbstractTaskExecutor {
             .setMaster(sparkParameters.getMaster())
             .setAppResource(sparkParameters.getMainJar())
             .setMainClass(sparkParameters.getMainClass())
-            .addAppArgs(String.valueOf(taskInstanceId))
+            .addAppArgs(String.valueOf(taskInstanceId), String.valueOf(processInstanceId))
             .setDeployMode(sparkParameters.getDeployMode());
         if (sparkParameters.getDriverMemory() != null) {
             launcher.setConf("spark.driver.memory", sparkParameters.getDriverMemory());
@@ -320,6 +327,7 @@ public class MaterializeTask extends AbstractTaskExecutor {
         private StoreConfig storeConfig;
         private List<SqlEntity> sqlList;
         private Boolean runEmpty;
+        private List<String> allHiveTableNames;
     }
 
     @Data

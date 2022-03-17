@@ -17,6 +17,7 @@ import org.apache.dolphinscheduler.api.service.MaterializeLightHandleService;
 import org.apache.dolphinscheduler.common.Constants;
 import org.apache.dolphinscheduler.common.enums.CommandType;
 import org.apache.dolphinscheduler.common.enums.ConditionType;
+import org.apache.dolphinscheduler.common.enums.DataType;
 import org.apache.dolphinscheduler.common.enums.Direct;
 import org.apache.dolphinscheduler.common.enums.ExecutionStatus;
 import org.apache.dolphinscheduler.common.enums.FailureStrategy;
@@ -38,6 +39,7 @@ import org.apache.dolphinscheduler.common.task.materialize.Param;
 import org.apache.dolphinscheduler.common.task.materialize.ParamUtils;
 import org.apache.dolphinscheduler.common.task.materialize.ReadConfig;
 import org.apache.dolphinscheduler.common.task.materialize.ReadOrStoreConfigTypeEnum;
+import org.apache.dolphinscheduler.common.task.materialize.StoreConfig;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
 import org.apache.dolphinscheduler.common.utils.HadoopUtils;
 import org.apache.dolphinscheduler.dao.entity.Command;
@@ -45,7 +47,6 @@ import org.apache.dolphinscheduler.dao.entity.CommandProcessInstanceRelation;
 import org.apache.dolphinscheduler.dao.entity.ErrorCommand;
 import org.apache.dolphinscheduler.dao.entity.ProcessDefinition;
 import org.apache.dolphinscheduler.dao.entity.ProcessInstance;
-import org.apache.dolphinscheduler.dao.entity.ProcessTaskRelation;
 import org.apache.dolphinscheduler.dao.entity.ProcessTaskRelationLog;
 import org.apache.dolphinscheduler.dao.entity.TaskDefinition;
 import org.apache.dolphinscheduler.dao.entity.TaskDefinitionLog;
@@ -88,10 +89,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
-
-import com.google.common.collect.Lists;
 
 /**
  * @author eye.gu@aloudata.com
@@ -148,6 +146,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         loginUser.setId(materialLightHandleConfig.getUserId());
 
         List<TaskDefinitionLog> taskDefinitionLogs = new ArrayList<>();
+        List<String> allTableNames = new ArrayList<>(materializeLightHandleProcessDefinition.getTasks().size());
         Map<String, Long> external2code = new HashMap<>(materializeLightHandleProcessDefinition.getTasks().size());
         for (MaterializeLightHandleTaskDefinition materializeLightHandleTaskDefinition : materializeLightHandleProcessDefinition.getTasks()) {
             TaskDefinitionLog taskDefinitionLog = build(materializeLightHandleProcessDefinition.getExternalCode(),
@@ -155,6 +154,10 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             taskDefinitionLogs.add(taskDefinitionLog);
 
             external2code.put(materializeLightHandleTaskDefinition.getExternalCode(), taskDefinitionLog.getCode());
+
+            Optional.ofNullable(materializeLightHandleTaskDefinition.getStoreConfig())
+                .filter(storeConfig -> storeConfig.getType() == null || storeConfig.getType().equalsIgnoreCase(ReadOrStoreConfigTypeEnum.HIVE.name()))
+                .map(StoreConfig::getTableName).ifPresent(allTableNames::add);
         }
 
         List<ProcessTaskRelationLog> taskRelationList = new ArrayList<>();
@@ -174,7 +177,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
 
         ProcessDefinition processDefinition = build(materialLightHandleConfig.getProjectCode(),
             materialLightHandleConfig.getUserId(), materialLightHandleConfig.getTenantId(),
-            CodeGenerateUtils.getInstance().genCode(), materializeLightHandleProcessDefinition);
+            CodeGenerateUtils.getInstance().genCode(), materializeLightHandleProcessDefinition, allTableNames);
 
         Map<String, Object> result = new HashMap<>();
         int saveTaskResult = processService.saveTaskDefine(loginUser, processDefinition.getProjectCode(), taskDefinitionLogs);
@@ -220,6 +223,7 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
 
         Map<String, Long> external2code = new HashMap<>(materializeLightHandleProcessDefinition.getTasks().size());
         List<TaskDefinitionLog> taskDefinitionLogs = new ArrayList<>();
+        List<String> allTableNames = new ArrayList<>(materializeLightHandleProcessDefinition.getTasks().size());
         for (MaterializeLightHandleTaskDefinition materializeLightHandleTaskDefinition : materializeLightHandleProcessDefinition.getTasks()) {
             TaskDefinition existTask = existExternalMap.get(materializeLightHandleTaskDefinition.getExternalCode());
             TaskDefinitionLog taskDefinitionLog = build(materializeLightHandleProcessDefinition.getExternalCode(),
@@ -228,12 +232,16 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             taskDefinitionLogs.add(taskDefinitionLog);
 
             external2code.put(materializeLightHandleTaskDefinition.getExternalCode(), taskDefinitionLog.getCode());
+
+            Optional.ofNullable(materializeLightHandleTaskDefinition.getStoreConfig())
+                .filter(storeConfig -> storeConfig.getType() == null || storeConfig.getType().equalsIgnoreCase(ReadOrStoreConfigTypeEnum.HIVE.name()))
+                .map(StoreConfig::getTableName).ifPresent(allTableNames::add);
         }
 
         ProcessDefinition existProcessDefinition = processDefinitionMapper.queryByExternalCode(materializeLightHandleProcessDefinition.getExternalCode());
         ProcessDefinition processDefinition = build(materialLightHandleConfig.getProjectCode(),
             materialLightHandleConfig.getUserId(), materialLightHandleConfig.getTenantId(),
-            existProcessDefinition.getCode(), materializeLightHandleProcessDefinition);
+            existProcessDefinition.getCode(), materializeLightHandleProcessDefinition, allTableNames);
         processDefinition.setId(existProcessDefinition.getId());
 
 
@@ -320,6 +328,17 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
         if (Objects.nonNull(materializeLightHandleExec.getDryRun()) && materializeLightHandleExec.getDryRun()) {
             startParams.put(ParamUtils.DRY_RUN, Boolean.TRUE.toString());
         }
+
+        List<Property> properties = JSONUtils.toList(processDefinition.getGlobalParams(), Property.class);
+        if (CollectionUtils.isNotEmpty(properties)) {
+            for (Property property : properties) {
+                if (property.getProp().startsWith(ParamUtils.SYSTEM_PARAM_PREFIX)
+                    && StringUtils.isNotBlank(property.getValue())) {
+                    startParams.put(property.getProp(), property.getValue());
+                }
+            }
+        }
+
         cmdParam.put(CMD_PARAM_START_PARAMS, JSONUtils.toJsonString(startParams));
         command.setCommandParam(JSONUtils.toJsonString(cmdParam));
         command.setExecutorId(materialLightHandleConfig.getUserId());
@@ -504,11 +523,10 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
     }
 
     private ProcessDefinition build(long projectCode, int userId, int tenantId, long code,
-                                    MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition) {
-        List<Property> properties = Collections.emptyList();
+                                    MaterializeLightHandleProcessDefinition materializeLightHandleProcessDefinition, List<String> allTableNames) {
+        List<Property> properties = new ArrayList<>();
         List<Param> params = materializeLightHandleProcessDefinition.getGlobalParams();
         if (CollectionUtils.isNotEmpty(params)) {
-            properties = new ArrayList<>(params.size());
             for (Param param : params) {
                 Property property = new Property();
                 property.setProp(param.getName());
@@ -518,6 +536,14 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
                 properties.add(property);
             }
         }
+
+        Property property = new Property();
+        property.setProp(ParamUtils.ALL_HIVE_TABLE_NAMES);
+        property.setDirect(Direct.IN);
+        property.setType(DataType.ARRAY_VARCHAR);
+        property.setValue(JSONUtils.toJsonString(allTableNames));
+        properties.add(property);
+
         String name;
         if (StringUtils.isBlank(materializeLightHandleProcessDefinition.getName())) {
             name = materializeLightHandleProcessDefinition.getExternalCode();
