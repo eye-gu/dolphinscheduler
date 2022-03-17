@@ -158,6 +158,12 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             Optional.ofNullable(materializeLightHandleTaskDefinition.getStoreConfig())
                 .filter(storeConfig -> storeConfig.getType() == null || storeConfig.getType().equalsIgnoreCase(ReadOrStoreConfigTypeEnum.HIVE.name()))
                 .map(StoreConfig::getTableName).ifPresent(allTableNames::add);
+
+            Optional.ofNullable(materializeLightHandleTaskDefinition.getReadConfig())
+                .filter(readConfig -> readConfig.getType() != null &&
+                    (readConfig.getType().equalsIgnoreCase(ReadOrStoreConfigTypeEnum.EXCEL.name()) ||
+                        readConfig.getType().equalsIgnoreCase(ReadOrStoreConfigTypeEnum.FILE.name())))
+                .map(ReadConfig::getDatasourceId).ifPresent(allTableNames::add);
         }
 
         List<ProcessTaskRelationLog> taskRelationList = new ArrayList<>();
@@ -236,6 +242,12 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             Optional.ofNullable(materializeLightHandleTaskDefinition.getStoreConfig())
                 .filter(storeConfig -> storeConfig.getType() == null || storeConfig.getType().equalsIgnoreCase(ReadOrStoreConfigTypeEnum.HIVE.name()))
                 .map(StoreConfig::getTableName).ifPresent(allTableNames::add);
+
+            Optional.ofNullable(materializeLightHandleTaskDefinition.getReadConfig())
+                .filter(readConfig -> readConfig.getType() != null &&
+                    (readConfig.getType().equalsIgnoreCase(ReadOrStoreConfigTypeEnum.EXCEL.name()) ||
+                        readConfig.getType().equalsIgnoreCase(ReadOrStoreConfigTypeEnum.FILE.name())))
+                .map(ReadConfig::getDatasourceId).ifPresent(allTableNames::add);
         }
 
         ProcessDefinition existProcessDefinition = processDefinitionMapper.queryByExternalCode(materializeLightHandleProcessDefinition.getExternalCode());
@@ -537,12 +549,14 @@ public class MaterializeLightHandleServiceImpl extends BaseServiceImpl implement
             }
         }
 
-        Property property = new Property();
-        property.setProp(ParamUtils.ALL_HIVE_TABLE_NAMES);
-        property.setDirect(Direct.IN);
-        property.setType(DataType.ARRAY_VARCHAR);
-        property.setValue(JSONUtils.toJsonString(allTableNames));
-        properties.add(property);
+        if (CollectionUtils.isNotEmpty(allTableNames)) {
+            Property property = new Property();
+            property.setProp(ParamUtils.ALL_HIVE_TABLE_NAMES);
+            property.setDirect(Direct.IN);
+            property.setType(DataType.ARRAY_VARCHAR);
+            property.setValue(JSONUtils.toJsonString(allTableNames));
+            properties.add(property);
+        }
 
         String name;
         if (StringUtils.isBlank(materializeLightHandleProcessDefinition.getName())) {

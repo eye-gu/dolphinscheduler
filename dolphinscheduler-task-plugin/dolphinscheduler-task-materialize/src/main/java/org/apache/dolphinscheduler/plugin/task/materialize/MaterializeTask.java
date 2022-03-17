@@ -36,6 +36,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -82,6 +86,14 @@ public class MaterializeTask extends AbstractTaskExecutor {
     @Override
     public void handle() throws Exception {
         start = System.currentTimeMillis();
+
+        if (materializeParameters.getCleanHiveFlag() != null && materializeParameters.getCleanHiveFlag()) {
+            if (clean()) {
+                super.setExitStatusCode(TaskConstants.EXIT_CODE_SUCCESS);
+            }
+            return;
+        }
+
         if (spark()) {
             super.setExitStatusCode(TaskConstants.EXIT_CODE_SUCCESS);
         }
@@ -113,6 +125,46 @@ public class MaterializeTask extends AbstractTaskExecutor {
         super.cancelApplication(status);
     }
 
+    private boolean clean() throws Exception {
+        logger.info("clean hive table");
+        String sql = "SELECT id,`global_params` from t_ds_process_instance where start_time >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) and start_time <= DATE_SUB(CURDATE(), INTERVAL 6 DAY)";
+        ReadConfig readConfig = materializeParameters.getReadConfig();
+        List<ProcessInstanceHiveTables> processInstanceHiveTables = new ArrayList<>();
+        String jdbcUrl = ParamUtils.jdbcUrl(readConfig);
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, readConfig.getUserName(), readConfig.getPassword());
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+            while (resultSet.next()) {
+                int processInstanceId = resultSet.getInt(1);
+                String global_params = resultSet.getString(2);
+                if (org.apache.commons.lang.StringUtils.isNotBlank(global_params)) {
+                    List<Property> properties = JSONUtils.toList(global_params, Property.class);
+                    for (Property property : properties) {
+                        if (property.getProp().equalsIgnoreCase(ParamUtils.ALL_HIVE_TABLE_NAMES)) {
+                            ProcessInstanceHiveTables processInstanceHiveTables1 = new ProcessInstanceHiveTables();
+                            processInstanceHiveTables1.setProcessInstanceId(processInstanceId);
+                            processInstanceHiveTables1.setTableNames(JSONUtils.toList(property.getValue(), String.class));
+                            processInstanceHiveTables.add(processInstanceHiveTables1);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        if (CollectionUtils.isEmpty(processInstanceHiveTables)) {
+            return true;
+        }
+        CleanHiveTask cleanHiveTask = new CleanHiveTask();
+        cleanHiveTask.setProcessInstanceHiveTables(processInstanceHiveTables);
+        HadoopUtils.getInstance().create(buildHdfsValueFilePath(), JSONUtils.toJsonString(cleanHiveTask).getBytes(StandardCharsets.UTF_8));
+
+        SparkAppHandle handle = buildAndStartSpark();
+        boolean result = sparkRunComplete(handle);
+
+        cleanHdfs();
+        return result;
+    }
+
     private boolean spark() throws Exception {
         TaskEntity task = buildTaskEntity();
 
@@ -133,6 +185,7 @@ public class MaterializeTask extends AbstractTaskExecutor {
         }
 
         TaskEntity task = new TaskEntity();
+        task.setInstanceId(String.valueOf(processInstanceId));
         ReadConfig readConfig = materializeParameters.getReadConfig();
         task.setReadConfig(handleReadConfig(globalParamsMap, readConfig));
         StoreConfig storeConfig = materializeParameters.getStoreConfig();
@@ -226,7 +279,7 @@ public class MaterializeTask extends AbstractTaskExecutor {
             .setMaster(sparkParameters.getMaster())
             .setAppResource(sparkParameters.getMainJar())
             .setMainClass(sparkParameters.getMainClass())
-            .addAppArgs(String.valueOf(taskInstanceId), String.valueOf(processInstanceId))
+            .addAppArgs(String.valueOf(taskInstanceId))
             .setDeployMode(sparkParameters.getDeployMode());
         if (sparkParameters.getDriverMemory() != null) {
             launcher.setConf("spark.driver.memory", sparkParameters.getDriverMemory());
@@ -327,6 +380,7 @@ public class MaterializeTask extends AbstractTaskExecutor {
         private StoreConfig storeConfig;
         private List<SqlEntity> sqlList;
         private Boolean runEmpty;
+        private String instanceId;
         private List<String> allHiveTableNames;
     }
 
@@ -343,5 +397,16 @@ public class MaterializeTask extends AbstractTaskExecutor {
         // integer long float boolean date time
         private String type;
         private String value;
+    }
+
+    @Data
+    private static class CleanHiveTask {
+        private List<ProcessInstanceHiveTables> processInstanceHiveTables;
+    }
+
+    @Data
+    private static class ProcessInstanceHiveTables {
+        private int processInstanceId;
+        private List<String> tableNames;
     }
 }

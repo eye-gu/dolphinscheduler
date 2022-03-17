@@ -319,7 +319,7 @@ public class ParamUtils {
     }
 
 
-    private static String jdbcUrl(ReadConfig readConfig) {
+    public static String jdbcUrl(ReadConfig readConfig) {
         return "jdbc:" + readConfig.getType().toLowerCase(Locale.ROOT) + "://" + readConfig.getIp() + ":" + readConfig.getPort() + "/"
             + readConfig.getDatabase();
     }

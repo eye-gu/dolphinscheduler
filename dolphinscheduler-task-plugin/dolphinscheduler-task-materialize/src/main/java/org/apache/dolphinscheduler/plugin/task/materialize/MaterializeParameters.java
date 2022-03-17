@@ -22,6 +22,8 @@ import java.util.List;
  */
 @Data
 public class MaterializeParameters extends AbstractParameters {
+    private Boolean cleanHiveFlag;
+
     private ReadConfig readConfig;
     private StoreConfig storeConfig;
     private List<Sql> sqlList;
