@@ -7,7 +7,8 @@ package org.apache.dolphinscheduler.common.task.materialize;
 
 import lombok.Data;
 
-import com.sun.tools.javac.util.List;
+import java.util.List;
+
 
 /**
  * @author eye.gu@aloudata.com
