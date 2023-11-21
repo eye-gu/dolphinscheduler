@@ -43,5 +43,5 @@ echo "JAVA_HOME=${JAVA_HOME}"
 echo "JAVA_OPTS=${JAVA_OPTS}"
 
 $JAVA_HOME/bin/java $JAVA_OPTS \
-  -cp "$DOLPHINSCHEDULER_HOME/conf":"$DOLPHINSCHEDULER_HOME/libs/*" \
+  -cp "$DOLPHINSCHEDULER_HOME/conf":"$DOLPHINSCHEDULER_HOME/libs/*":"$DOLPHINSCHEDULER_HOME/../libs/*" \
   org.apache.dolphinscheduler.server.master.MasterServer

@@ -29,21 +29,72 @@
         <fileSet>
             <directory>${basedir}/../dolphinscheduler-alert/dolphinscheduler-alert-server/target/alert-server</directory>
             <outputDirectory>alert-server</outputDirectory>
+            <includes>
+                <include>bin/</include>
+                <include>conf/</include>
+                <include>libs/dolphinscheduler-*</include>
+            </includes>
         </fileSet>
 
         <fileSet>
             <directory>${basedir}/../dolphinscheduler-api/target/api-server</directory>
             <outputDirectory>api-server</outputDirectory>
+            <includes>
+                <include>bin/</include>
+                <include>conf/</include>
+                <include>ui/</include>
+                <include>libs/dolphinscheduler-*</include>
+            </includes>
         </fileSet>
 
         <fileSet>
             <directory>${basedir}/../dolphinscheduler-master/target/master-server</directory>
             <outputDirectory>master-server</outputDirectory>
+            <includes>
+                <include>bin/</include>
+                <include>conf/</include>
+                <include>libs/dolphinscheduler-*</include>
+            </includes>
         </fileSet>
 
         <fileSet>
             <directory>${basedir}/../dolphinscheduler-worker/target/worker-server</directory>
             <outputDirectory>worker-server</outputDirectory>
+            <includes>
+                <include>bin/</include>
+                <include>conf/</include>
+                <include>libs/dolphinscheduler-*</include>
+            </includes>
+        </fileSet>
+
+
+        <fileSet>
+            <directory>${basedir}/../dolphinscheduler-alert/dolphinscheduler-alert-server/target/libs</directory>
+            <outputDirectory>libs</outputDirectory>
+            <excludes>
+                <exclude>dolphinscheduler-*</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/../dolphinscheduler-api/target/api-server/libs</directory>
+            <outputDirectory>libs</outputDirectory>
+            <excludes>
+                <exclude>dolphinscheduler-*</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/../dolphinscheduler-master/target/master-server/libs</directory>
+            <outputDirectory>libs</outputDirectory>
+            <excludes>
+                <exclude>dolphinscheduler-*</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/../dolphinscheduler-worker/target/worker-server/libs</directory>
+            <outputDirectory>libs</outputDirectory>
+            <excludes>
+                <exclude>dolphinscheduler-*</exclude>
+            </excludes>
         </fileSet>
 
         <fileSet>
