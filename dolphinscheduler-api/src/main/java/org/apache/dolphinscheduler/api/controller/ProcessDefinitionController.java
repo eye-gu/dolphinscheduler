@@ -36,6 +36,8 @@ import static org.apache.dolphinscheduler.api.enums.Status.SWITCH_PROCESS_DEFINI
 import static org.apache.dolphinscheduler.api.enums.Status.UPDATE_PROCESS_DEFINITION_ERROR;
 import static org.apache.dolphinscheduler.api.enums.Status.VERIFY_PROCESS_DEFINITION_NAME_UNIQUE_ERROR;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.dolphinscheduler.api.audit.OperatorLog;
 import org.apache.dolphinscheduler.api.audit.enums.AuditType;
 import org.apache.dolphinscheduler.api.enums.Status;
@@ -46,10 +48,12 @@ import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.common.enums.ProcessExecutionTypeEnum;
 import org.apache.dolphinscheduler.common.enums.ReleaseState;
+import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.ProcessDefinition;
 import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
@@ -711,14 +715,25 @@ public class ProcessDefinitionController extends BaseController {
     public Result importProcessDefinition(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
                                           @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
                                           @RequestParam("file") MultipartFile file) {
-        Map<String, Object> result;
-        if ("application/zip".equals(file.getContentType())) {
-            result = processDefinitionService.importSqlProcessDefinition(loginUser, projectCode, file);
-        } else {
-            result = processDefinitionService.importProcessDefinition(loginUser, projectCode, file);
-        }
+        Map<String, Object> result = processDefinitionService.importProcessDefinition(loginUser, projectCode, file);
         return returnDataList(result);
     }
+
+    @Operation(summary = "importSqlProcessDefinition", description = "IMPORT_SQL_PROCESS_DEFINITION_NOTES")
+    @Parameters({
+            @Parameter(name = "file", description = "RESOURCE_FILE", required = true, schema = @Schema(implementation = MultipartFile.class))
+    })
+    @PostMapping(value = "/importSql")
+    @ApiException(IMPORT_PROCESS_DEFINE_ERROR)
+    public Result importSqlProcessDefinition(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+                                          @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
+                                          @RequestParam("file") MultipartFile file,
+                                          @RequestParam("parseType") String parseType) {
+        Map<String, Object> result = processDefinitionService.importSqlProcessDefinition(loginUser, projectCode, file);
+        return returnDataList(result);
+    }
+
+
 
     /**
      * query process definition global variables and local variables

@@ -63,14 +63,7 @@ import org.apache.dolphinscheduler.api.utils.FileUtils;
 import org.apache.dolphinscheduler.api.utils.PageInfo;
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.constants.Constants;
-import org.apache.dolphinscheduler.common.enums.ConditionType;
-import org.apache.dolphinscheduler.common.enums.Flag;
-import org.apache.dolphinscheduler.common.enums.Priority;
-import org.apache.dolphinscheduler.common.enums.ProcessExecutionTypeEnum;
-import org.apache.dolphinscheduler.common.enums.ReleaseState;
-import org.apache.dolphinscheduler.common.enums.TimeoutFlag;
-import org.apache.dolphinscheduler.common.enums.UserType;
-import org.apache.dolphinscheduler.common.enums.WorkflowExecutionStatus;
+import org.apache.dolphinscheduler.common.enums.*;
 import org.apache.dolphinscheduler.common.graph.DAG;
 import org.apache.dolphinscheduler.common.lifecycle.ServerLifeCycleManager;
 import org.apache.dolphinscheduler.common.model.TaskNodeRelation;
@@ -1441,7 +1434,7 @@ public class ProcessDefinitionServiceImpl extends BaseServiceImpl implements Pro
         sqlParameters.setDatasource(dataSource.getId());
         sqlParameters.setSql(sql.substring(0, sql.length() - 1));
         // it may be a query type, but it can only be determined by parsing SQL
-        sqlParameters.setSqlType(SqlType.NON_QUERY.ordinal());
+        sqlParameters.setSqlType(SqlType.QUERY.ordinal());
         sqlParameters.setLocalParams(Collections.emptyList());
         taskDefinition.setTaskParams(JSONUtils.toJsonString(sqlParameters));
         taskDefinition.setCode(CodeGenerateUtils.genCode());
@@ -1457,6 +1450,8 @@ public class ProcessDefinitionServiceImpl extends BaseServiceImpl implements Pro
         taskDefinition.setTimeoutNotifyStrategy(TaskTimeoutStrategy.WARN);
         taskDefinition.setVersion(0);
         taskDefinition.setResourceIds("");
+        taskDefinition.setIsCache(Flag.NO);
+        taskDefinition.setTaskExecuteType(TaskExecuteType.BATCH);
         return taskDefinition;
     }
 

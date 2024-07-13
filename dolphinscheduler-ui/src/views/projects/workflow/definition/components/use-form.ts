@@ -30,7 +30,8 @@ export const useForm = () => {
     importFormRef: ref(),
     importForm: {
       name: '',
-      file: ''
+      file: '',
+      parseType: ''
     },
     saving: false,
     importRules: {

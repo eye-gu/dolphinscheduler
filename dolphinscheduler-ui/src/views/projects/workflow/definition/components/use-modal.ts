@@ -24,6 +24,7 @@ import { format } from 'date-fns'
 import {
   batchCopyByCodes,
   importProcessDefinition,
+  importSqlProcessDefinition,
   queryProcessDefinitionByCode
 } from '@/service/modules/process-definition'
 import { queryAllEnvironmentList } from '@/service/modules/environment'
@@ -65,6 +66,7 @@ export function useModal(
   const resetImportForm = () => {
     state.importForm.name = ''
     state.importForm.file = ''
+    state.importForm.parseType = ''
   }
 
   const handleImportDefinition = async () => {
@@ -77,6 +79,27 @@ export function useModal(
       formData.append('file', state.importForm.file)
       const code = Number(router.currentRoute.value.params.projectCode)
       await importProcessDefinition(formData, code)
+      window.$message.success(t('project.workflow.success'))
+      state.saving = false
+      ctx.emit('updateList')
+      ctx.emit('update:show')
+      resetImportForm()
+    } catch (err) {
+      state.saving = false
+    }
+  }
+
+  const handleSqlImportDefinition = async () => {
+    await state.importFormRef.validate()
+
+    if (state.saving) return
+    state.saving = true
+    try {
+      const formData = new FormData()
+      formData.append('file', state.importForm.file)
+      formData.append('parseType', state.importForm.parseType)
+      const code = Number(router.currentRoute.value.params.projectCode)
+      await importSqlProcessDefinition(formData, code)
       window.$message.success(t('project.workflow.success'))
       state.saving = false
       ctx.emit('updateList')
@@ -301,6 +324,7 @@ export function useModal(
   return {
     variables,
     handleImportDefinition,
+    handleSqlImportDefinition,
     handleStartDefinition,
     handleCreateTiming,
     handleUpdateTiming,

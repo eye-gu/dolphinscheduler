@@ -112,6 +112,21 @@ export function importProcessDefinition(data: FormData, code: number): any {
   })
 }
 
+export function importSqlProcessDefinition(data: FormData, code: number): any {
+  return axios({
+    url: `/projects/${code}/process-definition/importSql`,
+    method: 'post',
+    data
+  })
+}
+
+export function sqlParsePluginList(): any {
+  return axios({
+    url: `/sql-task-analysis/plugins`,
+    method: 'get'
+  })
+}
+
 export function queryList(code: CodeReq): any {
   return axios({
     url: `/projects/${code}/process-definition/list`,
