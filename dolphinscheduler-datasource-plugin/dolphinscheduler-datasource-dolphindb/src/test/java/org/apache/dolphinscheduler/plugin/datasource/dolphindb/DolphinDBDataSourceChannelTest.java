@@ -18,7 +18,6 @@
 package org.apache.dolphinscheduler.plugin.datasource.dolphindb;
 
 import org.apache.dolphinscheduler.plugin.datasource.dolphindb.param.DolphinDBConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -36,6 +35,6 @@ class DolphinDBDataSourceChannelTest {
         Mockito.when(sourceChannel.createPooledDataSourceClient(Mockito.any(), Mockito.any()))
                 .thenReturn(dataSourceClient);
         Assertions.assertNotNull(
-                sourceChannel.createPooledDataSourceClient(new DolphinDBConnectionParam(), DbType.DOLPHINDB));
+                sourceChannel.createPooledDataSourceClient(new DolphinDBConnectionParam(), "DOLPHINDB"));
     }
 }

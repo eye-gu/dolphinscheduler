@@ -36,7 +36,7 @@ public class DolphinDBDataSourceParamDTO extends BaseDataSourceParamDTO {
     }
 
     @Override
-    public DbType getType() {
-        return DbType.DOLPHINDB;
+    public String getType() {
+        return DbType.DOLPHINDB.name();
     }
 }

@@ -19,7 +19,6 @@ package org.apache.dolphinscheduler.plugin.datasource.trino;
 
 import org.apache.dolphinscheduler.plugin.datasource.api.constants.DataSourceConstants;
 import org.apache.dolphinscheduler.plugin.datasource.trino.param.TrinoConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,7 @@ public class TrinoDataSourceChannelTest {
         trinoConnectionParam.setDriverLocation(DataSourceConstants.COM_TRINO_JDBC_DRIVER);
         trinoConnectionParam.setDriverClassName(DataSourceConstants.COM_TRINO_JDBC_DRIVER);
         try {
-            sourceChannel.createPooledDataSourceClient(trinoConnectionParam, DbType.TRINO);
+            sourceChannel.createPooledDataSourceClient(trinoConnectionParam, "TRINO");
         } catch (Exception e) {
             Assertions.assertEquals(RuntimeException.class, e.getClass());
         }

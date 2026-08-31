@@ -36,7 +36,7 @@ public class DamengDataSourceParamDTO extends BaseDataSourceParamDTO {
     }
 
     @Override
-    public DbType getType() {
-        return DbType.DAMENG;
+    public String getType() {
+        return DbType.DAMENG.name();
     }
 }

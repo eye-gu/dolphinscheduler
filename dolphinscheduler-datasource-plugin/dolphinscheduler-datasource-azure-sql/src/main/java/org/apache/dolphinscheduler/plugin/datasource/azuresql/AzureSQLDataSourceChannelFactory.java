@@ -28,7 +28,7 @@ public class AzureSQLDataSourceChannelFactory implements DataSourceChannelFactor
 
     @Override
     public String getName() {
-        return DbType.AZURESQL.getName();
+        return DbType.AZURESQL.name();
     }
 
     @Override

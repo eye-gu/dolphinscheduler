@@ -19,11 +19,10 @@ package org.apache.dolphinscheduler.plugin.doris;
 
 import org.apache.dolphinscheduler.plugin.datasource.api.client.BaseAdHocDataSourceClient;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 public class DorisAdHocDataSourceClient extends BaseAdHocDataSourceClient {
 
-    public DorisAdHocDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType) {
-        super(baseConnectionParam, dbType);
+    public DorisAdHocDataSourceClient(BaseConnectionParam baseConnectionParam, String type) {
+        super(baseConnectionParam, type);
     }
 }

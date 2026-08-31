@@ -19,12 +19,11 @@ package org.apache.dolphinscheduler.plugin.datasource.sqlserver;
 
 import org.apache.dolphinscheduler.plugin.datasource.api.client.BasePooledDataSourceClient;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 public class SQLServerPooledDataSourceClient extends BasePooledDataSourceClient {
 
-    public SQLServerPooledDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType) {
-        super(baseConnectionParam, dbType);
+    public SQLServerPooledDataSourceClient(BaseConnectionParam baseConnectionParam, String type) {
+        super(baseConnectionParam, type);
     }
 
 }

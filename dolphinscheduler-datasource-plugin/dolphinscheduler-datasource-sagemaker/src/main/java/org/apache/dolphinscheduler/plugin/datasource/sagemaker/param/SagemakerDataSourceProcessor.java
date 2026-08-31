@@ -55,9 +55,9 @@ public class SagemakerDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public String getDatasourceUniqueId(ConnectionParam connectionParam, DbType dbType) {
+    public String getDatasourceUniqueId(ConnectionParam connectionParam) {
         SagemakerConnectionParam baseConnectionParam = (SagemakerConnectionParam) connectionParam;
-        return MessageFormat.format("{0}@{1}@{2}@{3}", dbType.getName(),
+        return MessageFormat.format("{0}@{1}@{2}@{3}", getType(),
                 PasswordUtils.encodePassword(baseConnectionParam.getUserName()),
                 PasswordUtils.encodePassword(baseConnectionParam.getPassword()),
                 PasswordUtils.encodePassword(baseConnectionParam.getAwsRegion()));
@@ -126,8 +126,13 @@ public class SagemakerDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.SAGEMAKER;
+    public String getType() {
+        return DbType.SAGEMAKER.name();
+    }
+
+    @Override
+    public boolean isJdbcCompatible() {
+        return false;
     }
 
     @Override

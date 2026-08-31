@@ -99,8 +99,8 @@ public class AthenaDataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.ATHENA, this.athenaDataSourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.ATHENA.name(), this.athenaDataSourceProcessor.getType());
     }
 
     @Test

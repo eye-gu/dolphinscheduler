@@ -37,7 +37,7 @@ public class VerticaDataSourceParamDTO extends BaseDataSourceParamDTO {
     }
 
     @Override
-    public DbType getType() {
-        return DbType.VERTICA;
+    public String getType() {
+        return DbType.VERTICA.name();
     }
 }

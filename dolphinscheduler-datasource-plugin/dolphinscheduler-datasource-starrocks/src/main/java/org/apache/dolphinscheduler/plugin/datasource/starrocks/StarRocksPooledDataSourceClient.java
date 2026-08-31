@@ -19,12 +19,11 @@ package org.apache.dolphinscheduler.plugin.datasource.starrocks;
 
 import org.apache.dolphinscheduler.plugin.datasource.api.client.BasePooledDataSourceClient;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 public class StarRocksPooledDataSourceClient extends BasePooledDataSourceClient {
 
-    public StarRocksPooledDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType) {
-        super(baseConnectionParam, dbType);
+    public StarRocksPooledDataSourceClient(BaseConnectionParam baseConnectionParam, String type) {
+        super(baseConnectionParam, type);
     }
 
 }

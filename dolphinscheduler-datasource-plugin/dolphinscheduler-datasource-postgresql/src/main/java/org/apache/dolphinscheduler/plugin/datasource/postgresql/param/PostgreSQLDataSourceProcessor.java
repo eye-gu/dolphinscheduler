@@ -123,8 +123,8 @@ public class PostgreSQLDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.POSTGRESQL;
+    public String getType() {
+        return DbType.POSTGRESQL.name();
     }
 
     @Override

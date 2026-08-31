@@ -26,7 +26,6 @@ import org.apache.dolphinscheduler.plugin.datasource.api.utils.PasswordUtils;
 import org.apache.dolphinscheduler.plugin.doris.param.DorisConnectionParam;
 import org.apache.dolphinscheduler.plugin.doris.param.DorisDataSourceParamDTO;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -88,7 +87,7 @@ public class DataSourceUtilsTest {
         dorisDatasourceParamDTO.setPort(3306);
         dorisDatasourceParamDTO.setPassword("123456");
         ConnectionParam connectionParam =
-                DataSourceUtils.buildConnectionParams(DbType.DORIS, JSONUtils.toJsonString(dorisDatasourceParamDTO));
+                DataSourceUtils.buildConnectionParams("DORIS", JSONUtils.toJsonString(dorisDatasourceParamDTO));
         Assertions.assertNotNull(connectionParam);
     }
 
@@ -106,7 +105,7 @@ public class DataSourceUtilsTest {
             DorisConnectionParam connectionParam = new DorisConnectionParam();
             connectionParam.setUser("root");
             connectionParam.setPassword("123456");
-            connection = DataSourceClientProvider.getAdHocConnection(DbType.DORIS, connectionParam);
+            connection = DataSourceClientProvider.getAdHocConnection("DORIS", connectionParam);
 
             Assertions.assertNotNull(connection);
         }
@@ -116,7 +115,7 @@ public class DataSourceUtilsTest {
     public void testGetJdbcUrl() {
         DorisConnectionParam dorisConnectionParam = new DorisConnectionParam();
         dorisConnectionParam.setJdbcUrl("jdbc:mysql://localhost,localhost2:3308?allowLoadLocalInfile=false");
-        String jdbcUrl = DataSourceUtils.getJdbcUrl(DbType.DORIS, dorisConnectionParam);
+        String jdbcUrl = DataSourceUtils.getJdbcUrl("DORIS", dorisConnectionParam);
         Assertions.assertEquals(
                 "jdbc:mysql://localhost,localhost2:3308?allowLoadLocalInfile=false",
                 jdbcUrl);
@@ -132,13 +131,13 @@ public class DataSourceUtilsTest {
         connectionParam.setPassword("123456");
 
         Assertions.assertNotNull(
-                DataSourceUtils.buildDatasourceParamDTO(DbType.DORIS, JSONUtils.toJsonString(connectionParam)));
+                DataSourceUtils.buildDatasourceParamDTO("DORIS", JSONUtils.toJsonString(connectionParam)));
 
     }
 
     @Test
     public void testGetDatasourceProcessor() {
-        Assertions.assertNotNull(DataSourceUtils.getDatasourceProcessor(DbType.DORIS));
+        Assertions.assertNotNull(DataSourceUtils.getDatasourceProcessor("DORIS"));
     }
 
     @Test

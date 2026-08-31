@@ -119,8 +119,8 @@ public class HanaDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.HANA;
+    public String getType() {
+        return DbType.HANA.name();
     }
 
     @Override

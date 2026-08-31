@@ -124,8 +124,8 @@ public class TrinoDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.TRINO;
+    public String getType() {
+        return DbType.TRINO.name();
     }
 
     @Override

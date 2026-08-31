@@ -87,8 +87,8 @@ public class SQLServerDataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.AZURESQL, sqlServerDatasourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.AZURESQL.name(), sqlServerDatasourceProcessor.getType());
     }
 
     @Test

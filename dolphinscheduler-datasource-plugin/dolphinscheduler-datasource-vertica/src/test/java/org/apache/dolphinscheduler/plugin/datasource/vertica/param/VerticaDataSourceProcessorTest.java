@@ -83,8 +83,8 @@ public class VerticaDataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.VERTICA, verticaDatasourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.VERTICA.name(), verticaDatasourceProcessor.getType());
     }
 
     @Test
@@ -102,7 +102,7 @@ public class VerticaDataSourceProcessorTest {
         try (MockedStatic<PasswordUtils> mockedPasswordUtils = Mockito.mockStatic(PasswordUtils.class)) {
             mockedPasswordUtils.when(() -> PasswordUtils.encodePassword(Mockito.anyString())).thenReturn("123456");
             Assertions.assertEquals("vertica@root@123456@jdbc:vertica://localhost:5433/default",
-                    verticaDatasourceProcessor.getDatasourceUniqueId(verticaConnectionParam, DbType.VERTICA));
+                    verticaDatasourceProcessor.getDatasourceUniqueId(verticaConnectionParam));
         }
     }
 }

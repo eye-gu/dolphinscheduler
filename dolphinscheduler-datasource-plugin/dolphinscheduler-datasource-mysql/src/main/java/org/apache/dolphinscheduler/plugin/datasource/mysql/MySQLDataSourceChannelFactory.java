@@ -28,7 +28,7 @@ public class MySQLDataSourceChannelFactory implements DataSourceChannelFactory {
 
     @Override
     public String getName() {
-        return DbType.MYSQL.getName();
+        return DbType.MYSQL.name();
     }
 
     @Override

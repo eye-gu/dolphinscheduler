@@ -80,7 +80,7 @@ public class SnowflakeDataSourceProcessorTest {
         snowflakeDatasourceParamDTO.setPort(3306);
         snowflakeDatasourceParamDTO.setPassword("123456");
         ConnectionParam connectionParam =
-                DataSourceUtils.buildConnectionParams(DbType.SNOWFLAKE,
+                DataSourceUtils.buildConnectionParams("SNOWFLAKE",
                         JSONUtils.toJsonString(snowflakeDatasourceParamDTO));
         Assertions.assertNotNull(connectionParam);
     }
@@ -132,8 +132,8 @@ public class SnowflakeDataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.SNOWFLAKE, snowflakeDataSourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.SNOWFLAKE.name(), snowflakeDataSourceProcessor.getType());
     }
 
     @Test
@@ -151,7 +151,7 @@ public class SnowflakeDataSourceProcessorTest {
         try (MockedStatic<PasswordUtils> mockedPasswordUtils = Mockito.mockStatic(PasswordUtils.class)) {
             Mockito.when(PasswordUtils.encodePassword(Mockito.anyString())).thenReturn("123456");
             Assertions.assertEquals("snowflake@root@123456@jdbc:snowflake://localhost:3306/default",
-                    snowflakeDataSourceProcessor.getDatasourceUniqueId(connectionParam, DbType.SNOWFLAKE));
+                    snowflakeDataSourceProcessor.getDatasourceUniqueId(connectionParam));
         }
     }
 
@@ -170,8 +170,8 @@ public class SnowflakeDataSourceProcessorTest {
     public void testDbType() {
         Assertions.assertEquals(20, DbType.SNOWFLAKE.getCode());
         Assertions.assertEquals("snowflake", DbType.SNOWFLAKE.getName());
-        Assertions.assertEquals(DbType.of(20), DbType.SNOWFLAKE);
-        Assertions.assertEquals(DbType.ofName("SNOWFLAKE"), DbType.SNOWFLAKE);
+        Assertions.assertEquals(DbType.of(20), "SNOWFLAKE");
+        Assertions.assertEquals(DbType.ofName("SNOWFLAKE"), "SNOWFLAKE");
     }
 
     @Test

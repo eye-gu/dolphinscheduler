@@ -28,7 +28,7 @@ public class DolphinDBDataSourceChannelFactory implements DataSourceChannelFacto
 
     @Override
     public String getName() {
-        return DbType.DOLPHINDB.getName();
+        return DbType.DOLPHINDB.name();
     }
 
     @Override

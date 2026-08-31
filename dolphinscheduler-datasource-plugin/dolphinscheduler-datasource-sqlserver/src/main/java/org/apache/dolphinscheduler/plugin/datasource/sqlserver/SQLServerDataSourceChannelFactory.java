@@ -28,7 +28,7 @@ public class SQLServerDataSourceChannelFactory implements DataSourceChannelFacto
 
     @Override
     public String getName() {
-        return DbType.SQLSERVER.getName();
+        return DbType.SQLSERVER.name();
     }
 
     @Override

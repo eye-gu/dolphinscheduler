@@ -86,8 +86,8 @@ public class HiveDataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.HIVE, hiveDatasourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.HIVE.name(), hiveDatasourceProcessor.getType());
     }
 
     @Test

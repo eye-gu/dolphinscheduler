@@ -134,8 +134,8 @@ public class DorisDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.DORIS;
+    public String getType() {
+        return DbType.DORIS.name();
     }
 
     @Override

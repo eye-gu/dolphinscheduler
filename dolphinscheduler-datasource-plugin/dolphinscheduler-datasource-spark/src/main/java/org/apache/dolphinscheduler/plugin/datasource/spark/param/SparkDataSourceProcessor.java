@@ -156,8 +156,8 @@ public class SparkDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.SPARK;
+    public String getType() {
+        return DbType.SPARK.name();
     }
 
     @Override

@@ -18,7 +18,6 @@
 package org.apache.dolphinscheduler.plugin.datasource.oracle;
 
 import org.apache.dolphinscheduler.plugin.datasource.oracle.param.OracleConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -36,6 +35,6 @@ public class OracleDataSourceChannelTest {
         Mockito.when(sourceChannel.createPooledDataSourceClient(Mockito.any(), Mockito.any()))
                 .thenReturn(dataSourceClient);
         Assertions
-                .assertNotNull(sourceChannel.createPooledDataSourceClient(new OracleConnectionParam(), DbType.ORACLE));
+                .assertNotNull(sourceChannel.createPooledDataSourceClient(new OracleConnectionParam(), "ORACLE"));
     }
 }

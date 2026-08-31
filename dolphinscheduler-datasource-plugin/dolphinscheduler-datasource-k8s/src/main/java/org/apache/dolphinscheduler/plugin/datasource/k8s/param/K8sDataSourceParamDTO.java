@@ -29,7 +29,7 @@ public class K8sDataSourceParamDTO extends BaseDataSourceParamDTO {
     protected String namespace;
 
     @Override
-    public DbType getType() {
-        return DbType.K8S;
+    public String getType() {
+        return DbType.K8S.name();
     }
 }

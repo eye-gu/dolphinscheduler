@@ -129,8 +129,8 @@ public class SnowflakeDatasourceProcessor extends AbstractDataSourceProcessor {
         return new SnowflakeDatasourceProcessor();
     }
     @Override
-    public DbType getDbType() {
-        return DbType.SNOWFLAKE;
+    public String getType() {
+        return DbType.SNOWFLAKE.name();
     }
 
 }

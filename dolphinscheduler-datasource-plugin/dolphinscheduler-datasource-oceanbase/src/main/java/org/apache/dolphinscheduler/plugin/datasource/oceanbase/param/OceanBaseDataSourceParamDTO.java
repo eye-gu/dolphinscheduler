@@ -33,7 +33,7 @@ public class OceanBaseDataSourceParamDTO extends BaseDataSourceParamDTO {
     }
 
     @Override
-    public DbType getType() {
-        return DbType.OCEANBASE;
+    public String getType() {
+        return DbType.OCEANBASE.name();
     }
 }

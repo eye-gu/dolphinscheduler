@@ -20,7 +20,6 @@ package org.apache.dolphinscheduler.plugin.datasource.zeppelin;
 import org.apache.dolphinscheduler.plugin.datasource.zeppelin.param.ZeppelinConnectionParam;
 import org.apache.dolphinscheduler.plugin.datasource.zeppelin.param.ZeppelinDataSourceParamDTO;
 import org.apache.dolphinscheduler.plugin.datasource.zeppelin.param.ZeppelinDataSourceProcessor;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,7 +62,7 @@ public class ZeppelinDataSourceProcessorTest {
         zeppelinConnectionParam.setUsername("root");
         zeppelinConnectionParam.setPassword("123456");
         Assertions.assertEquals("zeppelin@https://dolphinscheduler.com:8080@root@123456",
-                zeppelinDataSourceProcessor.getDatasourceUniqueId(zeppelinConnectionParam, DbType.ZEPPELIN));
+                zeppelinDataSourceProcessor.getDatasourceUniqueId(zeppelinConnectionParam));
 
     }
 

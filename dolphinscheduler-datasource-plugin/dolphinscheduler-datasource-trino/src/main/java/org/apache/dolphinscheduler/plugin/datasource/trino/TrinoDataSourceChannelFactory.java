@@ -28,7 +28,7 @@ public class TrinoDataSourceChannelFactory implements DataSourceChannelFactory {
 
     @Override
     public String getName() {
-        return DbType.TRINO.getName();
+        return DbType.TRINO.name();
     }
 
     @Override

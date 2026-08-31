@@ -28,7 +28,7 @@ public class SparkDataSourceChannelFactory implements DataSourceChannelFactory {
 
     @Override
     public String getName() {
-        return DbType.SPARK.getName();
+        return DbType.SPARK.name();
     }
 
     @Override

@@ -31,8 +31,8 @@ public class RedshiftDataSourceParamDTO extends BaseDataSourceParamDTO {
     protected String dbUser;
 
     @Override
-    public DbType getType() {
-        return DbType.REDSHIFT;
+    public String getType() {
+        return DbType.REDSHIFT.name();
     }
 
     @Override

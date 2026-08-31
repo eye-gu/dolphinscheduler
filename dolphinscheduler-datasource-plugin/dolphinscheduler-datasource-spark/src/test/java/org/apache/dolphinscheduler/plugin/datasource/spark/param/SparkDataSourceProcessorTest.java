@@ -88,8 +88,8 @@ public class SparkDataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.SPARK, sparkDatasourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.SPARK.name(), sparkDatasourceProcessor.getType());
     }
 
     @Test

@@ -30,7 +30,7 @@ public class AthenaDataSourceParamDTO extends BaseDataSourceParamDTO {
     protected String awsRegion;
 
     @Override
-    public DbType getType() {
-        return DbType.ATHENA;
+    public String getType() {
+        return DbType.ATHENA.name();
     }
 }

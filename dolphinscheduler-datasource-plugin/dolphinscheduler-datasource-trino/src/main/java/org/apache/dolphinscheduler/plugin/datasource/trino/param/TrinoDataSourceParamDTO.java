@@ -36,7 +36,7 @@ public class TrinoDataSourceParamDTO extends BaseDataSourceParamDTO {
     }
 
     @Override
-    public DbType getType() {
-        return DbType.TRINO;
+    public String getType() {
+        return DbType.TRINO.name();
     }
 }

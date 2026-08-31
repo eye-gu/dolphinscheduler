@@ -101,8 +101,8 @@ public class DorisDataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.DORIS, dorisDatasourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.DORIS.name(), dorisDatasourceProcessor.getType());
     }
 
     @Test
@@ -120,7 +120,7 @@ public class DorisDataSourceProcessorTest {
         try (MockedStatic<PasswordUtils> mockedPasswordUtils = Mockito.mockStatic(PasswordUtils.class)) {
             Mockito.when(PasswordUtils.encodePassword(Mockito.anyString())).thenReturn("123456");
             Assertions.assertEquals("doris@root@123456@jdbc:mysql://localhost:3306/default",
-                    dorisDatasourceProcessor.getDatasourceUniqueId(dorisConnectionParam, DbType.DORIS));
+                    dorisDatasourceProcessor.getDatasourceUniqueId(dorisConnectionParam));
         }
     }
 

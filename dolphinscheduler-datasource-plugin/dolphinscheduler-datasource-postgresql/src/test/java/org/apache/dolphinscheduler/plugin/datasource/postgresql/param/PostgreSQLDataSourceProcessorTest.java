@@ -92,8 +92,8 @@ public class PostgreSQLDataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.POSTGRESQL, postgreSqlDatasourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.POSTGRESQL.name(), postgreSqlDatasourceProcessor.getType());
     }
 
     @Test

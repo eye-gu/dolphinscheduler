@@ -18,7 +18,6 @@
 package org.apache.dolphinscheduler.plugin.datasource.databend;
 
 import org.apache.dolphinscheduler.plugin.datasource.databend.param.DatabendConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -36,6 +35,6 @@ public class DatabendDataSourceChannelTest {
         Mockito.when(sourceChannel.createPooledDataSourceClient(Mockito.any(), Mockito.any()))
                 .thenReturn(dataSourceClient);
         Assertions.assertNotNull(
-                sourceChannel.createPooledDataSourceClient(new DatabendConnectionParam(), DbType.DATABEND));
+                sourceChannel.createPooledDataSourceClient(new DatabendConnectionParam(), "DATABEND"));
     }
 }

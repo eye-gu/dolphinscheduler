@@ -18,7 +18,6 @@
 package org.apache.dolphinscheduler.plugin.datasource.dameng;
 
 import org.apache.dolphinscheduler.plugin.datasource.dameng.param.DamengConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -36,7 +35,7 @@ public class DamengDataSourceChannelTest {
         Mockito.when(sourceChannel.createPooledDataSourceClient(Mockito.any(), Mockito.any()))
                 .thenReturn(dataSourceClient);
         Assertions
-                .assertNotNull(sourceChannel.createPooledDataSourceClient(new DamengConnectionParam(), DbType.DAMENG));
+                .assertNotNull(sourceChannel.createPooledDataSourceClient(new DamengConnectionParam(), "DAMENG"));
     }
 
 }

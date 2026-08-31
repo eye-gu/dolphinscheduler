@@ -85,8 +85,8 @@ public class MySQLDataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.MYSQL, mysqlDatasourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.MYSQL.name(), mysqlDatasourceProcessor.getType());
     }
 
     @Test
@@ -104,7 +104,7 @@ public class MySQLDataSourceProcessorTest {
         try (MockedStatic<PasswordUtils> mockedPasswordUtils = Mockito.mockStatic(PasswordUtils.class)) {
             Mockito.when(PasswordUtils.encodePassword(Mockito.anyString())).thenReturn("123456");
             Assertions.assertEquals("mysql@root@123456@jdbc:mysql://localhost:3306/default",
-                    mysqlDatasourceProcessor.getDatasourceUniqueId(mysqlConnectionParam, DbType.MYSQL));
+                    mysqlDatasourceProcessor.getDatasourceUniqueId(mysqlConnectionParam));
         }
     }
 

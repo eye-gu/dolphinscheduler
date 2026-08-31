@@ -93,8 +93,8 @@ public class OracleDataSourceProcessorTest {
     }
 
     @Test
-    public void getDbType() {
-        Assertions.assertEquals(DbType.ORACLE, oracleDatasourceProcessor.getDbType());
+    public void getType() {
+        Assertions.assertEquals(DbType.ORACLE.name(), oracleDatasourceProcessor.getType());
     }
 
     @Test

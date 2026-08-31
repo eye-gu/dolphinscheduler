@@ -28,7 +28,7 @@ public class PrestoDataSourceChannelFactory implements DataSourceChannelFactory 
 
     @Override
     public String getName() {
-        return DbType.PRESTO.getName();
+        return DbType.PRESTO.name();
     }
 
     @Override

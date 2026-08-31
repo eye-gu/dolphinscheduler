@@ -18,7 +18,6 @@
 package org.apache.dolphinscheduler.plugin.datasource.vertica;
 
 import org.apache.dolphinscheduler.plugin.datasource.vertica.param.VerticaConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -36,6 +35,6 @@ public class VerticaDataSourceChannelTest {
         Mockito.when(sourceChannel.createPooledDataSourceClient(Mockito.any(), Mockito.any()))
                 .thenReturn(dataSourceClient);
         Assertions.assertNotNull(
-                sourceChannel.createPooledDataSourceClient(new VerticaConnectionParam(), DbType.VERTICA));
+                sourceChannel.createPooledDataSourceClient(new VerticaConnectionParam(), "VERTICA"));
     }
 }

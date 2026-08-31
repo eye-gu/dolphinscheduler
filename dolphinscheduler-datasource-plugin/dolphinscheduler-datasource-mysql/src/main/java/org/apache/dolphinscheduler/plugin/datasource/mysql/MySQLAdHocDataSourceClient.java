@@ -19,11 +19,10 @@ package org.apache.dolphinscheduler.plugin.datasource.mysql;
 
 import org.apache.dolphinscheduler.plugin.datasource.api.client.BaseAdHocDataSourceClient;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 public class MySQLAdHocDataSourceClient extends BaseAdHocDataSourceClient {
 
-    public MySQLAdHocDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType) {
-        super(baseConnectionParam, dbType);
+    public MySQLAdHocDataSourceClient(BaseConnectionParam baseConnectionParam, String type) {
+        super(baseConnectionParam, type);
     }
 }

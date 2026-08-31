@@ -116,8 +116,8 @@ public class VerticaDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.VERTICA;
+    public String getType() {
+        return DbType.VERTICA.name();
     }
 
     @Override

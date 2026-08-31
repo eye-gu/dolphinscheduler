@@ -128,8 +128,8 @@ public class DamengDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.DAMENG;
+    public String getType() {
+        return DbType.DAMENG.name();
     }
 
     @Override

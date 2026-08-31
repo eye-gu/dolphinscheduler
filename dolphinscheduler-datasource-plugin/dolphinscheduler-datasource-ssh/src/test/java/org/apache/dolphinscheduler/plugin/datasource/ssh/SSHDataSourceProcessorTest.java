@@ -22,7 +22,6 @@ import org.apache.dolphinscheduler.plugin.datasource.ssh.param.SSHConnectionPara
 import org.apache.dolphinscheduler.plugin.datasource.ssh.param.SSHDataSourceParamDTO;
 import org.apache.dolphinscheduler.plugin.datasource.ssh.param.SSHDataSourceProcessor;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,7 +64,7 @@ public class SSHDataSourceProcessorTest {
         sshConnectionParam.setUser("root");
         sshConnectionParam.setPassword("123456");
         Assertions.assertEquals("ssh@localhost@root@123456",
-                sshDataSourceProcessor.getDatasourceUniqueId(sshConnectionParam, DbType.SSH));
+                sshDataSourceProcessor.getDatasourceUniqueId(sshConnectionParam));
 
     }
 

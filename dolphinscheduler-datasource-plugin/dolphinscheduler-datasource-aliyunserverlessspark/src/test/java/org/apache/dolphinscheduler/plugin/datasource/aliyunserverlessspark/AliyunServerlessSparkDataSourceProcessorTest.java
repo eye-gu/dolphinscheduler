@@ -20,7 +20,6 @@ package org.apache.dolphinscheduler.plugin.datasource.aliyunserverlessspark;
 import org.apache.dolphinscheduler.plugin.datasource.aliyunserverlessspark.param.AliyunServerlessSparkConnectionParam;
 import org.apache.dolphinscheduler.plugin.datasource.aliyunserverlessspark.param.AliyunServerlessSparkDataSourceParamDTO;
 import org.apache.dolphinscheduler.plugin.datasource.aliyunserverlessspark.param.AliyunServerlessSparkDataSourceProcessor;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,8 +65,7 @@ public class AliyunServerlessSparkDataSourceProcessorTest {
         aliyunServerlessSparkConnectionParam.setAccessKeyId("mockAccessKeyId");
         aliyunServerlessSparkConnectionParam.setAccessKeySecret("mockAccessKeySecret");
         Assertions.assertEquals("aliyun_serverless_spark@cn-hangzhou@mockAccessKeyId@mockAccessKeySecret",
-                aliyunServerlessSparkDataSourceProcessor.getDatasourceUniqueId(aliyunServerlessSparkConnectionParam,
-                        DbType.ALIYUN_SERVERLESS_SPARK));
+                aliyunServerlessSparkDataSourceProcessor.getDatasourceUniqueId(aliyunServerlessSparkConnectionParam));
     }
 
     @Test

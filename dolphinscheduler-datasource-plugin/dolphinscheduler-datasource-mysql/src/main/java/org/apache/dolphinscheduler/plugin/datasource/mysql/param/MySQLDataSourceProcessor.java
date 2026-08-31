@@ -166,8 +166,8 @@ public class MySQLDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.MYSQL;
+    public String getType() {
+        return DbType.MYSQL.name();
     }
 
     @Override

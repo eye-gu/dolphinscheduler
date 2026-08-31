@@ -55,12 +55,12 @@ public class AliyunServerlessSparkDataSourceProcessor extends AbstractDataSource
     }
 
     @Override
-    public String getDatasourceUniqueId(ConnectionParam connectionParam, DbType dbType) {
+    public String getDatasourceUniqueId(ConnectionParam connectionParam) {
         AliyunServerlessSparkConnectionParam baseConnectionParam =
                 (AliyunServerlessSparkConnectionParam) connectionParam;
         return MessageFormat.format(
                 "{0}@{1}@{2}@{3}",
-                dbType.getName(),
+                getType(),
                 baseConnectionParam.getRegionId(),
                 PasswordUtils.encodePassword(baseConnectionParam.getAccessKeyId()),
                 PasswordUtils.encodePassword(baseConnectionParam.getAccessKeySecret()));
@@ -142,8 +142,13 @@ public class AliyunServerlessSparkDataSourceProcessor extends AbstractDataSource
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.ALIYUN_SERVERLESS_SPARK;
+    public String getType() {
+        return DbType.ALIYUN_SERVERLESS_SPARK.name();
+    }
+
+    @Override
+    public boolean isJdbcCompatible() {
+        return false;
     }
 
     @Override

@@ -19,12 +19,11 @@ package org.apache.dolphinscheduler.plugin.datasource.spark;
 
 import org.apache.dolphinscheduler.plugin.datasource.hive.HivePooledDataSourceClient;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 public class SparkPooledDataSourceClient extends HivePooledDataSourceClient {
 
-    public SparkPooledDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType) {
-        super(baseConnectionParam, dbType);
+    public SparkPooledDataSourceClient(BaseConnectionParam baseConnectionParam, String type) {
+        super(baseConnectionParam, type);
     }
 
 }

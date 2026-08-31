@@ -20,7 +20,6 @@ package org.apache.dolphinscheduler.plugin.datasource.sagemaker;
 import org.apache.dolphinscheduler.plugin.datasource.sagemaker.param.SagemakerConnectionParam;
 import org.apache.dolphinscheduler.plugin.datasource.sagemaker.param.SagemakerDataSourceParamDTO;
 import org.apache.dolphinscheduler.plugin.datasource.sagemaker.param.SagemakerDataSourceProcessor;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,7 +67,7 @@ public class SagemakerDataSourceProcessorTest {
         sagemakerConnectionParam.setPassword("secret access key");
         sagemakerConnectionParam.setAwsRegion("region");
         Assertions.assertEquals("sagemaker@access key@secret access key@region",
-                sagemakerDataSourceProcessor.getDatasourceUniqueId(sagemakerConnectionParam, DbType.SAGEMAKER));
+                sagemakerDataSourceProcessor.getDatasourceUniqueId(sagemakerConnectionParam));
 
     }
 

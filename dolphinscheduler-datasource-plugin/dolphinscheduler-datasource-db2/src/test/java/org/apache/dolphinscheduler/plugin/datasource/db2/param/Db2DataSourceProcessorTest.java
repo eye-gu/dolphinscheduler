@@ -89,8 +89,8 @@ public class Db2DataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.DB2, db2DatasourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.DB2.name(), db2DatasourceProcessor.getType());
     }
 
     @Test

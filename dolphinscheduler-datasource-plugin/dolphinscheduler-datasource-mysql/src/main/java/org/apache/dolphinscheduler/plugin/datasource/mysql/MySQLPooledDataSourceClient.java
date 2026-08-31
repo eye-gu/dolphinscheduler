@@ -19,12 +19,11 @@ package org.apache.dolphinscheduler.plugin.datasource.mysql;
 
 import org.apache.dolphinscheduler.plugin.datasource.api.client.BasePooledDataSourceClient;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 public class MySQLPooledDataSourceClient extends BasePooledDataSourceClient {
 
-    public MySQLPooledDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType) {
-        super(baseConnectionParam, dbType);
+    public MySQLPooledDataSourceClient(BaseConnectionParam baseConnectionParam, String type) {
+        super(baseConnectionParam, type);
     }
 
 }

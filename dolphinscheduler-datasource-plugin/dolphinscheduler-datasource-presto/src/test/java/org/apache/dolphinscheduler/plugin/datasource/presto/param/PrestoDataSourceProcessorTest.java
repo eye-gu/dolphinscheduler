@@ -83,8 +83,8 @@ public class PrestoDataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.PRESTO, prestoDatasourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.PRESTO.name(), prestoDatasourceProcessor.getType());
     }
 
     @Test

@@ -20,7 +20,6 @@ package org.apache.dolphinscheduler.plugin.datasource.k8s;
 import org.apache.dolphinscheduler.plugin.datasource.k8s.param.K8sConnectionParam;
 import org.apache.dolphinscheduler.plugin.datasource.k8s.param.K8sDataSourceParamDTO;
 import org.apache.dolphinscheduler.plugin.datasource.k8s.param.K8sDataSourceProcessor;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,7 +62,7 @@ public class K8sDataSourceProcessorTest {
         k8sConnectionParam.setNamespace("namespace");
         k8sConnectionParam.setKubeConfig("kubeConfig");
         Assertions.assertEquals("k8s@kubeConfig@namespace",
-                k8sDataSourceProcessor.getDatasourceUniqueId(k8sConnectionParam, DbType.K8S));
+                k8sDataSourceProcessor.getDatasourceUniqueId(k8sConnectionParam));
 
     }
 

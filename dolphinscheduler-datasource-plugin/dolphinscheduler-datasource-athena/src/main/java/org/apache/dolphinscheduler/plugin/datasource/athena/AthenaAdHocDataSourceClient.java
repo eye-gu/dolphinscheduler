@@ -19,11 +19,10 @@ package org.apache.dolphinscheduler.plugin.datasource.athena;
 
 import org.apache.dolphinscheduler.plugin.datasource.api.client.BaseAdHocDataSourceClient;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 public class AthenaAdHocDataSourceClient extends BaseAdHocDataSourceClient {
 
-    public AthenaAdHocDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType) {
-        super(baseConnectionParam, dbType);
+    public AthenaAdHocDataSourceClient(BaseConnectionParam baseConnectionParam, String type) {
+        super(baseConnectionParam, type);
     }
 }

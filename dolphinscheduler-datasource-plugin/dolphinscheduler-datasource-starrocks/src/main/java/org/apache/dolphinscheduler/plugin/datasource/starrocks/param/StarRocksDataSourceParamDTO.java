@@ -37,7 +37,7 @@ public class StarRocksDataSourceParamDTO extends BaseDataSourceParamDTO {
     }
 
     @Override
-    public DbType getType() {
-        return DbType.STARROCKS;
+    public String getType() {
+        return DbType.STARROCKS.name();
     }
 }

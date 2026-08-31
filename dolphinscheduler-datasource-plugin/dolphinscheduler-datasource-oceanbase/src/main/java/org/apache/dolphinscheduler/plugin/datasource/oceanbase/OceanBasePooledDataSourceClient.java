@@ -19,11 +19,10 @@ package org.apache.dolphinscheduler.plugin.datasource.oceanbase;
 
 import org.apache.dolphinscheduler.plugin.datasource.api.client.BasePooledDataSourceClient;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 public class OceanBasePooledDataSourceClient extends BasePooledDataSourceClient {
 
-    public OceanBasePooledDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType) {
-        super(baseConnectionParam, dbType);
+    public OceanBasePooledDataSourceClient(BaseConnectionParam baseConnectionParam, String type) {
+        super(baseConnectionParam, type);
     }
 }

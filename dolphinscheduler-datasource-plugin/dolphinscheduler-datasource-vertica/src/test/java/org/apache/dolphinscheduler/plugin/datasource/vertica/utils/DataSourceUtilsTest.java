@@ -26,7 +26,6 @@ import org.apache.dolphinscheduler.plugin.datasource.api.utils.PasswordUtils;
 import org.apache.dolphinscheduler.plugin.datasource.vertica.param.VerticaConnectionParam;
 import org.apache.dolphinscheduler.plugin.datasource.vertica.param.VerticaDataSourceParamDTO;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -86,7 +85,7 @@ public class DataSourceUtilsTest {
         verticaDatasourceParamDTO.setUserName("root");
         verticaDatasourceParamDTO.setPort(5433);
         verticaDatasourceParamDTO.setPassword("123456");
-        ConnectionParam connectionParam = DataSourceUtils.buildConnectionParams(DbType.VERTICA,
+        ConnectionParam connectionParam = DataSourceUtils.buildConnectionParams("VERTICA",
                 JSONUtils.toJsonString(verticaDatasourceParamDTO));
         Assertions.assertNotNull(connectionParam);
     }
@@ -106,7 +105,7 @@ public class DataSourceUtilsTest {
             VerticaConnectionParam connectionParam = new VerticaConnectionParam();
             connectionParam.setUser("root");
             connectionParam.setPassword("123456");
-            connection = DataSourceClientProvider.getAdHocConnection(DbType.VERTICA, connectionParam);
+            connection = DataSourceClientProvider.getAdHocConnection("VERTICA", connectionParam);
 
             Assertions.assertNotNull(connection);
         }
@@ -117,7 +116,7 @@ public class DataSourceUtilsTest {
     public void testGetJdbcUrl() {
         VerticaConnectionParam verticaConnectionParam = new VerticaConnectionParam();
         verticaConnectionParam.setJdbcUrl("jdbc:vertica://localhost:5433");
-        String jdbcUrl = DataSourceUtils.getJdbcUrl(DbType.VERTICA, verticaConnectionParam);
+        String jdbcUrl = DataSourceUtils.getJdbcUrl("VERTICA", verticaConnectionParam);
         Assertions.assertEquals("jdbc:vertica://localhost:5433",
                 jdbcUrl);
     }
@@ -131,13 +130,13 @@ public class DataSourceUtilsTest {
         connectionParam.setPassword("123456");
 
         Assertions.assertNotNull(
-                DataSourceUtils.buildDatasourceParamDTO(DbType.VERTICA, JSONUtils.toJsonString(connectionParam)));
+                DataSourceUtils.buildDatasourceParamDTO("VERTICA", JSONUtils.toJsonString(connectionParam)));
 
     }
 
     @Test
     public void testGetDatasourceProcessor() {
-        Assertions.assertNotNull(DataSourceUtils.getDatasourceProcessor(DbType.VERTICA));
+        Assertions.assertNotNull(DataSourceUtils.getDatasourceProcessor("VERTICA"));
     }
 
     @Test

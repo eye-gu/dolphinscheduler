@@ -21,17 +21,16 @@ import org.apache.dolphinscheduler.spi.datasource.AdHocDataSourceClient;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
 import org.apache.dolphinscheduler.spi.datasource.DataSourceChannel;
 import org.apache.dolphinscheduler.spi.datasource.PooledDataSourceClient;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 public class StarRocksDataSourceChannel implements DataSourceChannel {
 
     @Override
-    public AdHocDataSourceClient createAdHocDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType) {
-        return new StarRocksAdHocDataSourceClient(baseConnectionParam, dbType);
+    public AdHocDataSourceClient createAdHocDataSourceClient(BaseConnectionParam baseConnectionParam, String type) {
+        return new StarRocksAdHocDataSourceClient(baseConnectionParam, type);
     }
 
     @Override
-    public PooledDataSourceClient createPooledDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType) {
-        return new StarRocksPooledDataSourceClient(baseConnectionParam, dbType);
+    public PooledDataSourceClient createPooledDataSourceClient(BaseConnectionParam baseConnectionParam, String type) {
+        return new StarRocksPooledDataSourceClient(baseConnectionParam, type);
     }
 }

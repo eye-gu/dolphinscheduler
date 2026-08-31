@@ -91,8 +91,8 @@ public class RedshiftDataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.REDSHIFT, redshiftDatasourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.REDSHIFT.name(), redshiftDatasourceProcessor.getType());
     }
 
     @Test

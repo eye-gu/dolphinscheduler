@@ -28,7 +28,7 @@ public class ZeppelinDataSourceParamDTO extends BaseDataSourceParamDTO {
     protected String restEndpoint;
 
     @Override
-    public DbType getType() {
-        return DbType.ZEPPELIN;
+    public String getType() {
+        return DbType.ZEPPELIN.name();
     }
 }

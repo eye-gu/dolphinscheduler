@@ -122,8 +122,8 @@ public class PrestoDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.PRESTO;
+    public String getType() {
+        return DbType.PRESTO.name();
     }
 
     @Override

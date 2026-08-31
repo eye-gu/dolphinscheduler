@@ -36,7 +36,7 @@ public class AzureSQLDataSourceParamDTO extends BaseDataSourceParamDTO {
     protected String endpoint;
 
     @Override
-    public DbType getType() {
-        return DbType.AZURESQL;
+    public String getType() {
+        return DbType.AZURESQL.name();
     }
 }

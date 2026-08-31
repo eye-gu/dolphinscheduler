@@ -130,8 +130,8 @@ public class KyuubiDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.KYUUBI;
+    public String getType() {
+        return DbType.KYUUBI.name();
     }
 
     @Override

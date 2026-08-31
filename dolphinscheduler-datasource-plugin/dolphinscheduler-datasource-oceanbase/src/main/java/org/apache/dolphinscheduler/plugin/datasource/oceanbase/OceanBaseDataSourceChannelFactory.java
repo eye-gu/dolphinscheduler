@@ -28,7 +28,7 @@ public class OceanBaseDataSourceChannelFactory implements DataSourceChannelFacto
 
     @Override
     public String getName() {
-        return DbType.OCEANBASE.getName();
+        return DbType.OCEANBASE.name();
     }
 
     @Override

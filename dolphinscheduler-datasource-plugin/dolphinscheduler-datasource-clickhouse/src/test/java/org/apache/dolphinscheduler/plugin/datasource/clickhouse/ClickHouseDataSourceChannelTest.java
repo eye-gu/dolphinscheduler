@@ -18,7 +18,6 @@
 package org.apache.dolphinscheduler.plugin.datasource.clickhouse;
 
 import org.apache.dolphinscheduler.plugin.datasource.clickhouse.param.ClickHouseConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -36,6 +35,6 @@ public class ClickHouseDataSourceChannelTest {
         Mockito.when(sourceChannel.createPooledDataSourceClient(Mockito.any(), Mockito.any()))
                 .thenReturn(dataSourceClient);
         Assertions.assertNotNull(
-                sourceChannel.createPooledDataSourceClient(new ClickHouseConnectionParam(), DbType.CLICKHOUSE));
+                sourceChannel.createPooledDataSourceClient(new ClickHouseConnectionParam(), "CLICKHOUSE"));
     }
 }

@@ -28,7 +28,7 @@ public class ClickHouseDataSourceChannelFactory implements DataSourceChannelFact
 
     @Override
     public String getName() {
-        return DbType.CLICKHOUSE.getName();
+        return DbType.CLICKHOUSE.name();
     }
 
     @Override

@@ -146,8 +146,14 @@ public class RedshiftDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.REDSHIFT;
+    public String getType() {
+        return DbType.REDSHIFT.name();
+    }
+
+    @Override
+    protected boolean skipHostPatternCheck() {
+        // redshift uses non regular cluster hosts
+        return true;
     }
 
     @Override

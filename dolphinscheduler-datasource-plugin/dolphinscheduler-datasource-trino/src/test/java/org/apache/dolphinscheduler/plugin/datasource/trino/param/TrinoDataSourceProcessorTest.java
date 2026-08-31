@@ -83,8 +83,8 @@ public class TrinoDataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.TRINO, TrinoDatasourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.TRINO.name(), TrinoDatasourceProcessor.getType());
     }
 
     @Test

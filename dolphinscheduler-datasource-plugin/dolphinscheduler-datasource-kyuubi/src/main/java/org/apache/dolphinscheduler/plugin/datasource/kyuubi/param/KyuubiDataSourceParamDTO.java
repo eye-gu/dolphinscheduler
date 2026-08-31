@@ -35,7 +35,7 @@ public class KyuubiDataSourceParamDTO extends BaseDataSourceParamDTO {
     }
 
     @Override
-    public DbType getType() {
-        return DbType.KYUUBI;
+    public String getType() {
+        return DbType.KYUUBI.name();
     }
 }

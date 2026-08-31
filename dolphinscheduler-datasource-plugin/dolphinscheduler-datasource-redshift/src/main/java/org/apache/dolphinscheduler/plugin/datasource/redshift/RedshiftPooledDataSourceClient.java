@@ -22,7 +22,6 @@ import org.apache.dolphinscheduler.plugin.datasource.redshift.param.RedshiftAuth
 import org.apache.dolphinscheduler.plugin.datasource.redshift.param.RedshiftConnectionParam;
 import org.apache.dolphinscheduler.plugin.datasource.redshift.param.RedshiftDataSourceProcessor;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -32,8 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RedshiftPooledDataSourceClient extends BasePooledDataSourceClient {
 
-    public RedshiftPooledDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType) {
-        super(baseConnectionParam, dbType);
+    public RedshiftPooledDataSourceClient(BaseConnectionParam baseConnectionParam, String type) {
+        super(baseConnectionParam, type);
     }
 
     @Override

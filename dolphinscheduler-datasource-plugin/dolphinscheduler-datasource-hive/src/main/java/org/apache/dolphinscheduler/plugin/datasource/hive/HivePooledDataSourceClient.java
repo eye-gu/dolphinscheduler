@@ -25,7 +25,6 @@ import org.apache.dolphinscheduler.common.utils.PropertyUtils;
 import org.apache.dolphinscheduler.plugin.datasource.api.client.BasePooledDataSourceClient;
 import org.apache.dolphinscheduler.plugin.datasource.hive.security.UserGroupInformationFactory;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import sun.security.krb5.Config;
 
@@ -42,14 +41,14 @@ import com.zaxxer.hikari.HikariDataSource;
 @Slf4j
 public class HivePooledDataSourceClient extends BasePooledDataSourceClient {
 
-    public HivePooledDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType) {
-        super(baseConnectionParam, dbType);
+    public HivePooledDataSourceClient(BaseConnectionParam baseConnectionParam, String type) {
+        super(baseConnectionParam, type);
     }
 
-    public HikariDataSource createDataSourcePool(BaseConnectionParam baseConnectionParam, DbType dbType) {
+    public HikariDataSource createDataSourcePool(BaseConnectionParam baseConnectionParam, String type) {
         checkKerberosEnv();
         UserGroupInformationFactory.login(baseConnectionParam.getUser());
-        return super.createDataSourcePool(baseConnectionParam, dbType);
+        return super.createDataSourcePool(baseConnectionParam, type);
     }
 
     // used in constructor

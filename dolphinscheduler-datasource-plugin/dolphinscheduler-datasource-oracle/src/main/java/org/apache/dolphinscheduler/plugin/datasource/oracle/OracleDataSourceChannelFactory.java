@@ -28,7 +28,7 @@ public class OracleDataSourceChannelFactory implements DataSourceChannelFactory 
 
     @Override
     public String getName() {
-        return DbType.ORACLE.getName();
+        return DbType.ORACLE.name();
     }
 
     @Override

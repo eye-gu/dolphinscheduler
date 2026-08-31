@@ -164,8 +164,8 @@ public class AzureSQLDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.AZURESQL;
+    public String getType() {
+        return DbType.AZURESQL.name();
     }
 
     @Override

@@ -185,8 +185,8 @@ public class OceanBaseDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.OCEANBASE;
+    public String getType() {
+        return DbType.OCEANBASE.name();
     }
 
     @Override

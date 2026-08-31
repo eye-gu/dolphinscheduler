@@ -18,7 +18,6 @@
 package org.apache.dolphinscheduler.plugin.datasource.azuresql;
 
 import org.apache.dolphinscheduler.plugin.datasource.azuresql.param.AzureSQLConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -37,6 +36,6 @@ public class SQLServerDataSourceChannelTest {
                 .thenReturn(dataSourceClient);
         Assertions
                 .assertNotNull(
-                        sourceChannel.createPooledDataSourceClient(new AzureSQLConnectionParam(), DbType.AZURESQL));
+                        sourceChannel.createPooledDataSourceClient(new AzureSQLConnectionParam(), "AZURESQL"));
     }
 }

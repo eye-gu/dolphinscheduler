@@ -33,7 +33,7 @@ public class AliyunServerlessSparkDataSourceChannelFactory implements DataSource
 
     @Override
     public String getName() {
-        return DbType.ALIYUN_SERVERLESS_SPARK.getName();
+        return DbType.ALIYUN_SERVERLESS_SPARK.name();
     }
 
 }

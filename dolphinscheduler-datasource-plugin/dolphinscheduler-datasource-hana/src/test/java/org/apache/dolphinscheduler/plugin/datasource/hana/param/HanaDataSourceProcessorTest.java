@@ -81,8 +81,8 @@ class HanaDataSourceProcessorTest {
     }
 
     @Test
-    void testGetDbType() {
-        Assertions.assertEquals(DbType.HANA, hanaDataSourceProcessor.getDbType());
+    void testGetType() {
+        Assertions.assertEquals(DbType.HANA.name(), hanaDataSourceProcessor.getType());
     }
 
     @Test
@@ -100,7 +100,7 @@ class HanaDataSourceProcessorTest {
         try (MockedStatic<PasswordUtils> mockedPasswordUtils = Mockito.mockStatic(PasswordUtils.class)) {
             Mockito.when(PasswordUtils.encodePassword(Mockito.anyString())).thenReturn("123456");
             Assertions.assertEquals("hana@root@123456@jdbc:sap://localhost:30015?currentschema=default",
-                    hanaDataSourceProcessor.getDatasourceUniqueId(mysqlConnectionParam, DbType.HANA));
+                    hanaDataSourceProcessor.getDatasourceUniqueId(mysqlConnectionParam));
         }
     }
 }

@@ -37,7 +37,7 @@ public class SnowflakeDatasourceParamDTO extends BaseDataSourceParamDTO {
     }
 
     @Override
-    public DbType getType() {
-        return DbType.SNOWFLAKE;
+    public String getType() {
+        return DbType.SNOWFLAKE.name();
     }
 }

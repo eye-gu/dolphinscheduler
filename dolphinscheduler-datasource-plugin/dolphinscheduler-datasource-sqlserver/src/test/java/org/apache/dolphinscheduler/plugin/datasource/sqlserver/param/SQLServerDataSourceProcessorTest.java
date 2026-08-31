@@ -89,8 +89,8 @@ public class SQLServerDataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.SQLSERVER, sqlServerDatasourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.SQLSERVER.name(), sqlServerDatasourceProcessor.getType());
     }
 
     @Test

@@ -33,7 +33,7 @@ public class K8sDataSourceChannelFactory implements DataSourceChannelFactory {
 
     @Override
     public String getName() {
-        return DbType.K8S.getName();
+        return DbType.K8S.name();
     }
 
 }

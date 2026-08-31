@@ -80,7 +80,7 @@ public class KyuubiDataSourceProcessorTest {
         kyuubiDataSourceParamDTO.setPort(3306);
         kyuubiDataSourceParamDTO.setPassword("123456");
         ConnectionParam connectionParam =
-                DataSourceUtils.buildConnectionParams(DbType.KYUUBI, JSONUtils.toJsonString(kyuubiDataSourceParamDTO));
+                DataSourceUtils.buildConnectionParams("KYUUBI", JSONUtils.toJsonString(kyuubiDataSourceParamDTO));
         Assertions.assertNotNull(connectionParam);
     }
     @Test
@@ -144,12 +144,12 @@ public class KyuubiDataSourceProcessorTest {
     public void testDbType() {
         Assertions.assertEquals(18, DbType.KYUUBI.getCode());
         Assertions.assertEquals("kyuubi", DbType.KYUUBI.getName());
-        Assertions.assertEquals(DbType.KYUUBI, DbType.of(18));
+        Assertions.assertEquals("KYUUBI", DbType.of(18));
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.KYUUBI, kyuubiDatasourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.KYUUBI.name(), kyuubiDatasourceProcessor.getType());
     }
 
     @Test

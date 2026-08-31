@@ -26,7 +26,6 @@ import org.apache.dolphinscheduler.plugin.datasource.api.utils.PasswordUtils;
 import org.apache.dolphinscheduler.plugin.datasource.dolphindb.param.DolphinDBConnectionParam;
 import org.apache.dolphinscheduler.plugin.datasource.dolphindb.param.DolphinDBDataSourceParamDTO;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -83,7 +82,7 @@ public class DataSourceUtilsTest {
         paramDTO.setUserName("root");
         paramDTO.setPort(5433);
         paramDTO.setPassword("123456");
-        ConnectionParam connectionParam = DataSourceUtils.buildConnectionParams(DbType.DOLPHINDB,
+        ConnectionParam connectionParam = DataSourceUtils.buildConnectionParams("DOLPHINDB",
                 JSONUtils.toJsonString(paramDTO));
         Assertions.assertNotNull(connectionParam);
     }
@@ -103,7 +102,7 @@ public class DataSourceUtilsTest {
             DolphinDBConnectionParam connectionParam = new DolphinDBConnectionParam();
             connectionParam.setUser("admin");
             connectionParam.setPassword("123456");
-            connection = DataSourceClientProvider.getAdHocConnection(DbType.DOLPHINDB, connectionParam);
+            connection = DataSourceClientProvider.getAdHocConnection("DOLPHINDB", connectionParam);
 
             Assertions.assertNotNull(connection);
         }
@@ -114,7 +113,7 @@ public class DataSourceUtilsTest {
     public void testGetJdbcUrl() {
         DolphinDBConnectionParam connectionParam = new DolphinDBConnectionParam();
         connectionParam.setJdbcUrl("jdbc:dolphindb://localhost:8848");
-        String jdbcUrl = DataSourceUtils.getJdbcUrl(DbType.DOLPHINDB, connectionParam);
+        String jdbcUrl = DataSourceUtils.getJdbcUrl("DOLPHINDB", connectionParam);
         Assertions.assertEquals("jdbc:dolphindb://localhost:8848", jdbcUrl);
     }
 
@@ -127,13 +126,13 @@ public class DataSourceUtilsTest {
         connectionParam.setPassword("123456");
 
         Assertions.assertNotNull(
-                DataSourceUtils.buildDatasourceParamDTO(DbType.DOLPHINDB, JSONUtils.toJsonString(connectionParam)));
+                DataSourceUtils.buildDatasourceParamDTO("DOLPHINDB", JSONUtils.toJsonString(connectionParam)));
 
     }
 
     @Test
     public void testGetDatasourceProcessor() {
-        Assertions.assertNotNull(DataSourceUtils.getDatasourceProcessor(DbType.DOLPHINDB));
+        Assertions.assertNotNull(DataSourceUtils.getDatasourceProcessor("DOLPHINDB"));
     }
 
     @Test

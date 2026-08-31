@@ -120,8 +120,8 @@ public class DatabendDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.DATABEND;
+    public String getType() {
+        return DbType.DATABEND.name();
     }
 
     @Override

@@ -18,7 +18,6 @@
 package org.apache.dolphinscheduler.plugin.doris;
 
 import org.apache.dolphinscheduler.plugin.doris.param.DorisConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -35,6 +34,6 @@ public class DorisDataSourceChannelTest {
         DorisPooledDataSourceClient dataSourceClient = Mockito.mock(DorisPooledDataSourceClient.class);
         Mockito.when(sourceChannel.createPooledDataSourceClient(Mockito.any(), Mockito.any()))
                 .thenReturn(dataSourceClient);
-        Assertions.assertNotNull(sourceChannel.createPooledDataSourceClient(new DorisConnectionParam(), DbType.DORIS));
+        Assertions.assertNotNull(sourceChannel.createPooledDataSourceClient(new DorisConnectionParam(), "DORIS"));
     }
 }

@@ -36,7 +36,7 @@ public class DorisDataSourceParamDTO extends BaseDataSourceParamDTO {
                 + '}';
     }
     @Override
-    public DbType getType() {
-        return DbType.DORIS;
+    public String getType() {
+        return DbType.DORIS.name();
     }
 }

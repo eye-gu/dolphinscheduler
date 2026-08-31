@@ -35,7 +35,7 @@ public class DatabendDataSourceParamDTO extends BaseDataSourceParamDTO {
     }
 
     @Override
-    public DbType getType() {
-        return DbType.DATABEND;
+    public String getType() {
+        return DbType.DATABEND.name();
     }
 }

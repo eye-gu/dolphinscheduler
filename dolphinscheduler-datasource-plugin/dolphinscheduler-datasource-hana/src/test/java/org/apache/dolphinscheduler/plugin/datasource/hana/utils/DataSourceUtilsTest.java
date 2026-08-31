@@ -26,7 +26,6 @@ import org.apache.dolphinscheduler.plugin.datasource.api.utils.PasswordUtils;
 import org.apache.dolphinscheduler.plugin.datasource.hana.param.HanaConnectionParam;
 import org.apache.dolphinscheduler.plugin.datasource.hana.param.HanaDataSourceParamDTO;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -85,7 +84,7 @@ class DataSourceUtilsTest {
         hanaDatasourceParamDTO.setPort(30015);
         hanaDatasourceParamDTO.setPassword("123456");
         ConnectionParam connectionParam =
-                DataSourceUtils.buildConnectionParams(DbType.HANA, JSONUtils.toJsonString(hanaDatasourceParamDTO));
+                DataSourceUtils.buildConnectionParams("HANA", JSONUtils.toJsonString(hanaDatasourceParamDTO));
         Assertions.assertNotNull(connectionParam);
     }
 
@@ -113,7 +112,7 @@ class DataSourceUtilsTest {
     void testGetJdbcUrl() {
         HanaConnectionParam hanaConnectionParam = new HanaConnectionParam();
         hanaConnectionParam.setJdbcUrl("jdbc:sap://localhost:30015");
-        String jdbcUrl = DataSourceUtils.getJdbcUrl(DbType.HANA, hanaConnectionParam);
+        String jdbcUrl = DataSourceUtils.getJdbcUrl("HANA", hanaConnectionParam);
         Assertions.assertEquals(
                 "jdbc:sap://localhost:30015&reconnect=true",
                 jdbcUrl);
@@ -129,13 +128,13 @@ class DataSourceUtilsTest {
         connectionParam.setPassword("123456");
 
         Assertions.assertNotNull(
-                DataSourceUtils.buildDatasourceParamDTO(DbType.HANA, JSONUtils.toJsonString(connectionParam)));
+                DataSourceUtils.buildDatasourceParamDTO("HANA", JSONUtils.toJsonString(connectionParam)));
 
     }
 
     @Test
     void testGetDatasourceProcessor() {
-        Assertions.assertNotNull(DataSourceUtils.getDatasourceProcessor(DbType.HANA));
+        Assertions.assertNotNull(DataSourceUtils.getDatasourceProcessor("HANA"));
     }
 
     @Test

@@ -78,8 +78,8 @@ public class DamengDataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.DAMENG, damengDatasourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.DAMENG.name(), damengDatasourceProcessor.getType());
     }
 
     @Test

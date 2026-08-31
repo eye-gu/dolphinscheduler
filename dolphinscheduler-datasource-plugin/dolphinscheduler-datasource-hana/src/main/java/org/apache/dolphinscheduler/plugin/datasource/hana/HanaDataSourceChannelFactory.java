@@ -28,7 +28,7 @@ public class HanaDataSourceChannelFactory implements DataSourceChannelFactory {
 
     @Override
     public String getName() {
-        return DbType.HANA.getName();
+        return DbType.HANA.name();
     }
 
     @Override

@@ -28,8 +28,8 @@ public class SSHDataSourceParamDTO extends BaseDataSourceParamDTO {
     protected String privateKey;
 
     @Override
-    public DbType getType() {
-        return DbType.SSH;
+    public String getType() {
+        return DbType.SSH.name();
 
     }
 }

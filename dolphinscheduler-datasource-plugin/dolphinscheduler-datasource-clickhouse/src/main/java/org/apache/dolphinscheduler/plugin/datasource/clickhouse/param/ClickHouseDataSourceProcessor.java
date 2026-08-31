@@ -121,8 +121,8 @@ public class ClickHouseDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.CLICKHOUSE;
+    public String getType() {
+        return DbType.CLICKHOUSE.name();
     }
 
     @Override

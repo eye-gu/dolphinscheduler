@@ -79,7 +79,7 @@ public class DatabendDataSourceProcessorTest {
         databendDataSourceParamDTO.setPort(8000);
         databendDataSourceParamDTO.setPassword("databend");
         ConnectionParam connectionParam =
-                DataSourceUtils.buildConnectionParams(DbType.DATABEND,
+                DataSourceUtils.buildConnectionParams("DATABEND",
                         JSONUtils.toJsonString(databendDataSourceParamDTO));
         Assertions.assertNotNull(connectionParam);
     }
@@ -149,12 +149,12 @@ public class DatabendDataSourceProcessorTest {
     public void testDbType() {
         Assertions.assertEquals(19, DbType.DATABEND.getCode());
         Assertions.assertEquals("databend", DbType.DATABEND.getName());
-        Assertions.assertEquals(DbType.DATABEND, DbType.of(19));
+        Assertions.assertEquals("DATABEND", DbType.of(19));
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.DATABEND, databendDataSourceProcessor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.DATABEND.name(), databendDataSourceProcessor.getType());
     }
 
     @Test

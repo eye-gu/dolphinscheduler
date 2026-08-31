@@ -43,10 +43,7 @@ public class DolphinDBDataSourceProcessor extends AbstractDataSourceProcessor {
 
     @Override
     public void checkDatasourceParam(BaseDataSourceParamDTO baseDataSourceParamDTO) {
-        if (!baseDataSourceParamDTO.getType().equals(DbType.REDSHIFT)) {
-            // due to redshift use not regular hosts
-            checkHost(baseDataSourceParamDTO.getHost());
-        }
+        checkHost(baseDataSourceParamDTO.getHost());
         checkOther(baseDataSourceParamDTO.getOther());
     }
 
@@ -130,8 +127,8 @@ public class DolphinDBDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.DOLPHINDB;
+    public String getType() {
+        return DbType.DOLPHINDB.name();
     }
 
     @Override

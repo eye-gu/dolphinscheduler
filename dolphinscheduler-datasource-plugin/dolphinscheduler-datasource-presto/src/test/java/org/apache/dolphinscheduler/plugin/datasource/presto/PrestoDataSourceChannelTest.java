@@ -18,7 +18,6 @@
 package org.apache.dolphinscheduler.plugin.datasource.presto;
 
 import org.apache.dolphinscheduler.plugin.datasource.presto.param.PrestoConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -36,6 +35,6 @@ public class PrestoDataSourceChannelTest {
         Mockito.when(sourceChannel.createPooledDataSourceClient(Mockito.any(), Mockito.any()))
                 .thenReturn(dataSourceClient);
         Assertions
-                .assertNotNull(sourceChannel.createPooledDataSourceClient(new PrestoConnectionParam(), DbType.PRESTO));
+                .assertNotNull(sourceChannel.createPooledDataSourceClient(new PrestoConnectionParam(), "PRESTO"));
     }
 }

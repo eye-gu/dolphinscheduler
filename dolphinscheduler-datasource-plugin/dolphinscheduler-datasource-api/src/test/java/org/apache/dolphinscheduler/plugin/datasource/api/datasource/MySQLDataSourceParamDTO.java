@@ -39,7 +39,7 @@ public class MySQLDataSourceParamDTO extends BaseDataSourceParamDTO {
     }
 
     @Override
-    public DbType getType() {
-        return DbType.MYSQL;
+    public String getType() {
+        return DbType.MYSQL.name();
     }
 }

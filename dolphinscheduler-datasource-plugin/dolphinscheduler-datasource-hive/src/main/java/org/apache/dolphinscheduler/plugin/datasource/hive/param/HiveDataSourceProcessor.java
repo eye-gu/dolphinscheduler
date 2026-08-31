@@ -154,8 +154,8 @@ public class HiveDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.HIVE;
+    public String getType() {
+        return DbType.HIVE.name();
     }
 
     @Override

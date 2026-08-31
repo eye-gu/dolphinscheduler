@@ -28,7 +28,7 @@ public class SagemakerDataSourceParamDTO extends BaseDataSourceParamDTO {
     protected String awsRegion;
 
     @Override
-    public DbType getType() {
-        return DbType.SAGEMAKER;
+    public String getType() {
+        return DbType.SAGEMAKER.name();
     }
 }

@@ -26,7 +26,6 @@ import org.apache.dolphinscheduler.plugin.datasource.api.utils.PasswordUtils;
 import org.apache.dolphinscheduler.plugin.datasource.mysql.param.MySQLConnectionParam;
 import org.apache.dolphinscheduler.plugin.datasource.mysql.param.MySQLDataSourceParamDTO;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -99,7 +98,7 @@ public class DataSourceUtilsTest {
         mysqlDatasourceParamDTO.setPort(3306);
         mysqlDatasourceParamDTO.setPassword("123456");
         ConnectionParam connectionParam =
-                DataSourceUtils.buildConnectionParams(DbType.MYSQL, JSONUtils.toJsonString(mysqlDatasourceParamDTO));
+                DataSourceUtils.buildConnectionParams("MYSQL", JSONUtils.toJsonString(mysqlDatasourceParamDTO));
         Assertions.assertNotNull(connectionParam);
     }
 
@@ -127,7 +126,7 @@ public class DataSourceUtilsTest {
     public void testGetJdbcUrl() {
         MySQLConnectionParam mysqlConnectionParam = new MySQLConnectionParam();
         mysqlConnectionParam.setJdbcUrl("jdbc:mysql://localhost:3308");
-        String jdbcUrl = DataSourceUtils.getJdbcUrl(DbType.MYSQL, mysqlConnectionParam);
+        String jdbcUrl = DataSourceUtils.getJdbcUrl("MYSQL", mysqlConnectionParam);
         Assertions.assertEquals(
                 "jdbc:mysql://localhost:3308",
                 jdbcUrl);
@@ -143,13 +142,13 @@ public class DataSourceUtilsTest {
         connectionParam.setPassword("123456");
 
         Assertions.assertNotNull(
-                DataSourceUtils.buildDatasourceParamDTO(DbType.MYSQL, JSONUtils.toJsonString(connectionParam)));
+                DataSourceUtils.buildDatasourceParamDTO("MYSQL", JSONUtils.toJsonString(connectionParam)));
 
     }
 
     @Test
     public void testGetDatasourceProcessor() {
-        Assertions.assertNotNull(DataSourceUtils.getDatasourceProcessor(DbType.MYSQL));
+        Assertions.assertNotNull(DataSourceUtils.getDatasourceProcessor("MYSQL"));
     }
 
     @Test

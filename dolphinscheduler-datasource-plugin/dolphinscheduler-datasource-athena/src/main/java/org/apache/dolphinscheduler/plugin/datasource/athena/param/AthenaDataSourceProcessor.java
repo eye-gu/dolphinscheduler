@@ -118,8 +118,8 @@ public class AthenaDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.ATHENA;
+    public String getType() {
+        return DbType.ATHENA.name();
     }
 
     @Override

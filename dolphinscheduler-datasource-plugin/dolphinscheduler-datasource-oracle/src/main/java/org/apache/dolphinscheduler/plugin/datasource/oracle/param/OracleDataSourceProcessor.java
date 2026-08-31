@@ -141,8 +141,8 @@ public class OracleDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.ORACLE;
+    public String getType() {
+        return DbType.ORACLE.name();
     }
 
     @Override

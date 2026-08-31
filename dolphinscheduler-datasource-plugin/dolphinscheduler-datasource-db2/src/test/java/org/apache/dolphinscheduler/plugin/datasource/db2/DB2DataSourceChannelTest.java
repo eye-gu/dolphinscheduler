@@ -18,7 +18,6 @@
 package org.apache.dolphinscheduler.plugin.datasource.db2;
 
 import org.apache.dolphinscheduler.plugin.datasource.db2.param.Db2ConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -35,6 +34,6 @@ public class DB2DataSourceChannelTest {
         DB2PooledDataSourceClient dataSourceClient = Mockito.mock(DB2PooledDataSourceClient.class);
         Mockito.when(sourceChannel.createPooledDataSourceClient(Mockito.any(), Mockito.any()))
                 .thenReturn(dataSourceClient);
-        Assertions.assertNotNull(sourceChannel.createPooledDataSourceClient(new Db2ConnectionParam(), DbType.DB2));
+        Assertions.assertNotNull(sourceChannel.createPooledDataSourceClient(new Db2ConnectionParam(), "DB2"));
     }
 }

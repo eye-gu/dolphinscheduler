@@ -37,7 +37,7 @@ public class HanaDataSourceParamDTO extends BaseDataSourceParamDTO {
     }
 
     @Override
-    public DbType getType() {
-        return DbType.HANA;
+    public String getType() {
+        return DbType.HANA.name();
     }
 }

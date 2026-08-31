@@ -18,7 +18,6 @@
 package org.apache.dolphinscheduler.plugin.datasource.snowflake;
 
 import org.apache.dolphinscheduler.plugin.datasource.snowflake.param.SnowflakeConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -37,6 +36,6 @@ public class SnowflakeDataSourceChannelTest {
                 .thenReturn(dataSourceClient);
         Assertions
                 .assertNotNull(
-                        sourceChannel.createPooledDataSourceClient(new SnowflakeConnectionParam(), DbType.SNOWFLAKE));
+                        sourceChannel.createPooledDataSourceClient(new SnowflakeConnectionParam(), "SNOWFLAKE"));
     }
 }

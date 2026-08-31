@@ -149,8 +149,8 @@ public class StarRocksDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.STARROCKS;
+    public String getType() {
+        return DbType.STARROCKS.name();
     }
 
     @Override

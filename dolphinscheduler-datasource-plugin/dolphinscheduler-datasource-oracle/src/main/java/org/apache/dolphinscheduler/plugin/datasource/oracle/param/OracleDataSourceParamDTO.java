@@ -46,7 +46,7 @@ public class OracleDataSourceParamDTO extends BaseDataSourceParamDTO {
     }
 
     @Override
-    public DbType getType() {
-        return DbType.ORACLE;
+    public String getType() {
+        return DbType.ORACLE.name();
     }
 }

@@ -117,8 +117,8 @@ public class Db2DataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.DB2;
+    public String getType() {
+        return DbType.DB2.name();
     }
 
     @Override

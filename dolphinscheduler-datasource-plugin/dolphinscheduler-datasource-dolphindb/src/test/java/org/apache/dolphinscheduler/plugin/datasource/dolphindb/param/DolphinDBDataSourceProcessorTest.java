@@ -82,8 +82,8 @@ class DolphinDBDataSourceProcessorTest {
     }
 
     @Test
-    public void testGetDbType() {
-        Assertions.assertEquals(DbType.DOLPHINDB, processor.getDbType());
+    public void testGetType() {
+        Assertions.assertEquals(DbType.DOLPHINDB.name(), processor.getType());
     }
 
     @Test
@@ -101,7 +101,7 @@ class DolphinDBDataSourceProcessorTest {
         try (MockedStatic<PasswordUtils> mockedPasswordUtils = Mockito.mockStatic(PasswordUtils.class)) {
             mockedPasswordUtils.when(() -> PasswordUtils.encodePassword(Mockito.anyString())).thenReturn("123456");
             Assertions.assertEquals("dolphindb@admin@123456@jdbc:dolphindb://localhost:8848/",
-                    processor.getDatasourceUniqueId(param, DbType.DOLPHINDB));
+                    processor.getDatasourceUniqueId(param));
         }
     }
 }

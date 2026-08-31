@@ -122,8 +122,8 @@ public class SQLServerDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public DbType getDbType() {
-        return DbType.SQLSERVER;
+    public String getType() {
+        return DbType.SQLSERVER.name();
     }
 
     @Override

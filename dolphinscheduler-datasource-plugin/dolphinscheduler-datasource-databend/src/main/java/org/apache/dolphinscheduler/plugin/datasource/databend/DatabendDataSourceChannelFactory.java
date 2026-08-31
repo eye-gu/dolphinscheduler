@@ -28,7 +28,7 @@ public class DatabendDataSourceChannelFactory implements DataSourceChannelFactor
 
     @Override
     public String getName() {
-        return DbType.DATABEND.getName();
+        return DbType.DATABEND.name();
     }
 
     @Override
