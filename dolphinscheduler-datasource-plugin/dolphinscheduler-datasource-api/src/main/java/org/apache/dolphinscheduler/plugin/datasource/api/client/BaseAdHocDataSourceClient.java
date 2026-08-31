@@ -20,7 +20,6 @@ package org.apache.dolphinscheduler.plugin.datasource.api.client;
 import org.apache.dolphinscheduler.plugin.datasource.api.plugin.DataSourcePluginManager;
 import org.apache.dolphinscheduler.spi.datasource.AdHocDataSourceClient;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -28,17 +27,17 @@ import java.sql.SQLException;
 public abstract class BaseAdHocDataSourceClient implements AdHocDataSourceClient {
 
     private final BaseConnectionParam baseConnectionParam;
-    private final DbType dbType;
+    private final String type;
 
-    protected BaseAdHocDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType) {
+    protected BaseAdHocDataSourceClient(BaseConnectionParam baseConnectionParam, String type) {
         this.baseConnectionParam = baseConnectionParam;
-        this.dbType = dbType;
+        this.type = type;
     }
 
     @Override
     public Connection getConnection() throws SQLException {
         try {
-            return DataSourcePluginManager.getDataSourceProcessor(dbType).getConnection(baseConnectionParam);
+            return DataSourcePluginManager.getDataSourceProcessorChecked(type).getConnection(baseConnectionParam);
         } catch (Exception e) {
             throw new SQLException("Create adhoc connection error", e);
         }

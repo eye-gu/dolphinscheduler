@@ -25,7 +25,6 @@ import org.apache.dolphinscheduler.plugin.datasource.api.utils.DataSourceUtils;
 import org.apache.dolphinscheduler.plugin.datasource.api.utils.PasswordUtils;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
 import org.apache.dolphinscheduler.spi.datasource.PooledDataSourceClient;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.apache.commons.collections4.MapUtils;
 
@@ -42,20 +41,20 @@ public abstract class BasePooledDataSourceClient implements PooledDataSourceClie
     protected final BaseConnectionParam baseConnectionParam;
     protected HikariDataSource dataSource;
 
-    public BasePooledDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType) {
+    public BasePooledDataSourceClient(BaseConnectionParam baseConnectionParam, String type) {
 
         this.baseConnectionParam = checkNotNull(baseConnectionParam, "baseConnectionParam is null");
-        this.dataSource = createDataSourcePool(baseConnectionParam, checkNotNull(dbType, "dbType is null"));
+        this.dataSource = createDataSourcePool(baseConnectionParam, checkNotNull(type, "type is null"));
     }
 
     // todo: support multiple version databases
     @Override
-    public HikariDataSource createDataSourcePool(BaseConnectionParam baseConnectionParam, DbType dbType) {
+    public HikariDataSource createDataSourcePool(BaseConnectionParam baseConnectionParam, String type) {
 
         HikariDataSource dataSource = new HikariDataSource();
 
         dataSource.setDriverClassName(baseConnectionParam.getDriverClassName());
-        dataSource.setJdbcUrl(DataSourceUtils.getJdbcUrl(dbType, baseConnectionParam));
+        dataSource.setJdbcUrl(DataSourceUtils.getJdbcUrl(type, baseConnectionParam));
         dataSource.setUsername(baseConnectionParam.getUser());
         dataSource.setPassword(PasswordUtils.decodePassword(baseConnectionParam.getPassword()));
 
@@ -67,7 +66,7 @@ public abstract class BasePooledDataSourceClient implements PooledDataSourceClie
             baseConnectionParam.getOther().forEach(dataSource::addDataSourceProperty);
         }
 
-        log.info("Creating HikariDataSource for {} success.", dbType.name());
+        log.info("Creating HikariDataSource for {} success.", type);
         return dataSource;
     }
 

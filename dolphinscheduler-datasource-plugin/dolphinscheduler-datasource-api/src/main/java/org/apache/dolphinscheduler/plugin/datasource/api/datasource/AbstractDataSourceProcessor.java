@@ -21,7 +21,6 @@ import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.plugin.datasource.api.utils.PasswordUtils;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -55,12 +54,19 @@ public abstract class AbstractDataSourceProcessor implements DataSourceProcessor
 
     @Override
     public void checkDatasourceParam(BaseDataSourceParamDTO baseDataSourceParamDTO) {
-        if (!baseDataSourceParamDTO.getType().equals(DbType.REDSHIFT)) {
-            // due to redshift use not regular hosts
+        if (!skipHostPatternCheck()) {
             checkHost(baseDataSourceParamDTO.getHost());
         }
         checkDatabasePatter(baseDataSourceParamDTO.getDatabase());
         checkOther(baseDataSourceParamDTO.getOther());
+    }
+
+    /**
+     * Whether the host pattern check should be skipped for this datasource type, e.g. when the type does not use
+     * regular host addresses. Defaults to false, datasource processors can override it to declare the capability.
+     */
+    protected boolean skipHostPatternCheck() {
+        return false;
     }
 
     /**
@@ -116,9 +122,9 @@ public abstract class AbstractDataSourceProcessor implements DataSourceProcessor
     }
 
     @Override
-    public String getDatasourceUniqueId(ConnectionParam connectionParam, DbType dbType) {
+    public String getDatasourceUniqueId(ConnectionParam connectionParam) {
         BaseConnectionParam baseConnectionParam = (BaseConnectionParam) connectionParam;
-        return MessageFormat.format("{0}@{1}@{2}@{3}", dbType.getName(), baseConnectionParam.getUser(),
+        return MessageFormat.format("{0}@{1}@{2}@{3}", getType(), baseConnectionParam.getUser(),
                 PasswordUtils.encodePassword(baseConnectionParam.getPassword()), baseConnectionParam.getJdbcUrl());
     }
 
@@ -127,7 +133,7 @@ public abstract class AbstractDataSourceProcessor implements DataSourceProcessor
         try (Connection connection = getConnection(connectionParam)) {
             return true;
         } catch (Exception e) {
-            log.error("Check datasource connectivity for: {} error", getDbType().name(), e);
+            log.error("Check datasource connectivity for: {} error", getType(), e);
             return false;
         }
     }

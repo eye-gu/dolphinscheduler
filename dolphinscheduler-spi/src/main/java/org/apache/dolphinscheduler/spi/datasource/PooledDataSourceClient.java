@@ -17,8 +17,6 @@
 
 package org.apache.dolphinscheduler.spi.datasource;
 
-import org.apache.dolphinscheduler.spi.enums.DbType;
-
 import javax.sql.DataSource;
 
 /**
@@ -26,6 +24,9 @@ import javax.sql.DataSource;
  */
 public interface PooledDataSourceClient extends DataSourceClient {
 
-    DataSource createDataSourcePool(BaseConnectionParam baseConnectionParam, DbType dbType);
+    /**
+     * @param type the datasource type name declared by the datasource plugin, e.g. MYSQL
+     */
+    DataSource createDataSourcePool(BaseConnectionParam baseConnectionParam, String type);
 
 }

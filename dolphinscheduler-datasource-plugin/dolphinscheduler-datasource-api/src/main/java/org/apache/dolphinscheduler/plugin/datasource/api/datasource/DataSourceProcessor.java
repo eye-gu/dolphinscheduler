@@ -18,7 +18,6 @@
 package org.apache.dolphinscheduler.plugin.datasource.api.datasource;
 
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -46,7 +45,7 @@ public interface DataSourceProcessor {
      *
      * @return UniqueId
      */
-    String getDatasourceUniqueId(ConnectionParam connectionParam, DbType dbType);
+    String getDatasourceUniqueId(ConnectionParam connectionParam);
 
     /**
      * create BaseDataSourceParamDTO by connectionJson
@@ -107,9 +106,36 @@ public interface DataSourceProcessor {
     boolean checkDataSourceConnectivity(ConnectionParam connectionParam);
 
     /**
-     * @return {@link DbType}
+     * The identity of the datasource type provided by this processor.
+     * <p>
+     * The name must be unique among all installed datasource plugins, case-normalized to upper case (e.g.
+     * "MYSQL", "DORIS", "MY_INTERNAL_DB"). It is used to route parameters/connections to this processor, and is
+     * persisted in {@code t_ds_datasource.type}.
      */
-    DbType getDbType();
+    String getType();
+
+    /**
+     * The human readable label of the datasource type, shown in the UI. Defaults to the type name.
+     */
+    default String getLabel() {
+        return getType();
+    }
+
+    /**
+     * The suggested port of the datasource type, used by the UI as the default value of the port field.
+     * {@code null} means no suggestion (the port field is still rendered unless the type is not JDBC compatible).
+     */
+    default Integer getDefaultPort() {
+        return null;
+    }
+
+    /**
+     * Whether the datasource is accessible through a standard JDBC URL (host/port/database). Used by the UI to
+     * decide if the generic JDBC form can be rendered for this type.
+     */
+    default boolean isJdbcCompatible() {
+        return true;
+    }
 
     /**
      * get datasource processor

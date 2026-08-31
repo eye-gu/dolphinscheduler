@@ -18,7 +18,6 @@
 package org.apache.dolphinscheduler.plugin.datasource.api.datasource;
 
 import org.apache.dolphinscheduler.common.constants.Constants;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -85,9 +84,8 @@ public abstract class BaseDataSourceParamDTO implements Serializable {
 
     /**
      * Get the datasource type
-     * see{@link DbType}
      *
-     * @return datasource type code
+     * @return the datasource type name declared by the datasource plugin, e.g. MYSQL
      */
-    public abstract DbType getType();
+    public abstract String getType();
 }

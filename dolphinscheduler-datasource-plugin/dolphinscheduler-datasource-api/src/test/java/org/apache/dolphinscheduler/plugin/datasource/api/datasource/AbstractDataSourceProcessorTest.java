@@ -23,7 +23,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import java.sql.Connection;
 import java.util.HashMap;
@@ -103,7 +102,7 @@ public class AbstractDataSourceProcessorTest {
             }
 
             @Override
-            public DbType getDbType() {
+            public String getType() {
                 return null;
             }
 

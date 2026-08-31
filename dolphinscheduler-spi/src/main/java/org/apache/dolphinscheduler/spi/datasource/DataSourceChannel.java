@@ -17,17 +17,19 @@
 
 package org.apache.dolphinscheduler.spi.datasource;
 
-import org.apache.dolphinscheduler.spi.enums.DbType;
-
 public interface DataSourceChannel {
 
     /**
      * Create a AdHocDataSourceClient, this client should not be pooled.
+     *
+     * @param type the datasource type name declared by the datasource plugin, e.g. MYSQL
      */
-    AdHocDataSourceClient createAdHocDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType);
+    AdHocDataSourceClient createAdHocDataSourceClient(BaseConnectionParam baseConnectionParam, String type);
 
     /**
      * Create a PooledDataSourceClient, this client should be pooled.
+     *
+     * @param type the datasource type name declared by the datasource plugin, e.g. MYSQL
      */
-    PooledDataSourceClient createPooledDataSourceClient(BaseConnectionParam baseConnectionParam, DbType dbType);
+    PooledDataSourceClient createPooledDataSourceClient(BaseConnectionParam baseConnectionParam, String type);
 }

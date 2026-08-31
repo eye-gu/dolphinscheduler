@@ -28,6 +28,16 @@ import lombok.Getter;
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.google.common.base.Functions;
 
+/**
+ * Built-in datasource type constants.
+ * <p>
+ * Deprecated as the identity of a datasource type: since DSIP-110 a datasource type is identified by a unique
+ * string name declared by the datasource plugin (see {@code DataSourceProcessor#getType()}), and the persisted
+ * {@code t_ds_datasource.type} column stores that name. This enum is kept for one removal cycle as a constants
+ * holder (built-in type names and the legacy code-to-name mapping used by schema upgrade scripts); the integer
+ * {@code code} is no longer used at runtime.
+ */
+@Deprecated
 @Getter
 public enum DbType {
 
@@ -65,6 +75,10 @@ public enum DbType {
 
     private static final Map<Integer, DbType> DB_TYPE_MAP =
             Arrays.stream(DbType.values()).collect(toMap(DbType::getCode, Functions.identity()));
+    /**
+     * Legacy numeric code of the type, kept only for the schema upgrade mapping (integer code -> type name).
+     */
+    @Deprecated
     @EnumValue
     private final int code;
     private final String name;
@@ -76,6 +90,10 @@ public enum DbType {
         this.descp = descp;
     }
 
+    /**
+     * @deprecated the numeric code is no longer the identity of a datasource type, use {@link #name()} instead.
+     */
+    @Deprecated
     public static DbType of(int type) {
         if (DB_TYPE_MAP.containsKey(type)) {
             return DB_TYPE_MAP.get(type);
@@ -83,6 +101,11 @@ public enum DbType {
         return null;
     }
 
+    /**
+     * @deprecated use the plain type name string instead, unknown type names are rejected by
+     *             {@code DataSourcePluginManager} with an explicit error.
+     */
+    @Deprecated
     public static DbType ofName(String name) {
         return Arrays.stream(DbType.values()).filter(e -> e.name().equals(name)).findFirst()
                 .orElseThrow(() -> new NoSuchElementException("no such db type"));

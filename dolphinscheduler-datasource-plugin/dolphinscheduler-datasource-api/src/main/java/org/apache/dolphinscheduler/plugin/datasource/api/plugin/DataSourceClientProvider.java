@@ -26,7 +26,6 @@ import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
 import org.apache.dolphinscheduler.spi.datasource.DataSourceChannel;
 import org.apache.dolphinscheduler.spi.datasource.DataSourceClient;
 import org.apache.dolphinscheduler.spi.datasource.PooledDataSourceClient;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -58,35 +57,35 @@ public class DataSourceClientProvider {
                     .maximumSize(100)
                     .build();
 
-    public static DataSourceClient getPooledDataSourceClient(DbType dbType,
+    public static DataSourceClient getPooledDataSourceClient(String type,
                                                              ConnectionParam connectionParam) throws ExecutionException {
         BaseConnectionParam baseConnectionParam = (BaseConnectionParam) connectionParam;
-        String datasourceUniqueId = DataSourceUtils.getDatasourceUniqueId(baseConnectionParam, dbType);
+        String datasourceUniqueId = DataSourceUtils.getDatasourceUniqueId(baseConnectionParam, type);
         return POOLED_DATASOURCE_CLIENT_CACHE.get(datasourceUniqueId, () -> {
-            DataSourceChannel dataSourceChannel = DataSourcePluginManager.getDataSourceChannel(dbType);
+            DataSourceChannel dataSourceChannel = DataSourcePluginManager.getDataSourceChannel(type);
             if (null == dataSourceChannel) {
-                throw new RuntimeException(String.format("datasource plugin '%s' is not found", dbType.getName()));
+                throw new RuntimeException(String.format("datasource plugin '%s' is not found", type));
             }
-            return dataSourceChannel.createPooledDataSourceClient(baseConnectionParam, dbType);
+            return dataSourceChannel.createPooledDataSourceClient(baseConnectionParam, type);
         });
     }
 
-    public static Connection getPooledConnection(DbType dbType,
+    public static Connection getPooledConnection(String type,
                                                  ConnectionParam connectionParam) throws SQLException, ExecutionException {
-        return getPooledDataSourceClient(dbType, connectionParam).getConnection();
+        return getPooledDataSourceClient(type, connectionParam).getConnection();
     }
 
-    public static AdHocDataSourceClient getAdHocDataSourceClient(DbType dbType, ConnectionParam connectionParam) {
+    public static AdHocDataSourceClient getAdHocDataSourceClient(String type, ConnectionParam connectionParam) {
         BaseConnectionParam baseConnectionParam = (BaseConnectionParam) connectionParam;
-        DataSourceChannel dataSourceChannel = DataSourcePluginManager.getDataSourceChannel(dbType);
+        DataSourceChannel dataSourceChannel = DataSourcePluginManager.getDataSourceChannel(type);
         if (null == dataSourceChannel) {
-            throw new RuntimeException(String.format("datasource plugin '%s' is not found", dbType.getName()));
+            throw new RuntimeException(String.format("datasource plugin '%s' is not found", type));
         }
-        return dataSourceChannel.createAdHocDataSourceClient(baseConnectionParam, dbType);
+        return dataSourceChannel.createAdHocDataSourceClient(baseConnectionParam, type);
     }
 
-    public static Connection getAdHocConnection(DbType dbType,
+    public static Connection getAdHocConnection(String type,
                                                 ConnectionParam connectionParam) throws SQLException, ExecutionException {
-        return getAdHocDataSourceClient(dbType, connectionParam).getConnection();
+        return getAdHocDataSourceClient(type, connectionParam).getConnection();
     }
 }

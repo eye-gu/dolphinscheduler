@@ -22,7 +22,6 @@ import org.apache.dolphinscheduler.plugin.datasource.api.datasource.BaseDataSour
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.DataSourceProcessor;
 import org.apache.dolphinscheduler.plugin.datasource.api.plugin.DataSourcePluginManager;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import java.sql.Connection;
 
@@ -42,46 +41,60 @@ public class DataSourceUtils {
      * @param baseDataSourceParamDTO datasource param
      */
     public static void checkDatasourceParam(BaseDataSourceParamDTO baseDataSourceParamDTO) {
-        getDatasourceProcessor(baseDataSourceParamDTO.getType()).checkDatasourceParam(baseDataSourceParamDTO);
+        getDatasourceProcessorChecked(baseDataSourceParamDTO.getType())
+                .checkDatasourceParam(baseDataSourceParamDTO);
     }
 
     public static ConnectionParam buildConnectionParams(BaseDataSourceParamDTO baseDataSourceParamDTO) {
-        return getDatasourceProcessor(baseDataSourceParamDTO.getType()).createConnectionParams(baseDataSourceParamDTO);
+        return getDatasourceProcessorChecked(baseDataSourceParamDTO.getType())
+                .createConnectionParams(baseDataSourceParamDTO);
     }
 
-    public static ConnectionParam buildConnectionParams(DbType dbType, String connectionJson) {
-        return getDatasourceProcessor(dbType).createConnectionParams(connectionJson);
+    public static ConnectionParam buildConnectionParams(String type, String connectionJson) {
+        return getDatasourceProcessorChecked(type).createConnectionParams(connectionJson);
     }
 
-    public static String getJdbcUrl(DbType dbType, ConnectionParam baseConnectionParam) {
-        return getDatasourceProcessor(dbType).getJdbcUrl(baseConnectionParam);
+    public static String getJdbcUrl(String type, ConnectionParam baseConnectionParam) {
+        return getDatasourceProcessorChecked(type).getJdbcUrl(baseConnectionParam);
     }
 
-    public static Connection getConnection(DbType dbType, ConnectionParam connectionParam) {
+    public static Connection getConnection(String type, ConnectionParam connectionParam) {
         try {
-            return getDatasourceProcessor(dbType).getConnection(connectionParam);
+            return getDatasourceProcessorChecked(type).getConnection(connectionParam);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static String getDatasourceDriver(DbType dbType) {
-        return getDatasourceProcessor(dbType).getDatasourceDriver();
+    public static String getDatasourceDriver(String type) {
+        return getDatasourceProcessorChecked(type).getDatasourceDriver();
     }
 
-    public static BaseDataSourceParamDTO buildDatasourceParamDTO(DbType dbType, String connectionParams) {
-        return getDatasourceProcessor(dbType).createDatasourceParamDTO(connectionParams);
+    public static BaseDataSourceParamDTO buildDatasourceParamDTO(String type, String connectionParams) {
+        return getDatasourceProcessorChecked(type).createDatasourceParamDTO(connectionParams);
     }
 
-    public static DataSourceProcessor getDatasourceProcessor(DbType dbType) {
-        return DataSourcePluginManager.getDataSourceProcessor(dbType);
+    /**
+     * Get the datasource processor of the given type name, returns null when the datasource plugin of this type is
+     * not installed.
+     */
+    public static DataSourceProcessor getDatasourceProcessor(String type) {
+        return DataSourcePluginManager.getDataSourceProcessor(type);
+    }
+
+    /**
+     * Get the datasource processor of the given type name, fail with an explicit message when the datasource
+     * plugin of this type is not installed.
+     */
+    public static DataSourceProcessor getDatasourceProcessorChecked(String type) {
+        return DataSourcePluginManager.getDataSourceProcessorChecked(type);
     }
 
     /**
      * get datasource UniqueId
      */
-    public static String getDatasourceUniqueId(ConnectionParam connectionParam, DbType dbType) {
-        return getDatasourceProcessor(dbType).getDatasourceUniqueId(connectionParam, dbType);
+    public static String getDatasourceUniqueId(ConnectionParam connectionParam, String type) {
+        return getDatasourceProcessorChecked(type).getDatasourceUniqueId(connectionParam);
     }
 
     /**
@@ -89,8 +102,8 @@ public class DataSourceUtils {
      */
     public static BaseDataSourceParamDTO buildDatasourceParam(String param) {
         JsonNode jsonNodes = JSONUtils.parseObject(param);
+        String type = jsonNodes.get("type").asText();
 
-        return getDatasourceProcessor(DbType.ofName(jsonNodes.get("type").asText().toUpperCase()))
-                .castDatasourceParamDTO(param);
+        return DataSourcePluginManager.getDataSourceProcessorChecked(type).castDatasourceParamDTO(param);
     }
 }

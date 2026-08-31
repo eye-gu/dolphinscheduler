@@ -22,11 +22,14 @@ import static java.lang.String.format;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.DataSourceProcessor;
 import org.apache.dolphinscheduler.spi.datasource.DataSourceChannel;
 import org.apache.dolphinscheduler.spi.datasource.DataSourceChannelFactory;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 import org.apache.dolphinscheduler.spi.plugin.PrioritySPIFactory;
 
 import org.apache.commons.collections4.MapUtils;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,12 +48,49 @@ public class DataSourcePluginManager {
         loadDataSourcePlugin();
     }
 
-    public static DataSourceChannel getDataSourceChannel(@NonNull DbType dbType) {
-        return datasourceChannelMap.get(dbType.getName());
+    public static DataSourceChannel getDataSourceChannel(@NonNull String type) {
+        return datasourceChannelMap.get(normalizeType(type));
     }
 
-    public static DataSourceProcessor getDataSourceProcessor(@NonNull DbType dbType) {
-        return dataSourceProcessorMap.get(dbType.getName());
+    public static DataSourceProcessor getDataSourceProcessor(@NonNull String type) {
+        return dataSourceProcessorMap.get(normalizeType(type));
+    }
+
+    /**
+     * Get the datasource processor of the given type, fail with an explicit message when the datasource plugin of
+     * this type is not installed. This is the uniform error path for datasources whose type plugin is missing
+     * (e.g. the datasource was created by another deployment with more plugins installed).
+     */
+    public static DataSourceProcessor getDataSourceProcessorChecked(@NonNull String type) {
+        DataSourceProcessor dataSourceProcessor = getDataSourceProcessor(type);
+        if (dataSourceProcessor == null) {
+            throw new IllegalArgumentException(
+                    format("datasource type '%s' is not installed, please install the datasource plugin first",
+                            type));
+        }
+        return dataSourceProcessor;
+    }
+
+    /**
+     * Whether a datasource plugin declaring the given type name is installed.
+     */
+    public static boolean existDataSourceProcessor(@NonNull String type) {
+        return getDataSourceProcessor(type) != null;
+    }
+
+    /**
+     * List the metadata of all registered datasource types, sorted by type name. This is the single source of the
+     * datasource type list exposed to the frontend (GET /datasources/types).
+     */
+    public static List<DataSourceTypeInfo> getDataSourceTypeInfoList() {
+        List<DataSourceTypeInfo> typeInfos = new ArrayList<>();
+        dataSourceProcessorMap.forEach((type, processor) -> typeInfos.add(new DataSourceTypeInfo(
+                type,
+                processor.getLabel(),
+                processor.getDefaultPort(),
+                processor.isJdbcCompatible())));
+        typeInfos.sort(Comparator.comparing(DataSourceTypeInfo::getType));
+        return typeInfos;
     }
 
     public static void loadDataSourcePlugin() {
@@ -64,12 +104,13 @@ public class DataSourcePluginManager {
         }
         new PrioritySPIFactory<>(DataSourceChannelFactory.class).getSPIMap().forEach(
                 (dataSourceChannelName, dataSourceChannelFactory) -> {
-                    if (datasourceChannelMap.containsKey(dataSourceChannelName)) {
+                    String registerName = normalizeType(dataSourceChannelName);
+                    if (datasourceChannelMap.containsKey(registerName)) {
                         throw new IllegalStateException(
-                                format("Duplicate datasource channel named '%s'", dataSourceChannelName));
+                                format("Duplicate datasource channel named '%s'", registerName));
                     }
-                    datasourceChannelMap.put(dataSourceChannelName, dataSourceChannelFactory.create());
-                    log.info("Registered datasource channel: {}", dataSourceChannelName);
+                    datasourceChannelMap.put(registerName, dataSourceChannelFactory.create());
+                    log.info("Registered datasource channel: {}", registerName);
                 });
     }
 
@@ -79,7 +120,7 @@ public class DataSourcePluginManager {
         }
 
         ServiceLoader.load(DataSourceProcessor.class).forEach(factory -> {
-            final String name = factory.getDbType().getName();
+            final String name = normalizeType(factory.getType());
             if (dataSourceProcessorMap.containsKey(name)) {
                 throw new IllegalStateException(format("Duplicate datasource processor named '%s'", name));
             }
@@ -87,6 +128,14 @@ public class DataSourcePluginManager {
             dataSourceProcessorMap.put(name, dataSourceProcessor);
             log.info("Success register datasource processor -> {}", name);
         });
+    }
+
+    /**
+     * Datasource type names are case-normalized to upper case, so that a type declared as "mysql" by a legacy
+     * plugin and "MYSQL" submitted by the frontend resolve to the same registry entry.
+     */
+    private static String normalizeType(String type) {
+        return type.toUpperCase(Locale.ROOT);
     }
 
 }
