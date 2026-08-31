@@ -379,7 +379,7 @@ CREATE TABLE `t_ds_datasource` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'key',
   `name` varchar(64) NOT NULL COMMENT 'data source name',
   `note` varchar(255) DEFAULT NULL COMMENT 'description',
-  `type` tinyint(4) NOT NULL COMMENT 'data source type: 0:mysql,1:postgresql,2:hive,3:spark',
+  `type` varchar(64) NOT NULL COMMENT 'data source type name, e.g. mysql, declared by the datasource plugin',
   `user_id` int(11) NOT NULL COMMENT 'the creator id',
   `connection_params` text NOT NULL COMMENT 'json connection params',
   `create_time` datetime NOT NULL COMMENT 'create time',

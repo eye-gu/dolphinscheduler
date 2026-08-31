@@ -84,7 +84,7 @@ public class DataSourceMapperTest extends BaseDaoTest {
         expectedDataSource.setName("modify " + expectedDataSource.getName());
         expectedDataSource.setNote("modifiy " + expectedDataSource.getNote());
         expectedDataSource.setUserId(2);
-        expectedDataSource.setType(DbType.HIVE);
+        expectedDataSource.setType(DbType.HIVE.name());
         expectedDataSource.setConnectionParams("modify " + expectedDataSource.getConnectionParams());
         expectedDataSource.setUpdateTime(DateUtils.getCurrentDate());
 
@@ -119,7 +119,7 @@ public class DataSourceMapperTest extends BaseDaoTest {
         Map<Integer, DataSource> datasourceMap = createDataSourceMap(userId, "test");
 
         List<DataSource> actualDataSources = dataSourceMapper.queryDataSourceByType(
-                0, DbType.MYSQL.ordinal());
+                0, DbType.MYSQL.name());
 
         Assertions.assertTrue(actualDataSources.size() >= 2);
 
@@ -234,7 +234,7 @@ public class DataSourceMapperTest extends BaseDaoTest {
 
         Map<Integer, DataSource> expectedDataSourceMap = createDataSourceMap(count);
 
-        List<DataSource> actualDataSources = dataSourceMapper.listAllDataSourceByType(DbType.MYSQL.ordinal());
+        List<DataSource> actualDataSources = dataSourceMapper.listAllDataSourceByType(DbType.MYSQL.name());
 
         Assertions.assertTrue(actualDataSources.size() >= count);
 
@@ -380,7 +380,7 @@ public class DataSourceMapperTest extends BaseDaoTest {
         DataSource dataSource = new DataSource();
         dataSource.setUserId(userId);
         dataSource.setName(name);
-        dataSource.setType(DbType.MYSQL);
+        dataSource.setType(DbType.MYSQL.name());
         dataSource.setNote("mysql test");
         dataSource.setConnectionParams("hello mysql");
         dataSource.setUpdateTime(DateUtils.getCurrentDate());

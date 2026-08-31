@@ -26,7 +26,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 public interface DataSourceDao extends IDao<DataSource> {
 
-    List<DataSource> queryDataSourceByType(int userId, Integer type);
+    List<DataSource> queryDataSourceByType(int userId, String type);
 
     IPage<DataSource> queryDataSourcePaging(IPage<DataSource> page, int userId, String name);
 

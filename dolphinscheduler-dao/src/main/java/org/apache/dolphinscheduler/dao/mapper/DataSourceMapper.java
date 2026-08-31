@@ -35,10 +35,10 @@ public interface DataSourceMapper extends BaseMapper<DataSource> {
     /**
      * query datasource by type
      * @param userId userId
-     * @param type type
+     * @param type datasource type name, e.g. MYSQL
      * @return datasource list
      */
-    List<DataSource> queryDataSourceByType(@Param("userId") int userId, @Param("type") Integer type);
+    List<DataSource> queryDataSourceByType(@Param("userId") int userId, @Param("type") String type);
 
     /**
      * datasource page
@@ -74,10 +74,10 @@ public interface DataSourceMapper extends BaseMapper<DataSource> {
 
     /**
      * list all datasource by type
-     * @param type datasource type
+     * @param type datasource type name, e.g. MYSQL
      * @return datasource list
      */
-    List<DataSource> listAllDataSourceByType(@Param("type") Integer type);
+    List<DataSource> listAllDataSourceByType(@Param("type") String type);
 
     /**
      * list authorized datasource

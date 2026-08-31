@@ -20,3 +20,7 @@ ALTER TABLE `t_ds_workflow_instance` ADD INDEX idx_project_start_time (project_c
 ALTER TABLE `t_ds_schedules`
     ADD COLUMN `missed_fire_policy` tinyint NOT NULL DEFAULT '2' COMMENT 'missed fire policy: 0 skip missed, 1 fire once now, 2 fire all missed' AFTER `crontab`;
 
+
+-- DSIP-110: the datasource type is now a string name declared by the datasource plugin
+ALTER TABLE `t_ds_datasource`
+    MODIFY COLUMN `type` varchar(64) NOT NULL COMMENT 'data source type name, e.g. mysql, declared by the datasource plugin';

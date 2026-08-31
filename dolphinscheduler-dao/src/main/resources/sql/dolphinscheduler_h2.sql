@@ -372,7 +372,7 @@ CREATE TABLE t_ds_datasource
     id                int(11) NOT NULL AUTO_INCREMENT,
     name              varchar(64) NOT NULL,
     note              varchar(255) DEFAULT NULL,
-    type              tinyint(4) NOT NULL,
+    type              varchar(64) NOT NULL,
     user_id           int(11) NOT NULL,
     connection_params text        NOT NULL,
     create_time       datetime    NOT NULL,

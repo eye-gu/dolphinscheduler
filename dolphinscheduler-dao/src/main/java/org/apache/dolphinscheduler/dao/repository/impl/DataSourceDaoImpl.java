@@ -40,7 +40,7 @@ public class DataSourceDaoImpl extends BaseDao<DataSource, DataSourceMapper> imp
     }
 
     @Override
-    public List<DataSource> queryDataSourceByType(int userId, Integer type) {
+    public List<DataSource> queryDataSourceByType(int userId, String type) {
         return mybatisMapper.queryDataSourceByType(userId, type);
     }
 

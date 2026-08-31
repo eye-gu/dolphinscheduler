@@ -17,8 +17,6 @@
 
 package org.apache.dolphinscheduler.dao.entity;
 
-import org.apache.dolphinscheduler.spi.enums.DbType;
-
 import java.util.Date;
 import java.util.Objects;
 
@@ -50,8 +48,11 @@ public class DataSource {
 
     /**
      * data source type
+     * <p>
+     * The type name declared by the datasource plugin (e.g. MYSQL, or the name declared by a custom datasource
+     * plugin), stored as string since DSIP-110.
      */
-    private DbType type;
+    private String type;
 
     private String connectionParams;
 
