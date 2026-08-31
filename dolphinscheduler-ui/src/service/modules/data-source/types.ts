@@ -15,60 +15,24 @@
  * limitations under the License.
  */
 
-type IDataBase =
-  | 'MYSQL'
-  | 'POSTGRESQL'
-  | 'HIVE'
-  | 'SPARK'
-  | 'CLICKHOUSE'
-  | 'ORACLE'
-  | 'SQLSERVER'
-  | 'DB2'
-  | 'VERTICA'
-  | 'PRESTO'
-  | 'REDSHIFT'
-  | 'ATHENA'
-  | 'TRINO'
-  | 'AZURESQL'
-  | 'STARROCKS'
-  | 'DAMENG'
-  | 'OCEANBASE'
-  | 'SSH'
-  | 'DATABEND'
-  | 'SNOWFLAKE'
-  | 'HANA'
-  | 'DORIS'
-  | 'KYUUBI'
-  | 'ZEPPELIN'
-  | 'SAGEMAKER'
-  | 'K8S'
-  | 'ALIYUN_SERVERLESS_SPARK'
-  | 'DOLPHINDB'
+/**
+ * The datasource type name declared by the datasource plugin, e.g. MYSQL or the name declared by a
+ * custom datasource plugin. The closed string-literal union was replaced by a plain string since
+ * DSIP-110, the valid values come from GET /datasources/types at runtime.
+ */
+type IDataBase = string
 
-type IDataBaseLabel =
-  | 'MYSQL'
-  | 'POSTGRESQL'
-  | 'HIVE'
-  | 'SPARK'
-  | 'CLICKHOUSE'
-  | 'ORACLE'
-  | 'SQLSERVER'
-  | 'DB2'
-  | 'PRESTO'
-  | 'REDSHIFT'
-  | 'ATHENA'
-  | 'TRINO'
-  | 'AZURESQL'
-  | 'STARROCKS'
-  | 'DAMENG'
-  | 'OCEANBASE'
-  | 'SSH'
-  | 'KYUUBI'
-  | 'ZEPPELIN'
-  | 'SAGEMAKER'
-  | 'K8S'
-  | 'ALIYUN_SERVERLESS_SPARK'
-  | 'DOLPHINDB'
+type IDataBaseLabel = string
+
+/**
+ * The metadata of a datasource type registered by an installed datasource plugin.
+ */
+interface IDataSourceType {
+  type: string
+  label: string
+  defaultPort?: number | null
+  jdbcCompatible: boolean
+}
 
 interface IDataSource {
   id?: number
@@ -123,4 +87,13 @@ interface NameReq {
 
 type IdReq = number
 
-export { ListReq, IDataBase, IDataSource, UserIdReq, TypeReq, NameReq, IdReq }
+export {
+  ListReq,
+  IDataBase,
+  IDataSourceType,
+  IDataSource,
+  UserIdReq,
+  TypeReq,
+  NameReq,
+  IdReq
+}

@@ -17,7 +17,11 @@
 
 import { reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { getKerberosStartupState } from '@/service/modules/data-source'
+import {
+  getKerberosStartupState,
+  queryDataSourceTypes
+} from '@/service/modules/data-source'
+import type { IDataSourceType } from '@/service/modules/data-source/types'
 import type { FormRules } from 'naive-ui'
 import type {
   IDataSourceDetail,
@@ -360,7 +364,7 @@ export function useForm(id?: number) {
   }
 }
 
-export const datasourceType: IDataBaseOptionKeys = {
+export const datasourceType: IDataBaseOptionKeys = reactive({
   MYSQL: {
     value: 'MYSQL',
     label: 'MYSQL',
@@ -501,11 +505,54 @@ export const datasourceType: IDataBaseOptionKeys = {
     label: 'DOLPHINDB',
     defaultPort: 8848
   }
+})
+
+export const datasourceTypeList: IDataBaseOption[] = reactive(
+  Object.values(datasourceType).map((item) => {
+    item.class = 'options-datasource-type'
+    return item
+  })
+)
+
+/**
+ * Merge the datasource types registered on the backend (GET /datasources/types) into the local registry.
+ * Built-in types keep their dedicated form metadata (labels / default ports); types unknown to the
+ * frontend (custom datasource plugins) are added dynamically and rendered with the generic JDBC form.
+ */
+export const refreshDatasourceTypes = async () => {
+  let typeInfos: IDataSourceType[] = []
+  try {
+    typeInfos = await queryDataSourceTypes()
+  } catch (error) {
+    console.warn('Failed to load datasource types from backend', error)
+    return
+  }
+  typeInfos.forEach((typeInfo) => {
+    if (!typeInfo?.type || datasourceType[typeInfo.type]) {
+      return
+    }
+    const option = {
+      value: typeInfo.type,
+      label: typeInfo.label || typeInfo.type,
+      defaultPort: typeInfo.defaultPort || 0,
+      class: 'options-datasource-type'
+    } as IDataBaseOption
+    datasourceType[typeInfo.type] = option
+    datasourceTypeList.push(option)
+  })
 }
 
-export const datasourceTypeList: IDataBaseOption[] = Object.values(
-  datasourceType
-).map((item) => {
-  item.class = 'options-datasource-type'
-  return item
-})
+/**
+ * Get the registry entry of a datasource type, with a generic fallback for custom types that have not
+ * been merged yet (e.g. the types API has not answered).
+ */
+export const getDatasourceTypeOption = (type: IDataBase): IDataBaseOption => {
+  return (
+    datasourceType[type] || {
+      value: type,
+      label: type === 'HIVE' ? 'HIVE/IMPALA' : type,
+      defaultPort: 0,
+      class: 'options-datasource-type'
+    }
+  )
+}

@@ -34,6 +34,7 @@ import Search from '@/components/input-search'
 import DetailModal from './detail'
 import type { TableColumns } from './types'
 import SourceModal from './source-modal'
+import { refreshDatasourceTypes } from './use-form'
 
 const list = defineComponent({
   name: 'list',
@@ -86,6 +87,8 @@ const list = defineComponent({
     onMounted(() => {
       changePage(1)
       columns.value = getColumns()
+      // Merge the datasource types registered by installed plugins (incl. custom plugins) into the type list
+      refreshDatasourceTypes()
     })
 
     watch(useI18n().locale, () => {

@@ -36,7 +36,7 @@ import {
 } from 'naive-ui'
 import Modal from '@/components/modal'
 import { useI18n } from 'vue-i18n'
-import { useForm, datasourceType } from './use-form'
+import { useForm, getDatasourceTypeOption } from './use-form'
 import { useDetail } from './use-detail'
 import styles from './index.module.scss'
 
@@ -111,7 +111,7 @@ const DetailModal = defineComponent({
           state.detailForm.type &&
           (await changeType(
             state.detailForm.type,
-            datasourceType[state.detailForm.type]
+            getDatasourceTypeOption(state.detailForm.type)
           ))
         props.show && props.id && setFieldsValue(await queryById(props.id))
       }
@@ -126,7 +126,7 @@ const DetailModal = defineComponent({
         state.detailForm.type &&
           (await changeType(
             state.detailForm.type,
-            datasourceType[state.detailForm.type]
+            getDatasourceTypeOption(state.detailForm.type)
           ))
       }
     )

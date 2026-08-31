@@ -17,10 +17,17 @@
 
 import { ref, onMounted, nextTick, Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { queryDataSourceList } from '@/service/modules/data-source'
+import { queryDataSourceList, queryDataSourceTypes } from '@/service/modules/data-source'
 import { indexOf, find } from 'lodash'
 import type { IJsonItem } from '../types'
 import type { TypeReq } from '@/service/modules/data-source/types'
+
+/**
+ * Types that are not selectable in task nodes by default: they are not general purpose SQL engines
+ * (SSH is a remote shell channel, K8S/SNOWFLAKE were never offered by the task selector before the
+ * type list became dynamic). An explicit supportedDatasourceType whitelist overrides this.
+ */
+const defaultUnsupportedTaskTypes = ['SSH', 'K8S', 'SNOWFLAKE']
 
 export function useDatasource(
   model: { [field: string]: any },
@@ -36,151 +43,24 @@ export function useDatasource(
   const options = ref([] as { label: string; value: string }[])
   const datasourceOptions = ref([] as { label: string; value: number }[])
 
-  const datasourceTypes = [
-    {
-      id: 0,
-      code: 'MYSQL',
-      disabled: false
-    },
-    {
-      id: 1,
-      code: 'POSTGRESQL',
-      disabled: false
-    },
-    {
-      id: 2,
-      code: 'HIVE',
-      disabled: false
-    },
-    {
-      id: 3,
-      code: 'SPARK',
-      disabled: false
-    },
-    {
-      id: 4,
-      code: 'CLICKHOUSE',
-      disabled: false
-    },
-    {
-      id: 5,
-      code: 'ORACLE',
-      disabled: false
-    },
-    {
-      id: 6,
-      code: 'SQLSERVER',
-      disabled: false
-    },
-    {
-      id: 7,
-      code: 'DB2',
-      disabled: false
-    },
-    {
-      id: 8,
-      code: 'PRESTO',
-      disabled: false
-    },
-    {
-      id: 10,
-      code: 'REDSHIFT',
-      disabled: false
-    },
-    {
-      id: 11,
-      code: 'ATHENA',
-      disabled: false
-    },
-    {
-      id: 12,
-      code: 'TRINO',
-      disabled: false
-    },
-    {
-      id: 13,
-      code: 'STARROCKS',
-      disabled: false
-    },
-    {
-      id: 14,
-      code: 'AZURESQL',
-      disabled: false
-    },
-    {
-      id: 15,
-      code: 'DAMENG',
-      disabled: false
-    },
-    {
-      id: 16,
-      code: 'OCEANBASE',
-      disabled: false
-    },
-    {
-      id: 17,
-      code: 'SSH',
-      disabled: true
-    },
-    {
-      id: 18,
-      code: 'KYUUBI',
-      disabled: false
-    },
-    {
-      id: 19,
-      code: 'DATABEND',
-      disabled: false
-    },
-    {
-      id: 21,
-      code: 'VERTICA',
-      disabled: false
-    },
-    {
-      id: 22,
-      code: 'HANA',
-      disabled: false
-    },
-    {
-      id: 23,
-      code: 'DORIS',
-      disabled: false
-    },
-    {
-      id: 24,
-      code: 'ZEPPELIN',
-      disabled: false
-    },
-    {
-      id: 25,
-      code: 'SAGEMAKER',
-      disabled: false
-    },
-    {
-      id: 27,
-      code: 'ALIYUN_SERVERLESS_SPARK',
-      disabled: false
-    },
-    {
-      id: 28,
-      code: 'DOLPHINDB',
-      disabled: false
-    }
-  ]
-
   const getDatasourceTypes = async () => {
-    options.value = datasourceTypes
-      .filter((item) => {
-        if (item.disabled) {
-          return false
-        }
+    // The type list comes from the backend so custom datasource plugins show up automatically
+    let types: string[] = []
+    try {
+      const typeInfos = await queryDataSourceTypes()
+      types = typeInfos.map((typeInfo) => typeInfo.type)
+    } catch (error) {
+      console.warn('Failed to load datasource types from backend', error)
+      return
+    }
+    options.value = types
+      .filter((type) => {
         if (params.supportedDatasourceType) {
-          return indexOf(params.supportedDatasourceType, item.code) !== -1
+          return indexOf(params.supportedDatasourceType, type) !== -1
         }
-        return true
+        return indexOf(defaultUnsupportedTaskTypes, type) === -1
       })
-      .map((item) => ({ label: item.code, value: item.code }))
+      .map((type) => ({ label: type, value: type }))
   }
 
   const refreshOptions = async () => {

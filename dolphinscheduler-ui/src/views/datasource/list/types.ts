@@ -36,7 +36,6 @@ interface IDataBaseOption extends SelectBaseOption {
 type IDataBaseOptionKeys = {
   [key in IDataBase]: IDataBaseOption
 }
-
 export {
   IDataSource,
   IDataSourceDetail,

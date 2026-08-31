@@ -19,11 +19,19 @@ import { axios } from '@/service/service'
 import {
   ListReq,
   IDataSource,
+  IDataSourceType,
   UserIdReq,
   TypeReq,
   NameReq,
   IdReq
 } from './types'
+
+export function queryDataSourceTypes(): Promise<IDataSourceType[]> {
+  return axios({
+    url: '/datasources/types',
+    method: 'get'
+  })
+}
 
 export function queryDataSourceListPaging(params: ListReq): any {
   return axios({
