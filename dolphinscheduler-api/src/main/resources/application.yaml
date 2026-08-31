@@ -34,7 +34,7 @@ spring:
   application:
     name: api-server
   profiles:
-    active: postgresql
+    active: mysql
   banner:
     charset: UTF-8
   jackson:
@@ -276,7 +276,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/dolphinscheduler
     username: root
-    password: root
+    password: 12345678
   quartz:
     properties:
       org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate

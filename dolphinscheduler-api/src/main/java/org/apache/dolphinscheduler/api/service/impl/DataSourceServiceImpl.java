@@ -36,6 +36,8 @@ import org.apache.dolphinscheduler.dao.repository.DataSourceDao;
 import org.apache.dolphinscheduler.dao.repository.DataSourceUserDao;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.BaseDataSourceParamDTO;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.DataSourceProcessor;
+import org.apache.dolphinscheduler.plugin.datasource.api.plugin.DataSourcePluginManager;
+import org.apache.dolphinscheduler.plugin.datasource.api.plugin.DataSourceTypeInfo;
 import org.apache.dolphinscheduler.plugin.datasource.api.utils.DataSourceUtils;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
@@ -86,6 +88,7 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
 
     @Override
     public DataSource createDataSource(User loginUser, BaseDataSourceParamDTO datasourceParam) {
+        checkDataSourceTypeInstalled(datasourceParam.getType());
         DataSourceUtils.checkDatasourceParam(datasourceParam);
         if (!canOperatorPermissions(loginUser, null, AuthorizationType.DATASOURCE,
                 ApiFuncIdentificationConstant.DATASOURCE_CREATE_DATASOURCE)) {
@@ -122,6 +125,7 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
 
     @Override
     public DataSource updateDataSource(User loginUser, BaseDataSourceParamDTO dataSourceParam) {
+        checkDataSourceTypeInstalled(dataSourceParam.getType());
         DataSourceUtils.checkDatasourceParam(dataSourceParam);
         // determine whether the data source exists
         DataSource dataSource = dataSourceDao.queryById(dataSourceParam.getId());
@@ -243,7 +247,7 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
     }
 
     @Override
-    public List<DataSource> queryDataSourceList(User loginUser, Integer type) {
+    public List<DataSource> queryDataSourceList(User loginUser, String type) {
 
         List<DataSource> datasourceList;
         if (loginUser.getUserType().equals(UserType.ADMIN_USER)) {
@@ -255,10 +259,25 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
                 return Collections.emptyList();
             }
             datasourceList = dataSourceDao.queryByIds(ids).stream()
-                    .filter(dataSource -> dataSource.getType().getCode() == type).collect(Collectors.toList());
+                    .filter(dataSource -> dataSource.getType().equals(type)).collect(Collectors.toList());
         }
 
         return datasourceList;
+    }
+
+    @Override
+    public List<DataSourceTypeInfo> queryDataSourceTypes() {
+        return DataSourcePluginManager.getDataSourceTypeInfoList();
+    }
+
+    /**
+     * Reject datasource types whose plugin is not installed with an explicit error, instead of failing deep
+     * inside processor routing.
+     */
+    private void checkDataSourceTypeInstalled(String type) {
+        if (!DataSourcePluginManager.existDataSourceProcessor(type)) {
+            throw new ServiceException(Status.DATASOURCE_TYPE_NOT_EXIST, type);
+        }
     }
 
     @Override
@@ -270,9 +289,12 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
     }
 
     @Override
-    public void checkConnection(DbType type, ConnectionParam connectionParam) {
-        DataSourceProcessor sshDataSourceProcessor = DataSourceUtils.getDatasourceProcessor(type);
-        boolean connectivity = sshDataSourceProcessor.checkDataSourceConnectivity(connectionParam);
+    public void checkConnection(String type, ConnectionParam connectionParam) {
+        DataSourceProcessor dataSourceProcessor = DataSourceUtils.getDatasourceProcessor(type);
+        if (dataSourceProcessor == null) {
+            throw new ServiceException(Status.DATASOURCE_TYPE_NOT_EXIST, type);
+        }
+        boolean connectivity = dataSourceProcessor.checkDataSourceConnectivity(connectionParam);
         if (connectivity) {
             return;
         }
@@ -451,7 +473,7 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
 
             DatabaseMetaData metaData = connection.getMetaData();
 
-            if (dataSource.getType() == DbType.ORACLE) {
+            if (dataSource.getType().equals(DbType.ORACLE.name())) {
                 database = null;
             }
             rs = metaData.getColumns(database, null, tableName, "%");
@@ -505,7 +527,7 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
             if (null == connection) {
                 throw new ServiceException(Status.DATASOURCE_CONNECT_FAILED);
             }
-            if (dataSource.getType() == DbType.POSTGRESQL) {
+            if (dataSource.getType().equals(DbType.POSTGRESQL.name())) {
                 rs = connection.createStatement().executeQuery(Constants.DATABASES_QUERY_PG);
             } else {
                 rs = connection.createStatement().executeQuery(Constants.DATABASES_QUERY);
@@ -541,27 +563,32 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
         return options;
     }
 
-    private String getDbSchemaPattern(DbType dbType, String schema, BaseConnectionParam connectionParam) {
-        if (dbType == null) {
+    /**
+     * Resolve the schema pattern for JDBC metadata browsing per datasource type. Types not listed here (including
+     * custom datasource types) fall through to the default branch, which keeps metadata browsing working with the
+     * driver's own default behavior.
+     */
+    private String getDbSchemaPattern(String type, String schema, BaseConnectionParam connectionParam) {
+        if (type == null) {
             return null;
         }
         String schemaPattern = null;
-        switch (dbType) {
-            case HIVE:
+        switch (type) {
+            case "HIVE":
                 schemaPattern = connectionParam.getDatabase();
                 break;
-            case ORACLE:
+            case "ORACLE":
                 schemaPattern = connectionParam.getUser();
                 if (null != schemaPattern) {
                     schemaPattern = schemaPattern.toUpperCase();
                 }
                 break;
-            case SQLSERVER:
+            case "SQLSERVER":
                 schemaPattern = "dbo";
                 break;
-            case CLICKHOUSE:
-            case DATABEND:
-            case PRESTO:
+            case "CLICKHOUSE":
+            case "DATABEND":
+            case "PRESTO":
                 if (!StringUtils.isEmpty(schema)) {
                     schemaPattern = schema;
                 }

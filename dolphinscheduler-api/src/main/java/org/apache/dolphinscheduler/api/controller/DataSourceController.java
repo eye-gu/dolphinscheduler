@@ -44,11 +44,11 @@ import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.dao.entity.DataSource;
 import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.BaseDataSourceParamDTO;
+import org.apache.dolphinscheduler.plugin.datasource.api.plugin.DataSourceTypeInfo;
 import org.apache.dolphinscheduler.plugin.datasource.api.utils.CommonUtils;
 import org.apache.dolphinscheduler.plugin.datasource.api.utils.DataSourceUtils;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 import org.apache.dolphinscheduler.spi.params.base.ParamsOptions;
 
 import java.util.List;
@@ -152,22 +152,35 @@ public class DataSourceController extends BaseController {
     }
 
     /**
+     * query the metadata of all registered datasource types
+     *
+     * @return datasource type list, including the types registered by custom datasource plugins
+     */
+    @Operation(summary = "queryDataSourceTypes", description = "QUERY_DATA_SOURCE_TYPES_NOTES")
+    @GetMapping(value = "/types")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(QUERY_DATASOURCE_ERROR)
+    public Result<List<DataSourceTypeInfo>> queryDataSourceTypes() {
+        return Result.success(dataSourceService.queryDataSourceTypes());
+    }
+
+    /**
      * query datasource by type
      *
      * @param loginUser login user
-     * @param type data source type
+     * @param type data source type name, e.g. MYSQL
      * @return data source list page
      */
     @Operation(summary = "queryDataSourceList", description = "QUERY_DATA_SOURCE_LIST_BY_TYPE_NOTES")
     @Parameters({
-            @Parameter(name = "type", description = "DB_TYPE", required = true, schema = @Schema(implementation = DbType.class)),
+            @Parameter(name = "type", description = "DB_TYPE", required = true, schema = @Schema(implementation = String.class)),
     })
     @GetMapping(value = "/list")
     @ResponseStatus(HttpStatus.OK)
     @ApiException(QUERY_DATASOURCE_ERROR)
     public Result<Object> queryDataSourceList(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
-                                              @RequestParam("type") DbType type) {
-        List<DataSource> datasourceList = dataSourceService.queryDataSourceList(loginUser, type.getCode());
+                                              @RequestParam("type") String type) {
+        List<DataSource> datasourceList = dataSourceService.queryDataSourceList(loginUser, type);
         return Result.success(datasourceList);
     }
 

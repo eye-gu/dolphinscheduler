@@ -23,8 +23,8 @@ import org.apache.dolphinscheduler.api.vo.DataSourceSimpleInfoVO;
 import org.apache.dolphinscheduler.dao.entity.DataSource;
 import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.BaseDataSourceParamDTO;
+import org.apache.dolphinscheduler.plugin.datasource.api.plugin.DataSourceTypeInfo;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 import org.apache.dolphinscheduler.spi.params.base.ParamsOptions;
 
 import java.util.List;
@@ -75,10 +75,17 @@ public interface DataSourceService {
      * query data resource list
      *
      * @param loginUser login user
-     * @param type      datasource type
+     * @param type      datasource type name, e.g. MYSQL
      * @return datasource list
      */
-    List<DataSource> queryDataSourceList(User loginUser, Integer type);
+    List<DataSource> queryDataSourceList(User loginUser, String type);
+
+    /**
+     * query the metadata of all datasource types registered by the installed datasource plugins
+     *
+     * @return datasource type list, sorted by type name
+     */
+    List<DataSourceTypeInfo> queryDataSourceTypes();
 
     /**
      * verify whether a datasource name already exists
@@ -102,7 +109,7 @@ public interface DataSourceService {
      * @param connectionParam the connection parameters containing host, port, credentials, etc.
      * @throws ServiceException if the connection test fails (Status.CONNECTION_TEST_FAILURE)
      */
-    void checkConnection(DbType type, ConnectionParam connectionParam);
+    void checkConnection(String type, ConnectionParam connectionParam);
 
     /**
      * test the connectivity of a specific data source

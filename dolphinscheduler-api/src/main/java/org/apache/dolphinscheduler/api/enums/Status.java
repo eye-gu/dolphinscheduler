@@ -216,7 +216,7 @@ public enum Status {
     TASK_INSTANCE_STATE_OPERATION_ERROR(10166,
             "the status of task instance {0} is {1},Cannot perform force success operation",
             "任务实例[{0}]的状态是[{1}]，无法执行强制成功操作"),
-    DATASOURCE_TYPE_NOT_EXIST(10167, "data source type not exist", "数据源类型不存在"),
+    DATASOURCE_TYPE_NOT_EXIST(10167, "datasource type {0} is not installed", "数据源类型 {0} 未安装"),
     WORKFLOW_DEFINITION_NAME_EXIST(10168, "workflow definition name {0} already exists", "工作流定义名称[{0}]已存在"),
     DATASOURCE_DB_TYPE_ILLEGAL(10169, "datasource type illegal", "数据源类型参数不合法"),
     DATASOURCE_PORT_ILLEGAL(10170, "datasource port illegal", "数据源端口参数不合法"),

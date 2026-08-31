@@ -199,7 +199,7 @@ public class DataSourceServiceTest {
 
         // DATASOURCE_EXIST
         dataSource.setName(dataSourceName);
-        dataSource.setType(DbType.POSTGRESQL);
+        dataSource.setType(DbType.POSTGRESQL.name());
         dataSource.setConnectionParams(
                 JSONUtils.toJsonString(DataSourceUtils.buildConnectionParams(postgreSqlDatasourceParam)));
 
@@ -357,13 +357,13 @@ public class DataSourceServiceTest {
     @Test
     public void testQueryDataSourceList() {
         User adminUser = getAdminUser();
-        assertDoesNotThrow(() -> dataSourceService.queryDataSourceList(adminUser, DbType.MYSQL.ordinal()));
+        assertDoesNotThrow(() -> dataSourceService.queryDataSourceList(adminUser, DbType.MYSQL.name()));
 
         User generalUser = getGeneralUser();
 
         when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.DATASOURCE,
                 generalUser.getId(), dataSourceServiceLogger)).thenReturn(Collections.emptySet());
-        List<DataSource> emptyList = dataSourceService.queryDataSourceList(generalUser, DbType.MYSQL.ordinal());
+        List<DataSource> emptyList = dataSourceService.queryDataSourceList(generalUser, DbType.MYSQL.name());
         Assertions.assertEquals(emptyList.size(), 0);
 
         when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.DATASOURCE,
@@ -371,12 +371,12 @@ public class DataSourceServiceTest {
 
         DataSource dataSource = new DataSource();
         dataSource.setId(1);
-        dataSource.setType(DbType.MYSQL);
+        dataSource.setType(DbType.MYSQL.name());
         when(dataSourceDao.queryByIds(Collections.singleton(1)))
                 .thenReturn(Collections.singletonList(dataSource));
 
         List<DataSource> list =
-                dataSourceService.queryDataSourceList(generalUser, DbType.MYSQL.ordinal());
+                dataSourceService.queryDataSourceList(generalUser, DbType.MYSQL.name());
         Assertions.assertNotNull(list);
     }
 
@@ -442,7 +442,7 @@ public class DataSourceServiceTest {
         DataSource dataSource = new DataSource();
         dataSource.setName("test");
         dataSource.setNote("Note");
-        dataSource.setType(DbType.ORACLE);
+        dataSource.setType(DbType.ORACLE.name());
         dataSource.setConnectionParams(
                 "{\"connectType\":\"ORACLE_SID\",\"address\":\"jdbc:oracle:thin:@192.168.xx.xx:49161\",\"database\":\"XE\","
                         + "\"jdbcUrl\":\"jdbc:oracle:thin:@192.168.xx.xx:49161/XE\",\"user\":\"system\",\"password\":\"oracle\"}");
@@ -455,7 +455,7 @@ public class DataSourceServiceTest {
         dataSource.setId(dataSourceId);
         dataSource.setName("test");
         dataSource.setNote("Note");
-        dataSource.setType(DbType.ORACLE);
+        dataSource.setType(DbType.ORACLE.name());
         dataSource.setConnectionParams(
                 "{\"connectType\":\"ORACLE_SID\",\"address\":\"jdbc:oracle:thin:@192.168.xx.xx:49161\",\"database\":\"XE\","
                         + "\"jdbcUrl\":\"jdbc:oracle:thin:@192.168.xx.xx:49161/XE\",\"user\":\"system\",\"password\":\"oracle\"}");
@@ -568,7 +568,7 @@ public class DataSourceServiceTest {
      */
     @Test
     public void testCheckConnection() throws Exception {
-        DbType dataSourceType = DbType.POSTGRESQL;
+        String dataSourceType = DbType.POSTGRESQL.name();
         String dataSourceName = "dataSource01";
         String dataSourceDesc = "test dataSource";
 

@@ -492,7 +492,7 @@ public class PythonGateway {
         }
 
         List<DataSource> dataSourceListMatchType = dataSourceList.stream()
-                .filter(dataSource -> type == null || StringUtils.equalsIgnoreCase(dataSource.getType().name(), type))
+                .filter(dataSource -> type == null || StringUtils.equalsIgnoreCase(dataSource.getType(), type))
                 .collect(Collectors.toList());
 
         log.info("Get the datasource list match the type are: {}", dataSourceListMatchType);
