@@ -224,12 +224,14 @@ public class DataxTaskTest {
             when(resultSet.getMetaData()).thenReturn(md);
             when(stmt.executeQuery()).thenReturn(resultSet);
 
-            String[] rows = this.dataxTask.tryExecuteSqlResolveColumnNames(DbType.MYSQL, baseConnectionParam, "");
+            String[] rows =
+                    this.dataxTask.tryExecuteSqlResolveColumnNames(DbType.MYSQL.name(), baseConnectionParam, "");
             Assertions.assertEquals(rows.length, 1);
             Assertions.assertEquals(rows[0], "something");
 
             when(connection.prepareStatement(anyString())).thenThrow(new SQLException("Connection failed"));
-            String[] nullRows = this.dataxTask.tryExecuteSqlResolveColumnNames(DbType.MYSQL, baseConnectionParam, "");
+            String[] nullRows =
+                    this.dataxTask.tryExecuteSqlResolveColumnNames(DbType.MYSQL.name(), baseConnectionParam, "");
             Assertions.assertNull(nullRows);
         }
     }
@@ -290,8 +292,8 @@ public class DataxTaskTest {
 
         // set dataxTaskExecutionContext via reflection
         DataxTaskExecutionContext ctx = new DataxTaskExecutionContext();
-        ctx.setSourcetype(DbType.MYSQL);
-        ctx.setTargetType(DbType.MYSQL);
+        ctx.setSourcetype(DbType.MYSQL.name());
+        ctx.setTargetType(DbType.MYSQL.name());
         ctx.setSourceConnectionParams(
                 "{\"user\":\"root\",\"password\":\"123456\",\"address\":\"jdbc:mysql://localhost:3306\"}");
         ctx.setTargetConnectionParams(
@@ -311,9 +313,9 @@ public class DataxTaskTest {
                 MockedStatic<DataSourceClientProvider> mockedProvider = mockStatic(DataSourceClientProvider.class)) {
 
             mockedDataSourceUtils
-                    .when(() -> DataSourceUtils.buildConnectionParams(Mockito.any(DbType.class), Mockito.anyString()))
+                    .when(() -> DataSourceUtils.buildConnectionParams(Mockito.anyString(), Mockito.anyString()))
                     .thenReturn(mockConnParam);
-            mockedDataSourceUtils.when(() -> DataSourceUtils.getJdbcUrl(Mockito.any(DbType.class), Mockito.any()))
+            mockedDataSourceUtils.when(() -> DataSourceUtils.getJdbcUrl(Mockito.anyString(), Mockito.any()))
                     .thenReturn("jdbc:mysql://localhost:3306/test");
 
             Connection connection = mock(Connection.class);

@@ -31,7 +31,6 @@ import org.apache.dolphinscheduler.plugin.task.api.enums.Direct;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zeppelin.client.ClientConfig;
@@ -81,7 +80,7 @@ public class ZeppelinTask extends AbstractRemoteTask {
         zeppelinTaskExecutionContext =
                 zeppelinParameters.generateExtendedContext(taskExecutionContext.getResourceParametersHelper());
         zeppelinConnectionParam = (ZeppelinConnectionParam) DataSourceUtils
-                .buildConnectionParams(DbType.valueOf(zeppelinParameters.getType()),
+                .buildConnectionParams(zeppelinParameters.getType(),
                         zeppelinTaskExecutionContext.getConnectionParams());
         zeppelinParameters.setUsername(zeppelinConnectionParam.getUsername());
         zeppelinParameters.setPassword(zeppelinConnectionParam.getPassword());

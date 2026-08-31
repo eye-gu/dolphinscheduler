@@ -59,65 +59,66 @@ public class DataxUtils {
 
     public static final String DATAX_WRITER_PLUGIN_OCEANBASE = "oceanbasev10writer";
 
-    public static String getReaderPluginName(DbType dbType) {
-        switch (dbType) {
-            case MYSQL:
+    public static String getReaderPluginName(String type) {
+        // DataX only supports the built-in datasource types, custom types are excluded by the task whitelist
+        switch (type) {
+            case "MYSQL":
                 return DATAX_READER_PLUGIN_MYSQL;
-            case POSTGRESQL:
+            case "POSTGRESQL":
                 return DATAX_READER_PLUGIN_POSTGRESQL;
-            case ORACLE:
+            case "ORACLE":
                 return DATAX_READER_PLUGIN_ORACLE;
-            case SQLSERVER:
+            case "SQLSERVER":
                 return DATAX_READER_PLUGIN_SQLSERVER;
-            case CLICKHOUSE:
+            case "CLICKHOUSE":
                 return DATAX_READER_PLUGIN_CLICKHOUSE;
-            case OCEANBASE:
+            case "OCEANBASE":
                 return DATAX_READER_PLUGIN_OCEANBASE;
-            case HIVE:
-            case PRESTO:
+            case "HIVE":
+            case "PRESTO":
             default:
                 return DATAX_READER_PLUGIN_RDBMS;
         }
     }
 
-    public static String getWriterPluginName(DbType dbType) {
-        switch (dbType) {
-            case MYSQL:
+    public static String getWriterPluginName(String type) {
+        switch (type) {
+            case "MYSQL":
                 return DATAX_WRITER_PLUGIN_MYSQL;
-            case POSTGRESQL:
+            case "POSTGRESQL":
                 return DATAX_WRITER_PLUGIN_POSTGRESQL;
-            case ORACLE:
+            case "ORACLE":
                 return DATAX_WRITER_PLUGIN_ORACLE;
-            case SQLSERVER:
+            case "SQLSERVER":
                 return DATAX_WRITER_PLUGIN_SQLSERVER;
-            case CLICKHOUSE:
+            case "CLICKHOUSE":
                 return DATAX_WRITER_PLUGIN_CLICKHOUSE;
-            case DATABEND:
+            case "DATABEND":
                 return DATAX_WRITER_PLUGIN_DATABEND;
-            case OCEANBASE:
+            case "OCEANBASE":
                 return DATAX_WRITER_PLUGIN_OCEANBASE;
-            case HIVE:
-            case PRESTO:
+            case "HIVE":
+            case "PRESTO":
             default:
                 return DATAX_WRITER_PLUGIN_RDBMS;
         }
     }
 
-    public static SQLStatementParser getSqlStatementParser(DbType dbType, String sql) {
-        switch (dbType) {
-            case MYSQL:
+    public static SQLStatementParser getSqlStatementParserByType(String type, String sql) {
+        switch (type) {
+            case "MYSQL":
                 return new MySqlStatementParser(sql);
-            case POSTGRESQL:
+            case "POSTGRESQL":
                 return new PGSQLStatementParser(sql);
-            case ORACLE:
+            case "ORACLE":
                 return new OracleStatementParser(sql);
-            case SQLSERVER:
+            case "SQLSERVER":
                 return new SQLServerStatementParser(sql);
-            case CLICKHOUSE:
+            case "CLICKHOUSE":
                 return new ClickhouseStatementParser(sql);
-            case HIVE:
+            case "HIVE":
                 return new HiveStatementParser(sql);
-            case PRESTO:
+            case "PRESTO":
                 return new PrestoStatementParser(sql);
             default:
                 return null;
@@ -125,26 +126,26 @@ public class DataxUtils {
     }
 
     public static SQLStatementParser getSqlStatementParser(String compatibleMode, String sql) {
-        if (compatibleMode.toLowerCase().equals(DbType.ORACLE.getName())) {
+        if (compatibleMode.equalsIgnoreCase(DbType.ORACLE.name())) {
             return new OracleStatementParser(sql);
         }
         return new MySqlStatementParser(sql);
     }
 
-    public static String[] convertKeywordsColumns(DbType dbType, String[] columns) {
+    public static String[] convertKeywordsColumns(String type, String[] columns) {
         if (columns == null) {
             return null;
         }
 
         String[] toColumns = new String[columns.length];
         for (int i = 0; i < columns.length; i++) {
-            toColumns[i] = doConvertKeywordsColumn(dbType, columns[i]);
+            toColumns[i] = doConvertKeywordsColumn(type, columns[i]);
         }
 
         return toColumns;
     }
 
-    public static String doConvertKeywordsColumn(DbType dbType, String column) {
+    public static String doConvertKeywordsColumn(String type, String column) {
         if (column == null) {
             return column;
         }
@@ -154,20 +155,20 @@ public class DataxUtils {
         column = column.replace("\"", "");
         column = column.replace("'", "");
 
-        switch (dbType) {
-            case MYSQL:
+        switch (type) {
+            case "MYSQL":
                 return String.format("`%s`", column);
-            case POSTGRESQL:
+            case "POSTGRESQL":
                 return String.format("\"%s\"", column);
-            case ORACLE:
+            case "ORACLE":
                 return String.format("\"%s\"", column);
-            case SQLSERVER:
+            case "SQLSERVER":
                 return String.format("\"%s\"", column);
-            case CLICKHOUSE:
+            case "CLICKHOUSE":
                 return String.format("`%s`", column);
-            case DATABEND:
+            case "DATABEND":
                 return String.format("`%s`", column);
-            case OCEANBASE:
+            case "OCEANBASE":
                 return String.format("`%s`", column);
             default:
                 return column;

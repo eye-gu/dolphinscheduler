@@ -67,7 +67,8 @@ public class MySQLTargetGenerator implements ITargetGenerator {
 
                     mysqlTargetSb.append(SPACE).append(DB_CONNECT)
                             .append(SPACE).append(DOUBLE_QUOTES)
-                            .append(DataSourceUtils.getJdbcUrl(DbType.MYSQL, baseDataSource)).append(DOUBLE_QUOTES)
+                            .append(DataSourceUtils.getJdbcUrl(DbType.MYSQL.name(), baseDataSource))
+                            .append(DOUBLE_QUOTES)
                             .append(SPACE).append(DB_USERNAME)
                             .append(SPACE).append(baseDataSource.getUser())
                             .append(SPACE).append(DB_PWD)

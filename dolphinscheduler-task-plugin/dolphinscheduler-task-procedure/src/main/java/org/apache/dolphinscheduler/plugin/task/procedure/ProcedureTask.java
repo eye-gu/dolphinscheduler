@@ -36,7 +36,6 @@ import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -88,11 +87,11 @@ public class ProcedureTask extends AbstractTask {
                 procedureParameters.getMethod(),
                 procedureParameters.getLocalParams());
 
-        DbType dbType = DbType.valueOf(procedureParameters.getType());
-        DataSourceProcessor dataSourceProcessor = DataSourcePluginManager.getDataSourceProcessor(dbType);
+        String type = procedureParameters.getType();
+        DataSourceProcessor dataSourceProcessor = DataSourcePluginManager.getDataSourceProcessorChecked(type);
         ConnectionParam connectionParams =
                 dataSourceProcessor.createConnectionParams(procedureTaskExecutionContext.getConnectionParams());
-        try (Connection connection = DataSourceClientProvider.getAdHocConnection(dbType, connectionParams)) {
+        try (Connection connection = DataSourceClientProvider.getAdHocConnection(type, connectionParams)) {
             // Record the placeholder index and parameter mapping relationship
             Map<Integer, Property> sqlPlaceHolders = new HashMap<>();
 

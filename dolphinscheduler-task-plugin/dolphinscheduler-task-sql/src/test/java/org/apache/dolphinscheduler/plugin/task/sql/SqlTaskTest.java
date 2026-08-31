@@ -62,7 +62,7 @@ class SqlTaskTest {
     @BeforeEach
     void setup() {
         DataSourceParameters parameters = new DataSourceParameters();
-        parameters.setType(DbType.HIVE);
+        parameters.setType(DbType.HIVE.name());
         parameters.setResourceType(ResourceType.DATASOURCE.name());
 
         ResourceParametersHelper resourceParametersHelper = new ResourceParametersHelper();
@@ -73,6 +73,27 @@ class SqlTaskTest {
         ctx.setTaskParams("{\"type\":\"HIVE\",\"datasource\":1,\"sql\":\"select 1\"}");
 
         sqlTask = new SqlTask(ctx);
+    }
+
+    @Test
+    void testHandleFailsWithExplicitMessageWhenDatasourcePluginNotInstalled() {
+        DataSourceParameters parameters = new DataSourceParameters();
+        parameters.setType("NOT_INSTALLED_TYPE");
+        parameters.setResourceType(ResourceType.DATASOURCE.name());
+
+        ResourceParametersHelper resourceParametersHelper = new ResourceParametersHelper();
+        resourceParametersHelper.put(ResourceType.DATASOURCE, 1, parameters);
+
+        TaskExecutionContext ctx = new TaskExecutionContext();
+        ctx.setResourceParametersHelper(resourceParametersHelper);
+        ctx.setTaskParams(
+                "{\"type\":\"NOT_INSTALLED_TYPE\",\"datasource\":1,\"sql\":\"select 1\",\"sqlType\":\"0\"}");
+
+        SqlTask taskWithUninstalledType = new SqlTask(ctx);
+        TaskException exception = Assertions.assertThrows(TaskException.class,
+                () -> taskWithUninstalledType.handle(null));
+        Assertions.assertTrue(exception.getCause().getMessage().contains("NOT_INSTALLED_TYPE"));
+        Assertions.assertTrue(exception.getCause().getMessage().contains("not installed"));
     }
 
     @Test
@@ -88,7 +109,7 @@ class SqlTaskTest {
         sqlParameters.setSqlResource("/sql/test.sql");
 
         DataSourceParameters dataSourceParameters = new DataSourceParameters();
-        dataSourceParameters.setType(DbType.MYSQL);
+        dataSourceParameters.setType(DbType.MYSQL.name());
         dataSourceParameters.setResourceType(ResourceType.DATASOURCE.name());
 
         ResourceParametersHelper resourceParametersHelper = new ResourceParametersHelper();
@@ -385,7 +406,7 @@ class SqlTaskTest {
         TaskExecutionContext ctx = new TaskExecutionContext();
         ctx.setTaskParams("{\"type\":\"HIVE\",\"datasource\":1,\"sql\":\"select 1\",\"title\":\"title-$[yyyyMMdd]\"}");
         ctx.setScheduleTime(scheduleTimeMillis);
-        ctx.setResourceParametersHelper(getResourceParametersHelperWithDatasourceType(DbType.HIVE));
+        ctx.setResourceParametersHelper(getResourceParametersHelperWithDatasourceType(DbType.HIVE.name()));
 
         // Ensure prepareParamsMap == null
         ctx.setPrepareParamsMap(null);
@@ -412,7 +433,7 @@ class SqlTaskTest {
         ctx.setTaskParams("{\"type\":\"HIVE\",\"datasource\":1,\"sql\":\"select 1\"}");
         ctx.setScheduleTime(System.currentTimeMillis());
         ctx.setTaskInstanceId(1);
-        ctx.setResourceParametersHelper(getResourceParametersHelperWithDatasourceType(DbType.HIVE));
+        ctx.setResourceParametersHelper(getResourceParametersHelperWithDatasourceType(DbType.HIVE.name()));
         ctx.setPrepareParamsMap(prepareParamsMap);
 
         SqlTask task = new SqlTask(ctx);
@@ -448,7 +469,7 @@ class SqlTaskTest {
         sqlParameters.setSqlResource("/sql/missing.sql");
 
         DataSourceParameters dataSourceParameters = new DataSourceParameters();
-        dataSourceParameters.setType(DbType.HIVE);
+        dataSourceParameters.setType(DbType.HIVE.name());
         dataSourceParameters.setResourceType(ResourceType.DATASOURCE.name());
 
         ResourceParametersHelper resourceParametersHelper = new ResourceParametersHelper();
@@ -479,7 +500,7 @@ class SqlTaskTest {
         Assertions.assertInstanceOf(TaskException.class, thrown.getCause());
     }
 
-    private ResourceParametersHelper getResourceParametersHelperWithDatasourceType(DbType dbType) {
+    private ResourceParametersHelper getResourceParametersHelperWithDatasourceType(String dbType) {
         DataSourceParameters parameters = new DataSourceParameters();
         parameters.setType(dbType);
         parameters.setResourceType(ResourceType.DATASOURCE.name());

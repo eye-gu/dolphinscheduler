@@ -139,7 +139,7 @@ public class AliyunServerlessSparkTaskTest {
         when(mockTaskExecutionContext.getTaskParams()).thenReturn(taskParamsString);
         DataSourceParameters dataSourceParameters = new DataSourceParameters();
         dataSourceParameters.setConnectionParams(connectionParamsString);
-        dataSourceParameters.setType(DbType.ALIYUN_SERVERLESS_SPARK);
+        dataSourceParameters.setType(DbType.ALIYUN_SERVERLESS_SPARK.name());
         when(mockResourceParametersHelper.getResourceParameters(any(), any())).thenReturn(dataSourceParameters);
         when(mockTaskExecutionContext.getResourceParametersHelper()).thenReturn(mockResourceParametersHelper);
         Assertions.assertDoesNotThrow(

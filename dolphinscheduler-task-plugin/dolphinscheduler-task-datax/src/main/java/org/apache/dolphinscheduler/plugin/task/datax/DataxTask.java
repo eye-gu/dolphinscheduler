@@ -36,7 +36,6 @@ import org.apache.dolphinscheduler.plugin.task.api.shell.IShellInterceptorBuilde
 import org.apache.dolphinscheduler.plugin.task.api.shell.ShellInterceptorBuilderFactory;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 import org.apache.dolphinscheduler.spi.enums.Flag;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -231,7 +230,7 @@ public class DataxTask extends AbstractTask {
         }
 
         ArrayNode urlArr = readerConn.putArray("jdbcUrl");
-        urlArr.add(DataSourceUtils.getJdbcUrl(DbType.valueOf(dataXParameters.getDsType()), dataSourceCfg));
+        urlArr.add(DataSourceUtils.getJdbcUrl(dataXParameters.getDsType(), dataSourceCfg));
 
         readerConnArr.add(readerConn);
 
@@ -250,7 +249,7 @@ public class DataxTask extends AbstractTask {
         tableArr.add(dataXParameters.getTargetTable());
 
         writerConn.put("jdbcUrl",
-                DataSourceUtils.getJdbcUrl(DbType.valueOf(dataXParameters.getDtType()), dataTargetCfg));
+                DataSourceUtils.getJdbcUrl(dataXParameters.getDtType(), dataTargetCfg));
         writerConnArr.add(writerConn);
 
         ObjectNode writerParam = JSONUtils.createObjectNode();
@@ -399,7 +398,7 @@ public class DataxTask extends AbstractTask {
      * @param sql sql for data synchronization
      * @return Keyword converted column names
      */
-    private String[] parsingSqlColumnNames(DbType sourceType, DbType targetType, BaseConnectionParam dataSourceCfg,
+    private String[] parsingSqlColumnNames(String sourceType, String targetType, BaseConnectionParam dataSourceCfg,
                                            String sql) {
         String[] columnNames = tryGrammaticalAnalysisSqlColumnNames(sourceType, sql, dataSourceCfg.getCompatibleMode());
 
@@ -421,11 +420,11 @@ public class DataxTask extends AbstractTask {
      * @return column name array
      * @throws RuntimeException if error throws RuntimeException
      */
-    private String[] tryGrammaticalAnalysisSqlColumnNames(DbType dbType, String sql, String compatibleMode) {
+    private String[] tryGrammaticalAnalysisSqlColumnNames(String dbType, String sql, String compatibleMode) {
         String[] columnNames;
 
         try {
-            SQLStatementParser parser = DataxUtils.getSqlStatementParser(dbType, sql);
+            SQLStatementParser parser = DataxUtils.getSqlStatementParserByType(dbType, sql);
             if (StringUtils.isNotBlank(compatibleMode)) {
                 parser = DataxUtils.getSqlStatementParser(compatibleMode, sql);
             }
@@ -499,7 +498,7 @@ public class DataxTask extends AbstractTask {
      * @param sql sql for data synchronization
      * @return column name array
      */
-    public String[] tryExecuteSqlResolveColumnNames(DbType sourceType, BaseConnectionParam baseDataSource, String sql) {
+    public String[] tryExecuteSqlResolveColumnNames(String sourceType, BaseConnectionParam baseDataSource, String sql) {
         String[] columnNames;
         sql = String.format("SELECT t.* FROM ( %s ) t WHERE 0 = 1", sql);
         sql = sql.replace(";", "");

@@ -38,7 +38,6 @@ import org.apache.dolphinscheduler.plugin.task.api.parameters.SqlParameters;
 import org.apache.dolphinscheduler.plugin.task.api.resource.ResourceContext;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -92,8 +91,6 @@ public class SqlTask extends AbstractTask {
 
     private final SQLTaskExecutionContext sqlTaskExecutionContext;
 
-    private final DbType dbType;
-
     private Connection sessionConnection;
     private Statement sessionStatement;
 
@@ -111,7 +108,6 @@ public class SqlTask extends AbstractTask {
 
         sqlTaskExecutionContext =
                 sqlParameters.generateExtendedContext(taskExecutionContext.getResourceParametersHelper());
-        dbType = DbType.valueOf(sqlParameters.getType());
     }
 
     @Override
@@ -137,9 +133,10 @@ public class SqlTask extends AbstractTask {
             ensureSqlContent();
 
             // get datasource
-            baseConnectionParam = (BaseConnectionParam) DataSourceUtils.buildConnectionParams(dbType,
+            baseConnectionParam = (BaseConnectionParam) DataSourceUtils.buildConnectionParams(
+                    sqlParameters.getType(),
                     sqlTaskExecutionContext.getConnectionParams());
-            List<String> subSqls = DataSourcePluginManager.getDataSourceProcessor(dbType)
+            List<String> subSqls = DataSourcePluginManager.getDataSourceProcessorChecked(sqlParameters.getType())
                     .splitAndRemoveComment(sqlParameters.getSql());
 
             // ready to execute SQL and parameter entity Map
@@ -199,7 +196,7 @@ public class SqlTask extends AbstractTask {
                                   List<SqlBinds> postStatementsBinds) throws Exception {
         try (
                 Connection connection =
-                        DataSourceClientProvider.getAdHocConnection(DbType.valueOf(sqlParameters.getType()),
+                        DataSourceClientProvider.getAdHocConnection(sqlParameters.getType(),
                                 baseConnectionParam)) {
             sessionConnection = connection;
             // pre execute

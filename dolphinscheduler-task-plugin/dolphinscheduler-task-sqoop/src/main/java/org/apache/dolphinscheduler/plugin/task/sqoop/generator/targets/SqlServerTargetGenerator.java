@@ -72,9 +72,9 @@ public class SqlServerTargetGenerator implements ITargetGenerator {
 
             oracleTargetSb.append(SPACE).append(DB_CONNECT)
                     .append(SPACE).append(DOUBLE_QUOTES)
-                    .append(DataSourceUtils.getJdbcUrl(DbType.SQLSERVER, baseDataSource)).append(DOUBLE_QUOTES)
+                    .append(DataSourceUtils.getJdbcUrl(DbType.SQLSERVER.name(), baseDataSource)).append(DOUBLE_QUOTES)
                     // .append(SPACE).append(DRIVER)
-                    .append(SPACE).append(DataSourceUtils.getDatasourceDriver(DbType.SQLSERVER))
+                    .append(SPACE).append(DataSourceUtils.getDatasourceDriver(DbType.SQLSERVER.name()))
                     .append(SPACE).append(DB_USERNAME)
                     .append(SPACE).append(baseDataSource.getUser())
                     .append(SPACE).append(DB_PWD)

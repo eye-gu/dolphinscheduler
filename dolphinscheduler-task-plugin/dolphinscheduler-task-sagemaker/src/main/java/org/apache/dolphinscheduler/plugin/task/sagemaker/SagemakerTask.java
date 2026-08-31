@@ -33,7 +33,6 @@ import org.apache.dolphinscheduler.plugin.task.api.TaskException;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -97,7 +96,7 @@ public class SagemakerTask extends AbstractRemoteTask {
         sagemakerTaskExecutionContext =
                 parameters.generateExtendedContext(taskExecutionContext.getResourceParametersHelper());
         sagemakerConnectionParam =
-                (SagemakerConnectionParam) DataSourceUtils.buildConnectionParams(DbType.valueOf(parameters.getType()),
+                (SagemakerConnectionParam) DataSourceUtils.buildConnectionParams(parameters.getType(),
                         sagemakerTaskExecutionContext.getConnectionParams());
         parameters.setUsername(sagemakerConnectionParam.getUserName());
         parameters.setPassword(sagemakerConnectionParam.getPassword());

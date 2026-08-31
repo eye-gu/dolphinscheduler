@@ -72,7 +72,7 @@ public class OracleTargetGenerator implements ITargetGenerator {
 
             oracleTargetSb.append(SPACE).append(DB_CONNECT)
                     .append(SPACE).append(DOUBLE_QUOTES)
-                    .append(DataSourceUtils.getJdbcUrl(DbType.ORACLE, baseDataSource)).append(DOUBLE_QUOTES)
+                    .append(DataSourceUtils.getJdbcUrl(DbType.ORACLE.name(), baseDataSource)).append(DOUBLE_QUOTES)
                     .append(SPACE).append(DB_USERNAME)
                     .append(SPACE).append(baseDataSource.getUser())
                     .append(SPACE).append(DB_PWD)

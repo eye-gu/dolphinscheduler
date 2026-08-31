@@ -17,8 +17,6 @@
 
 package org.apache.dolphinscheduler.plugin.task.datax;
 
-import org.apache.dolphinscheduler.spi.enums.DbType;
-
 import java.io.Serializable;
 
 import lombok.Data;
@@ -31,13 +29,13 @@ public class DataxTaskExecutionContext implements Serializable {
 
     private int dataSourceId;
 
-    private DbType sourcetype;
+    private String sourcetype;
 
     private String sourceConnectionParams;
 
     private int dataTargetId;
 
-    private DbType targetType;
+    private String targetType;
 
     private String targetConnectionParams;
 

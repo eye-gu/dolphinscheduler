@@ -31,7 +31,6 @@ import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters
 import org.apache.dolphinscheduler.plugin.task.api.parameters.resource.DataSourceParameters;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.resource.ResourceParametersHelper;
 import org.apache.dolphinscheduler.plugin.task.api.utils.RetryUtils;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -105,7 +104,7 @@ public class AliyunServerlessSparkTask extends AbstractRemoteTask {
                 .getResourceParameters(ResourceType.DATASOURCE, aliyunServerlessSparkParameters.getDatasource());
         aliyunServerlessSparkConnectionParam = (AliyunServerlessSparkConnectionParam) DataSourceUtils
                 .buildConnectionParams(
-                        DbType.valueOf(aliyunServerlessSparkParameters.getType()),
+                        aliyunServerlessSparkParameters.getType(),
                         dataSourceParameters.getConnectionParams());
 
         accessKeyId = aliyunServerlessSparkConnectionParam.getAccessKeyId();

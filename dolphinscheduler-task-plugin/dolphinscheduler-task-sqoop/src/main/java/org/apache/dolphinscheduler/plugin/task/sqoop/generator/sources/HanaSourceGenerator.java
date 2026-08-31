@@ -77,9 +77,9 @@ public class HanaSourceGenerator implements ISourceGenerator {
 
             hanaSourceSb.append(SPACE).append(DB_CONNECT)
                     .append(SPACE).append(DOUBLE_QUOTES)
-                    .append(DataSourceUtils.getJdbcUrl(DbType.HANA, baseDataSource)).append(DOUBLE_QUOTES)
+                    .append(DataSourceUtils.getJdbcUrl(DbType.HANA.name(), baseDataSource)).append(DOUBLE_QUOTES)
                     .append(SPACE).append(DRIVER)
-                    .append(SPACE).append(DataSourceUtils.getDatasourceDriver(DbType.HANA))
+                    .append(SPACE).append(DataSourceUtils.getDatasourceDriver(DbType.HANA.name()))
                     .append(SPACE).append(DB_USERNAME)
                     .append(SPACE).append(baseDataSource.getUser())
                     .append(SPACE).append(DB_PWD)

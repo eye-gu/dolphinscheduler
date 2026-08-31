@@ -81,7 +81,7 @@ public class MySQLSourceGenerator implements ISourceGenerator {
                     .append(DB_CONNECT)
                     .append(SPACE)
                     .append(DOUBLE_QUOTES)
-                    .append(DataSourceUtils.getJdbcUrl(DbType.MYSQL, baseDataSource))
+                    .append(DataSourceUtils.getJdbcUrl(DbType.MYSQL.name(), baseDataSource))
                     .append(DOUBLE_QUOTES)
                     .append(SPACE)
                     .append(DB_USERNAME)

@@ -17,8 +17,6 @@
 
 package org.apache.dolphinscheduler.plugin.task.api.parameters.resource;
 
-import org.apache.dolphinscheduler.spi.enums.DbType;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -28,7 +26,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Data
 public class DataSourceParameters extends AbstractResourceParameters {
 
-    private DbType type;
+    /**
+     * The datasource type name declared by the datasource plugin, e.g. MYSQL
+     */
+    private String type;
 
     @JsonProperty(value = "DATASOURCE")
     private String resourceType;

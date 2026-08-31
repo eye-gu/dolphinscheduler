@@ -32,7 +32,6 @@ import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.resource.DataSourceParameters;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.apache.commons.lang3.SystemUtils;
 
@@ -174,7 +173,7 @@ public class RemoteShellTask extends AbstractTask {
         taskExecutionContext.getResourceParametersHelper().getResourceParameters(ResourceType.DATASOURCE,
                 remoteShellParameters.getDatasource());
         SSHConnectionParam sshConnectionParam = (SSHConnectionParam) DataSourceUtils.buildConnectionParams(
-                DbType.valueOf(remoteShellParameters.getType()),
+                remoteShellParameters.getType(),
                 dbSource.getConnectionParams());
         remoteExecutor = new RemoteExecutor(sshConnectionParam);
     }

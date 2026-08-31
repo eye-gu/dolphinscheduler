@@ -31,7 +31,6 @@ import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.K8sTaskParameters;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -73,7 +72,7 @@ public class K8sTask extends AbstractK8sTask {
                 k8sTaskParameters.generateK8sTaskExecutionContext(taskExecutionContext.getResourceParametersHelper(),
                         k8sTaskParameters.getDatasource());
         k8sConnectionParam =
-                (K8sConnectionParam) DataSourceUtils.buildConnectionParams(DbType.valueOf(k8sTaskParameters.getType()),
+                (K8sConnectionParam) DataSourceUtils.buildConnectionParams(k8sTaskParameters.getType(),
                         k8sTaskExecutionContext.getConnectionParams());
         String kubeConfig = k8sConnectionParam.getKubeConfig();
         k8sTaskParameters.setNamespace(k8sConnectionParam.getNamespace());

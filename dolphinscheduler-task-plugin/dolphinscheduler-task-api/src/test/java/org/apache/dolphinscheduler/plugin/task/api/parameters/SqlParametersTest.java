@@ -134,7 +134,7 @@ public class SqlParametersTest {
         p.setDatasource(1);
 
         DataSourceParameters dataSourceParameters = new DataSourceParameters();
-        dataSourceParameters.setType(DbType.MYSQL);
+        dataSourceParameters.setType(DbType.MYSQL.name());
         dataSourceParameters.setResourceType(ResourceType.DATASOURCE.name());
         dataSourceParameters.setConnectionParams("conn_params");
 

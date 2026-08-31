@@ -17,8 +17,6 @@
 
 package org.apache.dolphinscheduler.plugin.task.sqoop;
 
-import org.apache.dolphinscheduler.spi.enums.DbType;
-
 import java.io.Serializable;
 
 import lombok.Data;
@@ -31,7 +29,7 @@ public class SqoopTaskExecutionContext implements Serializable {
     private int dataSourceId;
 
     /** sourcetype */
-    private DbType sourcetype;
+    private String sourcetype;
 
     /** sourceConnectionParams */
     private String sourceConnectionParams;
@@ -40,7 +38,7 @@ public class SqoopTaskExecutionContext implements Serializable {
     private int dataTargetId;
 
     /** targetType */
-    private DbType targetType;
+    private String targetType;
 
     /** targetConnectionParams */
     private String targetConnectionParams;
